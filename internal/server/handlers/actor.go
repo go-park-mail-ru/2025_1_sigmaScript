@@ -30,7 +30,7 @@ func GetActor(w http.ResponseWriter, r *http.Request) {
       Str("method", r.Method).
       Str("path", r.URL.Path).
       Msg("Invalid actor id")
-    http.Error(w, "Invalid actor ID", http.StatusBadRequest)
+    jsonutil.SendError(w, http.StatusBadRequest, "invalid_id", "Invalid actor id")
     return
   }
 
@@ -43,7 +43,7 @@ func GetActor(w http.ResponseWriter, r *http.Request) {
       Str("path", r.URL.Path).
       Str("id", vars["id"]).
       Msg("Actor not found")
-    http.Error(w, "Actor not found", http.StatusNotFound)
+    jsonutil.SendError(w, http.StatusNotFound, "not_found", "Actor not found")
     return
   }
 

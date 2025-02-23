@@ -14,7 +14,6 @@ type ErrorResponse struct {
 }
 
 func SendError(w http.ResponseWriter, errCode int, errResp, msg string) {
-  log.Info().Msg("SendError")
   w.Header().Set("Content-Type", "application/json")
   w.WriteHeader(errCode)
 
@@ -28,8 +27,6 @@ func SendError(w http.ResponseWriter, errCode int, errResp, msg string) {
 }
 
 func SendJSON(w http.ResponseWriter, data interface{}) error {
-  log.Info().Msg("SendJSON")
-
   w.Header().Set("Content-Type", "application/json")
   if err := json.NewEncoder(w).Encode(data); err != nil {
     log.Error().Err(err).Msg("Error encoding JSON")

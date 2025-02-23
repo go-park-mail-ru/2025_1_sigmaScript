@@ -8,17 +8,22 @@ import (
   "os"
   "os/signal"
   "syscall"
-  "time"
 
+  "github.com/go-park-mail-ru/2025_1_sigmaScript/config"
   "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server"
 )
 
 func main() {
-  srv := server.New()
-  log.Println("Server is starting on :8080...")
+  cfg, err := config.New()
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  srv := server.New(&cfg.Server)
+  log.Printf("Server is starting on %s:%d...\n", cfg.Server.Address, cfg.Server.Port)
 
   go func() {
-    if err := srv.Run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+    if err = srv.Run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
       log.Fatalf("Server failed to start: %v", err)
     }
   }()
@@ -29,10 +34,10 @@ func main() {
   <-stop
   log.Println("Server is shutting down...")
 
-  ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+  ctx, cancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout)
   defer cancel()
 
-  if err := srv.Shutdown(ctx); err != nil {
+  if err = srv.Shutdown(ctx); err != nil {
     log.Fatalf("Server shutdown failed: %v", err)
   }
   log.Println("Server is shut down gracefully")

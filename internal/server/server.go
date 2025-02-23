@@ -2,8 +2,10 @@ package server
 
 import (
   "context"
+  "fmt"
   "net/http"
 
+  "github.com/go-park-mail-ru/2025_1_sigmaScript/config"
   "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/handlers"
   "github.com/gorilla/mux"
 )
@@ -27,13 +29,16 @@ func (s *Server) Shutdown(ctx context.Context) error {
   return s.httpServer.Shutdown(ctx)
 }
 
-func New() *Server {
+func New(srv *config.Server) *Server {
   router := mux.NewRouter()
   s := &Server{
     Router: router,
     httpServer: &http.Server{
-      Addr:    ":8080",
-      Handler: router,
+      Addr:         fmt.Sprintf("%s:%d", srv.Address, srv.Port),
+      ReadTimeout:  srv.ReadTimeout,
+      WriteTimeout: srv.WriteTimeout,
+      IdleTimeout:  srv.IdleTimeout,
+      Handler:      router,
     },
   }
   s.configureRoutes()

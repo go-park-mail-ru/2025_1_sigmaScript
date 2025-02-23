@@ -1,11 +1,11 @@
 package handlers
 
 import (
-  "encoding/json"
   "net/http"
   "strconv"
 
   "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
+  "github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
   "github.com/gorilla/mux"
   "github.com/rs/zerolog/log"
 )
@@ -47,7 +47,7 @@ func GetActor(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  if err = json.NewEncoder(w).Encode(actor); err != nil {
+  if err = jsonutil.SendJSON(w, actor); err != nil {
     log.Error().
       Err(err).
       Str("package", "handlers").
@@ -55,8 +55,7 @@ func GetActor(w http.ResponseWriter, r *http.Request) {
       Str("method", r.Method).
       Str("path", r.URL.Path).
       Str("id", vars["id"]).
-      Msg("Encode error")
-    http.Error(w, "Encode error", http.StatusInternalServerError)
+      Msg("Error sending JSON")
     return
   }
 }

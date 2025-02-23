@@ -3,6 +3,7 @@ package config
 import (
   "time"
 
+  "github.com/rs/zerolog/log"
   "github.com/spf13/viper"
 )
 
@@ -20,17 +21,43 @@ type Server struct {
 }
 
 func New() (*Config, error) {
+  log.Info().
+    Str("package", "config").
+    Str("func", "New").
+    Msg("Initializing config")
+
   if err := setupViper(); err != nil {
+    log.Error().
+      Err(err).
+      Str("package", "config").
+      Str("func", "New").
+      Msg("Error initializing config")
     return nil, err
   }
+
   var config Config
   if err := viper.Unmarshal(&config); err != nil {
+    log.Error().
+      Err(err).
+      Str("package", "config").
+      Str("func", "New").
+      Msg("Error unmarshalling config")
     return nil, err
   }
+
+  log.Info().
+    Str("package", "config").
+    Str("func", "New").
+    Msg("Config initialized")
   return &config, nil
 }
 
 func setupViper() error {
+  log.Info().
+    Str("package", "config").
+    Str("func", "setupViper").
+    Msg("Initializing viper")
+
   viper.SetConfigName("config")
   viper.SetConfigType("yml")
   viper.AddConfigPath("./internal/config")
@@ -43,7 +70,17 @@ func setupViper() error {
   viper.SetDefault("server.idle_timeout", time.Second*60)
 
   if err := viper.ReadInConfig(); err != nil {
+    log.Error().
+      Err(err).
+      Str("package", "config").
+      Str("func", "setupViper").
+      Msg("Error reading config")
     return err
   }
+
+  log.Info().
+    Str("package", "config").
+    Str("func", "setupViper").
+    Msg("Viper initialized")
   return nil
 }

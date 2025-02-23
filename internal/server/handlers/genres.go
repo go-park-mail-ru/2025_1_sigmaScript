@@ -9,20 +9,9 @@ import (
 )
 
 func GetGenres(w http.ResponseWriter, r *http.Request) {
-  log.Info().
-    Str("package", "handlers").
-    Str("func", "GetGenres").
-    Str("method", r.Method).
-    Str("path", r.URL.Path).
-    Msg("GetGenres")
+  log.Info().Msg("GetGenres")
   if err := jsonutil.SendJSON(w, mocks.Genres); err != nil {
-    log.Error().
-      Err(err).
-      Str("package", "handlers").
-      Str("func", "GetGenres").
-      Str("method", r.Method).
-      Str("path", r.URL.Path).
-      Msg("Error sending JSON")
+    log.Error().Err(err).Msg("Error sending JSON")
     return
   }
 }

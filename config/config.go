@@ -21,42 +21,25 @@ type Server struct {
 }
 
 func New() (*Config, error) {
-  log.Info().
-    Str("package", "config").
-    Str("func", "New").
-    Msg("Initializing config")
+  log.Info().Msg("Initializing config")
 
   if err := setupViper(); err != nil {
-    log.Error().
-      Err(err).
-      Str("package", "config").
-      Str("func", "New").
-      Msg("Error initializing config")
+    log.Error().Err(err).Msg("Error initializing config")
     return nil, err
   }
 
   var config Config
   if err := viper.Unmarshal(&config); err != nil {
-    log.Error().
-      Err(err).
-      Str("package", "config").
-      Str("func", "New").
-      Msg("Error unmarshalling config")
+    log.Error().Err(err).Msg("Error unmarshalling config")
     return nil, err
   }
 
-  log.Info().
-    Str("package", "config").
-    Str("func", "New").
-    Msg("Config initialized")
+  log.Info().Msg("Config initialized")
   return &config, nil
 }
 
 func setupViper() error {
-  log.Info().
-    Str("package", "config").
-    Str("func", "setupViper").
-    Msg("Initializing viper")
+  log.Info().Msg("Initializing viper")
 
   viper.SetConfigName("config")
   viper.SetConfigType("yml")
@@ -70,17 +53,10 @@ func setupViper() error {
   viper.SetDefault("server.idle_timeout", time.Second*60)
 
   if err := viper.ReadInConfig(); err != nil {
-    log.Error().
-      Err(err).
-      Str("package", "config").
-      Str("func", "setupViper").
-      Msg("Error reading config")
+    log.Error().Err(err).Msg("Error reading config")
     return err
   }
 
-  log.Info().
-    Str("package", "config").
-    Str("func", "setupViper").
-    Msg("Viper initialized")
+  log.Info().Msg("Viper initialized")
   return nil
 }

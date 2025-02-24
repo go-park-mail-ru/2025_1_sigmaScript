@@ -6,7 +6,7 @@ import (
   "net/http"
 
   "github.com/go-park-mail-ru/2025_1_sigmaScript/config"
-  "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/handlers"
+  rout "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/router"
   "github.com/gorilla/mux"
   "github.com/rs/zerolog/log"
 )
@@ -14,14 +14,6 @@ import (
 type Server struct {
   Router     *mux.Router
   httpServer *http.Server
-}
-
-func (s *Server) configureRoutes() {
-  log.Info().Msg("Configuring routes")
-  s.Router.HandleFunc("/film/{id}", handlers.GetFilm).Methods("GET")
-  s.Router.HandleFunc("/actor/{id}", handlers.GetActor).Methods("GET")
-  s.Router.HandleFunc("/genres/", handlers.GetGenres).Methods("GET")
-  log.Info().Msg("Routes configured successfully")
 }
 
 func (s *Server) Run() error {
@@ -36,7 +28,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 func New(srv *config.Server) *Server {
   log.Info().Msg("Initializing server")
-  router := mux.NewRouter()
+  router := rout.New()
   s := &Server{
     Router: router,
     httpServer: &http.Server{
@@ -47,7 +39,6 @@ func New(srv *config.Server) *Server {
       Handler:      router,
     },
   }
-  s.configureRoutes()
   log.Info().Msg("Server initialized successfully")
   return s
 }

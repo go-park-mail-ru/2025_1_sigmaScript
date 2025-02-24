@@ -26,6 +26,13 @@ func SendError(w http.ResponseWriter, errCode int, errResp, msg string) {
   }
 }
 
+func ReadJSON(r *http.Request, data interface{}) error {
+  if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+    return fmt.Errorf("error reading json: %w", err)
+  }
+  return nil
+}
+
 func SendJSON(w http.ResponseWriter, data interface{}) error {
   w.Header().Set("Content-Type", "application/json")
   if err := json.NewEncoder(w).Encode(data); err != nil {

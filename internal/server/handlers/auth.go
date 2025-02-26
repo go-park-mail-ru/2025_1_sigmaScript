@@ -33,6 +33,12 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
     return
   }
 
+  if reg.Password != reg.RepeatedPassword {
+    log.Info().Msg("Password mismatch")
+    jsonutil.SendError(w, http.StatusBadRequest, "password_mismatch", "Password mismatch")
+    return
+  }
+
   hashedPass, err := bcrypt.GenerateFromPassword([]byte(reg.Password), bcrypt.DefaultCost)
   if err != nil {
     log.Error().Err(err).Msg("Error hashing password")

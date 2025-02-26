@@ -27,7 +27,13 @@ func SendError(w http.ResponseWriter, errCode int, errResp, msg string) {
 }
 
 func ReadJSON(r *http.Request, data interface{}) error {
-  if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+  defer func() {
+    err := r.Body.Close()
+    if err != nil {
+      log.Error().Err(err).Msg("Failed to close body")
+    }
+  }()
+  if err := json.NewDecoder(r.Body).Decode(data); err != nil {
     return fmt.Errorf("error reading json: %w", err)
   }
   return nil

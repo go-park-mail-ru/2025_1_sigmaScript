@@ -6,7 +6,7 @@ import (
   "net/http"
 
   "github.com/go-park-mail-ru/2025_1_sigmaScript/config"
-  rout "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/router"
+  "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/router"
   "github.com/gorilla/mux"
   "github.com/rs/zerolog/log"
 )
@@ -28,17 +28,18 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 func New(srv *config.Server) *Server {
   log.Info().Msg("Initializing server")
-  router := rout.New()
+  mx := router.New()
   s := &Server{
-    Router: router,
+    Router: mx,
     httpServer: &http.Server{
       Addr:         fmt.Sprintf("%s:%d", srv.Address, srv.Port),
       ReadTimeout:  srv.ReadTimeout,
       WriteTimeout: srv.WriteTimeout,
       IdleTimeout:  srv.IdleTimeout,
-      Handler:      router,
+      Handler:      mx,
     },
   }
+
   log.Info().Msg("Server initialized successfully")
   return s
 }

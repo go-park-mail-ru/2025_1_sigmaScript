@@ -2,7 +2,8 @@ package session
 
 import (
   "crypto/rand"
-  "encoding/base64"
+  "crypto/sha256"
+  "encoding/hex"
   "fmt"
 )
 
@@ -11,5 +12,6 @@ func GenerateSessionID(length int) (string, error) {
   if _, err := rand.Read(session); err != nil {
     return "", fmt.Errorf("failed to generate session id: %w", err)
   }
-  return base64.URLEncoding.EncodeToString(session), nil
+  hash := sha256.Sum256(session)
+  return hex.EncodeToString(hash[:]), nil
 }

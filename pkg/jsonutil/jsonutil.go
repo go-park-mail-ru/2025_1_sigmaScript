@@ -2,9 +2,9 @@ package jsonutil
 
 import (
   "encoding/json"
-  "fmt"
   "net/http"
 
+  "github.com/pkg/errors"
   "github.com/rs/zerolog/log"
 )
 
@@ -34,7 +34,7 @@ func ReadJSON(r *http.Request, data interface{}) error {
     }
   }()
   if err := json.NewDecoder(r.Body).Decode(data); err != nil {
-    return fmt.Errorf("error reading json: %w", err)
+    return errors.Wrap(err, "error reading json")
   }
   return nil
 }
@@ -44,7 +44,7 @@ func SendJSON(w http.ResponseWriter, data interface{}) error {
   if err := json.NewEncoder(w).Encode(data); err != nil {
     log.Error().Err(err).Msg("Error encoding JSON")
     SendError(w, http.StatusInternalServerError, "encode_error", "Error encoding JSON")
-    return fmt.Errorf("error encoding JSON: %w", err)
+    return errors.Wrap(err, "error encoding JSON")
   }
   return nil
 }

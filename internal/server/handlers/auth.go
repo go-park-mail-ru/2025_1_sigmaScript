@@ -66,7 +66,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
   hashedPass, exists := users[login.Username]
   if err := bcrypt.CompareHashAndPassword([]byte(hashedPass), []byte(login.Password)); err != nil || !exists {
-    log.Error().Msg("Login or password incorrect")
+    log.Error().Err(err).Msg("Login or password incorrect")
     jsonutil.SendError(w, http.StatusUnauthorized, "not_found", "Login or password incorrect")
     return
   }

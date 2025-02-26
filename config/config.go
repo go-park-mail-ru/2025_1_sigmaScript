@@ -1,9 +1,9 @@
 package config
 
 import (
-  "fmt"
   "time"
 
+  "github.com/pkg/errors"
   "github.com/rs/zerolog/log"
   "github.com/spf13/viper"
 )
@@ -26,13 +26,13 @@ func New() (*Config, error) {
 
   if err := setupViper(); err != nil {
     log.Error().Err(err).Msg("Error initializing config")
-    return nil, fmt.Errorf("failed to initialize config: %w", err)
+    return nil, errors.Wrap(err, "failed to initialize config")
   }
 
   var config Config
   if err := viper.Unmarshal(&config); err != nil {
     log.Error().Err(err).Msg("Error unmarshalling config")
-    return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+    return nil, errors.Wrap(err, "failed to unmarshal config")
   }
 
   log.Info().Msg("Config initialized")
@@ -55,7 +55,7 @@ func setupViper() error {
 
   if err := viper.ReadInConfig(); err != nil {
     log.Error().Err(err).Msg("Error reading config")
-    return fmt.Errorf("failed to read config: %w", err)
+    return errors.Wrap(err, "failed to read config")
   }
 
   log.Info().Msg("Viper initialized")

@@ -9,16 +9,18 @@ import (
   "github.com/pkg/errors"
 )
 
+const (
+  MinPasswordLength = 6
+)
+
 func IsValidPassword(password string) error {
-  if utf8.RuneCountInString(password) < 6 {
+  if utf8.RuneCountInString(password) < MinPasswordLength {
     return errors.New(errs.ErrPasswordTooShort)
   }
   if strings.TrimSpace(password) == "" {
     return errors.New(errs.ErrEmptyPassword)
   }
-  lower := false
-  upper := false
-  digit := false
+  var lower, upper, digit bool
   for _, c := range password {
     switch {
     case unicode.IsNumber(c):
@@ -29,8 +31,8 @@ func IsValidPassword(password string) error {
       lower = true
     }
   }
-  if !lower || !upper || !digit {
-    return errors.New(errs.ErrEasyPassword)
+  if lower && upper && digit {
+    return nil
   }
-  return nil
+  return errors.New(errs.ErrEasyPassword)
 }

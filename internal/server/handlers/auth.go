@@ -22,14 +22,14 @@ type AuthHandler struct {
   users map[string]string
   // sessionID --> username
   sessions map[string]string
-  config   *config.Cookie
+  cfg      *config.Cookie
 }
 
 func NewAuthHandler(ctx context.Context) *AuthHandler {
   return &AuthHandler{
     users:    make(map[string]string),
     sessions: make(map[string]string),
-    config:   config.FromCookieContext(ctx),
+    cfg:      config.FromCookieContext(ctx),
   }
 }
 
@@ -97,7 +97,7 @@ func (a *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  sessionID, err := session.GenerateSessionID(a.config.SessionLength)
+  sessionID, err := session.GenerateSessionID(a.cfg.SessionLength)
   if err != nil {
     log.Error().Err(errors.Wrap(err, errs.ErrGenerateSession)).Msg(errors.Wrap(err, errs.ErrGenerateSession).Error())
     jsonutil.SendError(w, http.StatusInternalServerError, errors.Wrap(err, errs.ErrGenerateSessionShort).Error(),
@@ -109,12 +109,12 @@ func (a *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
   log.Info().Msg("Session created")
 
   http.SetCookie(w, &http.Cookie{
-    Name:     a.config.SessionName,
+    Name:     a.cfg.SessionName,
     Value:    sessionID,
-    HttpOnly: a.config.HTTPOnly,
-    Secure:   a.config.Secure,
-    SameSite: a.config.SameSite,
-    Path:     a.config.Path,
+    HttpOnly: a.cfg.HTTPOnly,
+    Secure:   a.cfg.Secure,
+    SameSite: a.cfg.SameSite,
+    Path:     a.cfg.Path,
   })
 
   err = jsonutil.SendJSON(w, ds.Response{Message: messages.SuccessfulLogin})
@@ -144,13 +144,13 @@ func (a *AuthHandler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
   delete(a.sessions, sessionID)
   http.SetCookie(w, &http.Cookie{
-    Name:     a.config.SessionName,
+    Name:     a.cfg.SessionName,
     Value:    "",
-    HttpOnly: a.config.HTTPOnly,
-    Secure:   a.config.Secure,
-    SameSite: a.config.SameSite,
-    Path:     a.config.Path,
-    MaxAge:   a.config.ExpirationAge,
+    HttpOnly: a.cfg.HTTPOnly,
+    Secure:   a.cfg.Secure,
+    SameSite: a.cfg.SameSite,
+    Path:     a.cfg.Path,
+    MaxAge:   a.cfg.ExpirationAge,
   })
   log.Info().Msg("Session deleted")
 

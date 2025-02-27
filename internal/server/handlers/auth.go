@@ -7,6 +7,7 @@ import (
   "github.com/go-park-mail-ru/2025_1_sigmaScript/config"
   "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/ds"
   "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
+  "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/messages"
   "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
   "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/validation/auth"
   "github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
@@ -70,7 +71,7 @@ func (a *AuthHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
   }
 
   a.users[reg.Username] = string(hashedPass)
-  if err = jsonutil.SendJSON(w, ds.Response{Message: ds.SuccessfulRegister}); err != nil {
+  if err = jsonutil.SendJSON(w, ds.Response{Message: messages.SuccessfulRegister}); err != nil {
     log.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSendJSON).Error())
     return
   }
@@ -116,7 +117,7 @@ func (a *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
     Path:     a.config.Path,
   })
 
-  err = jsonutil.SendJSON(w, ds.Response{Message: ds.SuccessfulLogin})
+  err = jsonutil.SendJSON(w, ds.Response{Message: messages.SuccessfulLogin})
   if err != nil {
     log.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSendJSON).Error())
     return
@@ -153,7 +154,7 @@ func (a *AuthHandler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
   })
   log.Info().Msg("Session deleted")
 
-  err = jsonutil.SendJSON(w, ds.Response{Message: ds.SuccessfulLogout})
+  err = jsonutil.SendJSON(w, ds.Response{Message: messages.SuccessfulLogout})
   if err != nil {
     log.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSendJSON).Error())
     return

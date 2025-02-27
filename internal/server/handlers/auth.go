@@ -70,7 +70,7 @@ func (a *AuthHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
   }
 
   a.users[reg.Username] = string(hashedPass)
-  if err = jsonutil.SendJSON(w, map[string]string{"message": ds.SuccessfulRegister}); err != nil {
+  if err = jsonutil.SendJSON(w, ds.Response{Message: ds.SuccessfulRegister}); err != nil {
     log.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSendJSON).Error())
     return
   }
@@ -116,7 +116,7 @@ func (a *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
     Path:     a.config.Path,
   })
 
-  err = jsonutil.SendJSON(w, map[string]string{"message": ds.SuccessfulLogin})
+  err = jsonutil.SendJSON(w, ds.Response{Message: ds.SuccessfulLogin})
   if err != nil {
     log.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSendJSON).Error())
     return
@@ -153,7 +153,7 @@ func (a *AuthHandler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
   })
   log.Info().Msg("Session deleted")
 
-  err = jsonutil.SendJSON(w, map[string]string{"message": ds.SuccessfulLogout})
+  err = jsonutil.SendJSON(w, ds.Response{Message: ds.SuccessfulLogout})
   if err != nil {
     log.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSendJSON).Error())
     return

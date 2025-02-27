@@ -13,6 +13,7 @@ import (
 
 type Server struct {
   Router     *mux.Router
+  Config     *config.Server
   httpServer *http.Server
 }
 
@@ -26,16 +27,17 @@ func (s *Server) Shutdown(ctx context.Context) error {
   return s.httpServer.Shutdown(ctx)
 }
 
-func New(srv *config.Server) *Server {
+func New(cfg *config.Config) *Server {
   log.Info().Msg("Initializing server")
-  mx := router.New()
+  mx := router.New(config.WrapCookieContext(context.Background(), &cfg.Cookie))
   s := &Server{
     Router: mx,
+    Config: &cfg.Server,
     httpServer: &http.Server{
-      Addr:         fmt.Sprintf("%s:%d", srv.Address, srv.Port),
-      ReadTimeout:  srv.ReadTimeout,
-      WriteTimeout: srv.WriteTimeout,
-      IdleTimeout:  srv.IdleTimeout,
+      Addr:         fmt.Sprintf("%s:%d", cfg.Server.Address, cfg.Server.Port),
+      ReadTimeout:  cfg.Server.ReadTimeout,
+      WriteTimeout: cfg.Server.WriteTimeout,
+      IdleTimeout:  cfg.Server.IdleTimeout,
       Handler:      mx,
     },
   }

@@ -19,7 +19,7 @@ func main() {
     log.Fatal().Err(err).Msg("Error loading config")
   }
 
-  srv := server.New(&cfg.Server)
+  srv := server.New(cfg)
   log.Info().Msg("Starting server")
 
   go func() {

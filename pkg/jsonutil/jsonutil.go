@@ -29,8 +29,7 @@ func SendError(w http.ResponseWriter, errCode int, errResp, msg string) {
 
 func ReadJSON(r *http.Request, data interface{}) error {
   defer func() {
-    err := r.Body.Close()
-    if err != nil {
+    if err := r.Body.Close(); err != nil {
       log.Error().Err(errors.Wrap(err, errs.ErrCloseBody)).Msg(errors.Wrap(err, errs.ErrCloseBody).Error())
     }
   }()

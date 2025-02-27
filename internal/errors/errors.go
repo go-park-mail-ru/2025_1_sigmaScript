@@ -33,6 +33,8 @@ const (
   ErrUnauthorizedShort             = "unauthorized"
   ErrSessionNotExists              = "Session does not exist"
   ErrSessionNotExistsShort         = "not_exists"
+  ErrInvalidPassword               = "Invalid password"
+  ErrInvalidPasswordShort          = "invalid_password"
 )
 
 // jsonutil
@@ -40,4 +42,11 @@ const (
   ErrEncodeJSON      = "Error encoding JSON"
   ErrEncodeJSONShort = "encode_json_error"
   ErrCloseBody       = "Error closing body"
+)
+
+// validation/auth
+const (
+  ErrPasswordTooShort = "Password too short"
+  ErrEmptyPassword    = "Empty password"
+  ErrEasyPassword     = "Easy password"
 )

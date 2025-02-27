@@ -8,6 +8,7 @@ import (
   "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/ds"
   "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
   "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
+  "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/validation/auth"
   "github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
   "github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/session"
   "github.com/pkg/errors"
@@ -51,6 +52,12 @@ func (a *AuthHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
   if reg.Password != reg.RepeatedPassword {
     log.Info().Msg("Passwords mismatch")
     jsonutil.SendError(w, http.StatusBadRequest, errors.New(errs.ErrPasswordsMismatchShort).Error(), errs.ErrPasswordsMismatch)
+    return
+  }
+
+  if err := auth.IsValidPassword(reg.Password); err != nil {
+    log.Error().Err(errors.Wrap(err, errs.ErrInvalidPassword)).Msg(errors.Wrap(err, errs.ErrInvalidPassword).Error())
+    jsonutil.SendError(w, http.StatusBadRequest, errors.Wrap(err, errs.ErrInvalidPasswordShort).Error(), errors.Wrap(err, errs.ErrInvalidPassword).Error())
     return
   }
 

@@ -6,9 +6,11 @@ import (
 
   "github.com/go-park-mail-ru/2025_1_sigmaScript/config"
   "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/ds"
+  "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
   "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
   "github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
   "github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/session"
+  "github.com/pkg/errors"
   "github.com/rs/zerolog/log"
   "golang.org/x/crypto/bcrypt"
 )
@@ -34,33 +36,35 @@ func (a *AuthHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
   log.Info().Msg("Registering user")
 
   if err := jsonutil.ReadJSON(r, &reg); err != nil {
-    log.Error().Err(err).Msg("Error parsing JSON")
-    jsonutil.SendError(w, http.StatusBadRequest, "incorrect_data", "Incorrect data")
+    log.Error().Err(errors.Wrap(err, errs.ErrParseJSON)).Msg(errors.Wrap(err, errs.ErrParseJSON).Error())
+    jsonutil.SendError(w, http.StatusBadRequest, errors.Wrap(err, errs.ErrParseJSONShort).Error(),
+      errors.Wrap(err, errs.ErrParseJSON).Error())
     return
   }
 
   if _, exists := a.users[reg.Username]; exists {
-    log.Error().Msg("User already registered")
-    jsonutil.SendError(w, http.StatusBadRequest, "already_exists", "User already exists")
+    log.Error().Err(errors.New(errs.ErrAlreadyExists)).Msg(errs.ErrAlreadyExists)
+    jsonutil.SendError(w, http.StatusBadRequest, errors.New(errs.ErrAlreadyExistsShort).Error(), errs.ErrAlreadyExists)
     return
   }
 
   if reg.Password != reg.RepeatedPassword {
-    log.Info().Msg("Password mismatch")
-    jsonutil.SendError(w, http.StatusBadRequest, "password_mismatch", "Password mismatch")
+    log.Info().Msg("Passwords mismatch")
+    jsonutil.SendError(w, http.StatusBadRequest, errors.New(errs.ErrPasswordsMismatchShort).Error(), errs.ErrPasswordsMismatch)
     return
   }
 
   hashedPass, err := bcrypt.GenerateFromPassword([]byte(reg.Password), bcrypt.DefaultCost)
   if err != nil {
-    log.Error().Err(err).Msg("Error hashing password")
-    jsonutil.SendError(w, http.StatusInternalServerError, "internal_error", "Failed to hash password")
+    log.Error().Err(errors.Wrap(err, errs.ErrBcrypt)).Msg(errors.Wrap(err, errs.ErrBcrypt).Error())
+    jsonutil.SendError(w, http.StatusInternalServerError, errors.Wrap(err, errs.ErrBcryptShort).Error(),
+      errors.Wrap(err, errs.ErrBcrypt).Error())
     return
   }
 
   a.users[reg.Username] = string(hashedPass)
   if err = jsonutil.SendJSON(w, map[string]string{"message": ds.SuccessfulRegister}); err != nil {
-    log.Error().Err(err).Msg("Error sending JSON")
+    log.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSendJSON).Error())
     return
   }
   log.Info().Msg("User registered successfully")
@@ -71,22 +75,25 @@ func (a *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
   log.Info().Msg("Logining user")
 
   if err := jsonutil.ReadJSON(r, &login); err != nil {
-    log.Error().Err(err).Msg("Error parsing JSON")
-    jsonutil.SendError(w, http.StatusBadRequest, "incorrect_data", "Incorrect data")
+    log.Error().Err(errors.Wrap(err, errs.ErrParseJSON)).Msg(errors.Wrap(err, errs.ErrParseJSON).Error())
+    jsonutil.SendError(w, http.StatusBadRequest, errors.Wrap(err, errs.ErrParseJSONShort).Error(),
+      errors.Wrap(err, errs.ErrParseJSON).Error())
     return
   }
 
   hashedPass, exists := a.users[login.Username]
   if err := bcrypt.CompareHashAndPassword([]byte(hashedPass), []byte(login.Password)); err != nil || !exists {
-    log.Error().Err(err).Msg("Login or password incorrect")
-    jsonutil.SendError(w, http.StatusUnauthorized, "not_found", "Login or password incorrect")
+    log.Error().Err(errors.Wrap(err, errs.ErrIncorrectLoginOrPassword)).Msg(errors.Wrap(err, errs.ErrIncorrectLoginOrPassword).Error())
+    jsonutil.SendError(w, http.StatusUnauthorized, errors.Wrap(err, errs.ErrIncorrectLoginOrPasswordShort).Error(),
+      errors.Wrap(err, errs.ErrIncorrectLoginOrPassword).Error())
     return
   }
 
   sessionID, err := session.GenerateSessionID(a.Config.SessionLength)
   if err != nil {
-    log.Error().Err(err).Msg("Error generating session ID")
-    jsonutil.SendError(w, http.StatusInternalServerError, "internal_error", "Failed to generate session ID")
+    log.Error().Err(errors.Wrap(err, errs.ErrGenerateSession)).Msg(errors.Wrap(err, errs.ErrGenerateSession).Error())
+    jsonutil.SendError(w, http.StatusInternalServerError, errors.Wrap(err, errs.ErrGenerateSessionShort).Error(),
+      errors.Wrap(err, errs.ErrGenerateSession).Error())
     return
   }
 
@@ -104,7 +111,7 @@ func (a *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
   err = jsonutil.SendJSON(w, map[string]string{"message": ds.SuccessfulLogin})
   if err != nil {
-    log.Error().Err(err).Msg("Error sending JSON")
+    log.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSendJSON).Error())
     return
   }
 }
@@ -114,15 +121,16 @@ func (a *AuthHandler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
   cookie, err := r.Cookie("session_id")
   if err != nil {
-    log.Warn().Msg("Unauthorized")
-    jsonutil.SendError(w, http.StatusUnauthorized, "unauthorized", "Unauthorized")
+    log.Warn().Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+    jsonutil.SendError(w, http.StatusUnauthorized, errors.Wrap(err, errs.ErrUnauthorizedShort).Error(),
+      errors.Wrap(err, errs.ErrUnauthorized).Error())
     return
   }
 
   sessionID := cookie.Value
   if _, exists := a.sessions[sessionID]; !exists {
-    log.Warn().Msg("Session does not exist")
-    jsonutil.SendError(w, http.StatusNotFound, "not_exists", "Session does not exist")
+    log.Warn().Msg(errs.ErrSessionNotExists)
+    jsonutil.SendError(w, http.StatusNotFound, errors.Wrap(err, errs.ErrSessionNotExistsShort).Error(), errs.ErrSessionNotExists)
     return
   }
 
@@ -140,7 +148,7 @@ func (a *AuthHandler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
   err = jsonutil.SendJSON(w, map[string]string{"message": ds.SuccessfulLogout})
   if err != nil {
-    log.Error().Err(err).Msg("Error sending JSON")
+    log.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSendJSON).Error())
     return
   }
 }

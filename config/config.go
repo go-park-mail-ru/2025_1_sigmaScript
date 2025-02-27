@@ -5,6 +5,7 @@ import (
   "time"
 
   "github.com/go-park-mail-ru/2025_1_sigmaScript/config/defaults"
+  "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
   "github.com/pkg/errors"
   "github.com/rs/zerolog/log"
   "github.com/spf13/viper"
@@ -38,14 +39,14 @@ func New() (*Config, error) {
   log.Info().Msg("Initializing config")
 
   if err := setupViper(); err != nil {
-    log.Error().Err(err).Msg("Error initializing config")
-    return nil, errors.Wrap(err, "failed to initialize config")
+    log.Error().Err(errors.Wrap(err, errs.ErrInitializeConfig)).Msg(errors.Wrap(err, errs.ErrInitializeConfig).Error())
+    return nil, errors.Wrap(err, errs.ErrInitializeConfig)
   }
 
   var config Config
   if err := viper.Unmarshal(&config); err != nil {
-    log.Error().Err(err).Msg("Error unmarshalling config")
-    return nil, errors.Wrap(err, "failed to unmarshal config")
+    log.Error().Err(errors.Wrap(err, errs.ErrUnmarshalConfig)).Msg(errors.Wrap(err, errs.ErrUnmarshalConfig).Error())
+    return nil, errors.Wrap(err, errs.ErrUnmarshalConfig)
   }
 
   log.Info().Msg("Config initialized")
@@ -82,8 +83,8 @@ func setupViper() error {
   setupCookie()
 
   if err := viper.ReadInConfig(); err != nil {
-    log.Error().Err(err).Msg("Error reading config")
-    return errors.Wrap(err, "failed to read config")
+    log.Error().Err(errors.Wrap(err, errs.ErrReadConfig)).Msg(errors.Wrap(err, errs.ErrReadConfig).Error())
+    return errors.Wrap(err, errs.ErrReadConfig)
   }
 
   log.Info().Msg("Viper initialized")

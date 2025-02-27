@@ -149,7 +149,7 @@ func (a *AuthHandler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
     Secure:   a.config.Secure,
     SameSite: a.config.SameSite,
     Path:     a.config.Path,
-    MaxAge:   a.config.ResetMaxAge,
+    MaxAge:   a.config.ExpirationAge,
   })
   log.Info().Msg("Session deleted")
 

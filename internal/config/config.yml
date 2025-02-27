@@ -17,4 +17,4 @@ cookie:
   # SameSiteNoneMode = 4
   same_site: 3
   path: "/"
-  reset_max_age: -1
+  expiration_age: -1

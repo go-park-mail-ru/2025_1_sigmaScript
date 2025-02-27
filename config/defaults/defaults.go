@@ -23,5 +23,5 @@ const (
   Secure        = false
   SameSite      = http.SameSiteStrictMode
   Path          = "/"
-  ResetMaxAge   = -1
+  ExpirationAge = -1
 )

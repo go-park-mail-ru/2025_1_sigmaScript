@@ -32,7 +32,7 @@ type Cookie struct {
   Secure        bool          `yaml:"secure" mapstructure:"secure"`
   SameSite      http.SameSite `yaml:"same_site" mapstructure:"same_site"`
   Path          string        `yaml:"path" mapstructure:"path"`
-  ResetMaxAge   int           `yaml:"reset_max_age" mapstructure:"reset_max_age"`
+  ExpirationAge int           `yaml:"expiration_age" mapstructure:"expiration_age"`
 }
 
 func New() (*Config, error) {
@@ -69,7 +69,7 @@ func setupCookie() {
   viper.SetDefault("cookie.secure", defaults.Secure)
   viper.SetDefault("cookie.same_site", defaults.SameSite)
   viper.SetDefault("cookie.path", defaults.Path)
-  viper.SetDefault("cookie.reset_max_age", defaults.ResetMaxAge)
+  viper.SetDefault("cookie.expiration_age", defaults.ExpirationAge)
 }
 
 func setupViper() error {

@@ -35,6 +35,6 @@ var OskarNominees = Collection{
 }
 
 var Collections = map[string]Collection{
-	"BestOfAllTime": BestOfAllTime,
 	"OskarNominees": OskarNominees,
+	"BestOfAllTime": BestOfAllTime,
 }

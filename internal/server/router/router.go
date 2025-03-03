@@ -15,7 +15,7 @@ func New(ctx context.Context) *mux.Router {
 	authHandler := handlers.NewAuthHandler(ctx)
 
 	router := mux.NewRouter()
-	router.HandleFunc("/collection/{id}", handlers.GetCollection).Methods(http.MethodGet)
+	router.HandleFunc("/collections/", handlers.GetCollections).Methods(http.MethodGet)
 	router.HandleFunc("/auth/login/", authHandler.LoginHandler).Methods(http.MethodPost)
 	router.HandleFunc("/auth/logout/", authHandler.LogoutHandler).Methods(http.MethodPost)
 	router.HandleFunc("/auth/register/", authHandler.RegisterHandler).Methods(http.MethodPost)

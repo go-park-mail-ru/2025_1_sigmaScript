@@ -3,7 +3,7 @@ package mocks
 type Film struct {
 	ID         int    `json:"id"`
 	Title      string `json:"title"`
-	PreviewURL string `json:"previewURL"`
+	PreviewURL string `json:"preview_url"`
 }
 
 type Collection map[int]Film

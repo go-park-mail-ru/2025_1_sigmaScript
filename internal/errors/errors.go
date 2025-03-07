@@ -47,6 +47,7 @@ const (
 // validation/auth
 const (
   ErrPasswordTooShort = "Password too short"
+  ErrPasswordTooLong  = "Password too long"
   ErrEmptyPassword    = "Empty password"
   ErrEasyPassword     = "Easy password"
 )

@@ -2,7 +2,6 @@ package auth
 
 import (
   "strings"
-  "unicode"
   "unicode/utf8"
 
   errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
@@ -11,6 +10,7 @@ import (
 
 const (
   MinPasswordLength = 6
+  MaxPasswordLength = 18
 )
 
 func IsValidPassword(password string) error {
@@ -20,19 +20,8 @@ func IsValidPassword(password string) error {
   if strings.TrimSpace(password) == "" {
     return errors.New(errs.ErrEmptyPassword)
   }
-  var lower, upper, digit bool
-  for _, c := range password {
-    switch {
-    case unicode.IsNumber(c):
-      digit = true
-    case unicode.IsUpper(c):
-      upper = true
-    case unicode.IsLower(c):
-      lower = true
-    }
+  if utf8.RuneCountInString(password) > MaxPasswordLength {
+    return errors.New(errs.ErrPasswordTooLong)
   }
-  if lower && upper && digit {
-    return nil
-  }
-  return errors.New(errs.ErrEasyPassword)
+  return nil
 }

@@ -51,3 +51,10 @@ const (
   ErrEmptyPassword    = "Empty password"
   ErrEasyPassword     = "Easy password"
 )
+
+// session
+const (
+  ErrNegativeSessionIDLength = "Negative session ID length"
+  ErrLengthTooShort          = "Length too short"
+  ErrLengthTooLong           = "Length too long"
+)

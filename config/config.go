@@ -75,14 +75,23 @@ func setupCookie() {
 func setupViper() error {
   log.Info().Msg("Initializing viper")
 
+  viper.SetConfigName(".env")
+  viper.SetConfigType("env")
+  viper.AddConfigPath(".")
+
+  if err := viper.ReadInConfig(); err != nil {
+    log.Error().Err(errors.Wrap(err, errs.ErrReadEnvironment)).Msg(errors.Wrap(err, errs.ErrReadEnvironment).Error())
+    return errors.Wrap(err, errs.ErrReadEnvironment)
+  }
+
   viper.SetConfigName("config")
   viper.SetConfigType("yml")
-  viper.AddConfigPath("./internal/config")
+  viper.AddConfigPath(viper.GetString("VIPER_CONFIG_PATH"))
 
   setupServer()
   setupCookie()
 
-  if err := viper.ReadInConfig(); err != nil {
+  if err := viper.MergeInConfig(); err != nil {
     log.Error().Err(errors.Wrap(err, errs.ErrReadConfig)).Msg(errors.Wrap(err, errs.ErrReadConfig).Error())
     return errors.Wrap(err, errs.ErrReadConfig)
   }

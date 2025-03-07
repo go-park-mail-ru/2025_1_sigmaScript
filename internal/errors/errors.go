@@ -12,6 +12,7 @@ const (
   ErrInitializeConfig = "Error initializing config"
   ErrUnmarshalConfig  = "Error unmarshalling config"
   ErrReadConfig       = "Error reading config"
+  ErrReadEnvironment  = "Error reading .env file"
 )
 
 // handlers

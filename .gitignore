@@ -8,6 +8,8 @@
 
 *.out
 
+.env
+
 go.work
 
 .idea/

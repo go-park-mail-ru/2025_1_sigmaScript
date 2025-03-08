@@ -38,7 +38,7 @@ func checkResponseError(t *testing.T, rr *httptest.ResponseRecorder, expectedMes
 	expected := expectedMessage
 	err = json.NewDecoder(rr.Body).Decode(&got)
 	require.NoError(t, err, errs.ErrParseJSON)
-	assert.True(t, got.Error == expected)
+	assert.Equal(t, got.Error, expected)
 }
 
 func checkResponseMessage(t *testing.T, rr *httptest.ResponseRecorder, expectedMessage string) {
@@ -46,5 +46,5 @@ func checkResponseMessage(t *testing.T, rr *httptest.ResponseRecorder, expectedM
 	expected := expectedMessage
 	err = json.NewDecoder(rr.Body).Decode(&got)
 	require.NoError(t, err, errs.ErrParseJSON)
-	assert.True(t, got.Message == expected)
+	assert.Equal(t, got.Message, expected)
 }

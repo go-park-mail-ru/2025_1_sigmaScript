@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/ds"
@@ -39,7 +38,7 @@ func checkResponseError(t *testing.T, rr *httptest.ResponseRecorder, expectedMes
 	expected := expectedMessage
 	err = json.NewDecoder(rr.Body).Decode(&got)
 	require.NoError(t, err, errs.ErrParseJSON)
-	assert.True(t, reflect.DeepEqual(got.Error, expected))
+	assert.True(t, got.Error == expected)
 }
 
 func checkResponseMessage(t *testing.T, rr *httptest.ResponseRecorder, expectedMessage string) {
@@ -47,5 +46,5 @@ func checkResponseMessage(t *testing.T, rr *httptest.ResponseRecorder, expectedM
 	expected := expectedMessage
 	err = json.NewDecoder(rr.Body).Decode(&got)
 	require.NoError(t, err, errs.ErrParseJSON)
-	assert.True(t, reflect.DeepEqual(got.Message, expected))
+	assert.True(t, got.Message == expected)
 }

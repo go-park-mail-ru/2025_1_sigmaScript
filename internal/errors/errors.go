@@ -9,10 +9,12 @@ const (
 
 // config
 const (
-  ErrInitializeConfig = "Error initializing config"
-  ErrUnmarshalConfig  = "Error unmarshalling config"
-  ErrReadConfig       = "Error reading config"
-  ErrReadEnvironment  = "Error reading .env file"
+  ErrInitializeConfig  = "Error initializing config"
+  ErrUnmarshalConfig   = "Error unmarshalling config"
+  ErrReadConfig        = "Error reading config"
+  ErrReadEnvironment   = "Error reading .env file"
+  ErrGetDirectory      = "Error getting directory"
+  ErrDirectoryNotFound = "Error finding directory"
 )
 
 // handlers

@@ -2,6 +2,8 @@ package config
 
 import (
   "net/http"
+  "os"
+  "path/filepath"
   "time"
 
   "github.com/go-park-mail-ru/2025_1_sigmaScript/config/defaults"
@@ -9,6 +11,10 @@ import (
   "github.com/pkg/errors"
   "github.com/rs/zerolog/log"
   "github.com/spf13/viper"
+)
+
+const (
+  MaxFindingEnvDepth = 100
 )
 
 type Config struct {
@@ -72,16 +78,48 @@ func setupCookie() {
   viper.SetDefault("cookie.expiration_age", defaults.ExpirationAge)
 }
 
+func findEnvDir() (string, error) {
+  log.Info().Msg("Finding environment dir")
+  currentDir, err := os.Getwd()
+  if err != nil {
+    return "", errors.Wrap(err, errs.ErrGetDirectory)
+  }
+
+  for i := 0; i < MaxFindingEnvDepth; i++ {
+    path := filepath.Join(currentDir, ".env")
+    if _, err := os.Stat(path); err == nil {
+      log.Info().Msg("Found .env file")
+      return currentDir, nil
+    }
+
+    parentDir := filepath.Dir(currentDir)
+    if parentDir == currentDir {
+      return "", errors.Wrap(err, errs.ErrDirectoryNotFound)
+    }
+    currentDir = parentDir
+  }
+
+  return "", errors.Wrap(err, errs.ErrDirectoryNotFound)
+}
+
 func setupViper() error {
   log.Info().Msg("Initializing viper")
 
+  envDir, err := findEnvDir()
+  if err != nil {
+    wrapped := errors.Wrap(err, errs.ErrDirectoryNotFound)
+    log.Error().Err(wrapped).Msg(wrapped.Error())
+    return wrapped
+  }
+
   viper.SetConfigName(".env")
   viper.SetConfigType("env")
-  viper.AddConfigPath(".")
+  viper.AddConfigPath(envDir)
 
   if err := viper.ReadInConfig(); err != nil {
-    log.Error().Err(errors.Wrap(err, errs.ErrReadEnvironment)).Msg(errors.Wrap(err, errs.ErrReadEnvironment).Error())
-    return errors.Wrap(err, errs.ErrReadEnvironment)
+    wrapped := errors.Wrap(err, errs.ErrReadEnvironment)
+    log.Error().Err(wrapped).Msg(wrapped.Error())
+    return wrapped
   }
 
   viper.SetConfigName("config")
@@ -92,8 +130,9 @@ func setupViper() error {
   setupCookie()
 
   if err := viper.MergeInConfig(); err != nil {
-    log.Error().Err(errors.Wrap(err, errs.ErrReadConfig)).Msg(errors.Wrap(err, errs.ErrReadConfig).Error())
-    return errors.Wrap(err, errs.ErrReadConfig)
+    wrapped := errors.Wrap(err, errs.ErrReadConfig)
+    log.Error().Err(wrapped).Msg(wrapped.Error())
+    return wrapped
   }
 
   log.Info().Msg("Viper initialized")

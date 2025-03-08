@@ -6,11 +6,11 @@ import (
   "path/filepath"
   "time"
 
-  "github.com/go-park-mail-ru/2025_1_sigmaScript/config/defaults"
-  "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
-  "github.com/pkg/errors"
-  "github.com/rs/zerolog/log"
-  "github.com/spf13/viper"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/config/defaults"
+	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 )
 
 const (

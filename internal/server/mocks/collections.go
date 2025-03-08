@@ -8,6 +8,8 @@ type Film struct {
 
 type Collection map[int]Film
 
+type Collections map[string]Collection
+
 var BestOfAllTime = Collection{
 	0: {ID: 1, Title: "Бойцовский клуб", PreviewURL: "/img/0.webp"},
 	1: {ID: 2, Title: "Тёмный рыцарь", PreviewURL: "/img/1.webp"},
@@ -34,7 +36,7 @@ var OskarNominees = Collection{
 	9: {ID: 19, Title: "Титаник", PreviewURL: "/img/19.webp"},
 }
 
-var Collections = map[string]Collection{
+var MainPageCollections = Collections{
 	"BestOfAllTime": BestOfAllTime,
 	"OskarNominees": OskarNominees,
 }

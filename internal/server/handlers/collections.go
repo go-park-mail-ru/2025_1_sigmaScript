@@ -11,7 +11,7 @@ import (
 func GetCollections(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("GetCollections")
 
-	collections := mocks.Collections
+	collections := mocks.MainPageCollections
 
 	if err := jsonutil.SendJSON(w, collections); err != nil {
 		log.Error().Err(err).Msg("Error sending JSON")

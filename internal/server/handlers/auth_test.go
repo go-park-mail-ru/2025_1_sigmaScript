@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -17,43 +16,233 @@ import (
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var cfg, err = config.New()
 
-var registration = models.RegisterData{
-	Username:         "george",
-	Password:         "georgesPassword10",
-	RepeatedPassword: "georgesPassword10",
-}
+const (
+	RegisterUrl = "/auth/register/"
+	LoginUrl    = "/auth/login/"
+	LogoutUrl   = "/auth/logout/"
+)
 
-var login = models.LoginData{
-	Username: "george",
-	Password: "georgesPassword10",
-}
-
-func getResponseRequest(t *testing.T, method, target string, data any) (*httptest.ResponseRecorder, *http.Request) {
-	var req *http.Request
-	jsonData, err := json.Marshal(data)
-	require.NoError(t, err, errs.ErrParseJSON, errs.ErrEncodeJSON)
-	jsonReader := bytes.NewReader(jsonData)
-	if method == "GET" {
-		req = httptest.NewRequest(method, target, nil)
-	} else {
-		req = httptest.NewRequest(method, target, jsonReader)
+func TestRegister(t *testing.T) {
+	registration := models.RegisterData{
+		Username:         "guestForTest",
+		Password:         "guestPassword10",
+		RepeatedPassword: "guestPassword10",
 	}
-	rr := httptest.NewRecorder()
-	return rr, req
+
+	tests := []struct {
+		name             string
+		registerUser     bool
+		data             models.RegisterData
+		expectedStatus   int
+		checkMessage     bool
+		expectedResponse string
+	}{
+		{
+			name:             "RegisterOK",
+			registerUser:     false,
+			data:             registration,
+			checkMessage:     true,
+			expectedResponse: messages.SuccessfulRegister,
+			expectedStatus:   http.StatusOK,
+		},
+		{
+			name:             "RegisterAlreadyExists",
+			registerUser:     true,
+			data:             registration,
+			checkMessage:     false,
+			expectedResponse: errs.ErrAlreadyExistsShort,
+			expectedStatus:   http.StatusBadRequest,
+		},
+		{
+			name:         "RegisterMismatch",
+			registerUser: false,
+			data: models.RegisterData{
+				Username:         "guestForTest",
+				Password:         "passwordFirST1",
+				RepeatedPassword: "SeCond2password",
+			},
+			checkMessage:     false,
+			expectedResponse: errs.ErrPasswordsMismatchShort,
+			expectedStatus:   http.StatusBadRequest,
+		},
+		{
+			name:         "RegisterInvalidPassword",
+			registerUser: false,
+			checkMessage: false,
+			data: models.RegisterData{
+				Username:         "guestForTest",
+				Password:         "123",
+				RepeatedPassword: "123",
+			},
+			expectedResponse: errs.ErrInvalidPasswordShort + ": " + errs.ErrPasswordTooShort,
+			expectedStatus:   http.StatusBadRequest,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			authHandler := NewAuthHandler(config.WrapCookieContext(context.Background(), &cfg.Cookie))
+			if test.registerUser {
+				registerUser(t, authHandler, registration)
+			}
+			rr := registerUser(t, authHandler, test.data)
+			assertHeaders(t, test.expectedStatus, rr)
+			if test.checkMessage {
+				checkResponseMessage(t, rr, test.expectedResponse)
+			} else {
+				checkResponseError(t, rr, test.expectedResponse)
+			}
+		})
+	}
+}
+func TestLogin(t *testing.T) {
+	registration := models.RegisterData{
+		Username:         "guestForTest",
+		Password:         "guestPassword10",
+		RepeatedPassword: "guestPassword10",
+	}
+
+	login := models.LoginData{
+		Username: "guestForTest",
+		Password: "guestPassword10",
+	}
+
+	tests := []struct {
+		name             string
+		registerUser     bool
+		cookiesEnabled   bool
+		checkMessage     bool
+		expectedResponse string
+		expectedStatus   int
+	}{
+		{
+			name:             "LoginOK",
+			registerUser:     true,
+			cookiesEnabled:   true,
+			checkMessage:     true,
+			expectedResponse: messages.SuccessfulLogin,
+			expectedStatus:   http.StatusOK,
+		},
+		{
+			name:             "LoginFail",
+			registerUser:     false,
+			cookiesEnabled:   false,
+			checkMessage:     false,
+			expectedResponse: errs.ErrIncorrectLoginOrPasswordShort + ": " + bcrypt.ErrHashTooShort.Error(),
+			expectedStatus:   http.StatusUnauthorized,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			authHandler := NewAuthHandler(config.WrapCookieContext(context.Background(), &cfg.Cookie))
+			if test.registerUser {
+				registerUser(t, authHandler, registration)
+			}
+			rr, cookie := loginUser(t, authHandler, login)
+			assertHeaders(t, test.expectedStatus, rr)
+			if test.checkMessage {
+				checkResponseMessage(t, rr, test.expectedResponse)
+			} else {
+				checkResponseError(t, rr, test.expectedResponse)
+			}
+			if test.cookiesEnabled {
+				assert.NotNil(t, cookie, errs.ErrSessionNotExists)
+				assert.NotEmpty(t, cookie.Value, errs.ErrCookieEmpty)
+				assert.True(t, cookie.HttpOnly, errs.ErrCookieHttpOnly)
+			} else {
+				assert.Empty(t, cookie, errs.ErrSessionCreated)
+			}
+		})
+	}
+}
+func TestLogout(t *testing.T) {
+	registration := models.RegisterData{
+		Username:         "guestForTest",
+		Password:         "guestPassword10",
+		RepeatedPassword: "guestPassword10",
+	}
+
+	login := models.LoginData{
+		Username: "guestForTest",
+		Password: "guestPassword10",
+	}
+
+	tests := []struct {
+		name               string
+		cookieCheckExpired bool
+		cookieChangeName   bool
+		deleteSessions     bool
+		checkMessage       bool
+		expectedResponse   string
+		expectedStatus     int
+	}{
+		{
+			name:               "LogoutOK",
+			cookieCheckExpired: true,
+			cookieChangeName:   false,
+			deleteSessions:     false,
+			checkMessage:       true,
+			expectedResponse:   messages.SuccessfulLogout,
+			expectedStatus:     http.StatusOK,
+		},
+		{
+			name:               "LogoutNoCookie",
+			cookieCheckExpired: false,
+			cookieChangeName:   true,
+			deleteSessions:     false,
+			checkMessage:       false,
+			expectedResponse:   errs.ErrUnauthorizedShort + ": " + http.ErrNoCookie.Error(),
+			expectedStatus:     http.StatusUnauthorized,
+		},
+		{
+			name:               "LogoutNoCookie",
+			cookieCheckExpired: false,
+			cookieChangeName:   false,
+			deleteSessions:     true,
+			checkMessage:       false,
+			expectedResponse:   errs.ErrSessionNotExistsShort,
+			expectedStatus:     http.StatusNotFound,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			authHandler := NewAuthHandler(config.WrapCookieContext(context.Background(), &cfg.Cookie))
+			registerUser(t, authHandler, registration)
+			_, cookie := loginUser(t, authHandler, login)
+			if test.cookieChangeName {
+				cookie.Name = "something_else"
+			}
+			if test.deleteSessions {
+				for k := range authHandler.sessions {
+					delete(authHandler.sessions, k)
+				}
+			}
+			rr := logoutUser(t, authHandler, login, cookie)
+			assertHeaders(t, test.expectedStatus, rr)
+			if test.checkMessage {
+				checkResponseMessage(t, rr, test.expectedResponse)
+			} else {
+				checkResponseError(t, rr, test.expectedResponse)
+			}
+			if test.cookieCheckExpired {
+				assert.True(t, cookie.MaxAge <= 0, errs.ErrCookieExpire)
+			}
+		})
+	}
 }
 
 func registerUser(t *testing.T, auth *AuthHandler, data any) *httptest.ResponseRecorder {
-	rr, req := getResponseRequest(t, "POST", "/auth/register/", data)
+	rr, req := getResponseRequest(t, "POST", RegisterUrl, data)
 	auth.RegisterHandler(rr, req)
 	return rr
 }
 
 func loginUser(t *testing.T, auth *AuthHandler, data any) (*httptest.ResponseRecorder, *http.Cookie) {
-	rr, req := getResponseRequest(t, "POST", "/auth/login/", data)
+	rr, req := getResponseRequest(t, "POST", LoginUrl, data)
 	auth.LoginHandler(rr, req)
 
 	var sessionCookie *http.Cookie
@@ -67,18 +256,13 @@ func loginUser(t *testing.T, auth *AuthHandler, data any) (*httptest.ResponseRec
 }
 
 func logoutUser(t *testing.T, auth *AuthHandler, data any, cookie *http.Cookie) *httptest.ResponseRecorder {
-	rr, req := getResponseRequest(t, "POST", "/auth/logout/", data)
+	rr, req := getResponseRequest(t, "POST", LogoutUrl, data)
 	req.AddCookie(cookie)
 	auth.LogoutHandler(rr, req)
 	return rr
 }
 
-func assertHeaders(t *testing.T, code int, rr *httptest.ResponseRecorder) {
-	assert.Equal(t, code, rr.Code, errs.ErrWrongResponseCode)
-	assert.Equal(t, "application/json", rr.Header().Get("Content-Type"), errs.ErrWrongHeaders)
-}
-
-func checkResponceError(t *testing.T, rr *httptest.ResponseRecorder, expectedMessage string) {
+func checkResponseError(t *testing.T, rr *httptest.ResponseRecorder, expectedMessage string) {
 	var got jsonutil.ErrorResponse
 	expected := expectedMessage
 	err = json.NewDecoder(rr.Body).Decode(&got)
@@ -92,96 +276,4 @@ func checkResponseMessage(t *testing.T, rr *httptest.ResponseRecorder, expectedM
 	err = json.NewDecoder(rr.Body).Decode(&got)
 	require.NoError(t, err, errs.ErrParseJSON)
 	assert.True(t, reflect.DeepEqual(got.Message, expected))
-}
-func TestRegisterOK(t *testing.T) {
-	authHandler := NewAuthHandler(config.WrapCookieContext(context.Background(), &cfg.Cookie))
-	rr := registerUser(t, authHandler, registration)
-	assertHeaders(t, http.StatusOK, rr)
-	checkResponseMessage(t, rr, messages.SuccessfulRegister)
-}
-
-func TestRegisterAlreadyExists(t *testing.T) {
-	authHandler := NewAuthHandler(config.WrapCookieContext(context.Background(), &cfg.Cookie))
-	registerUser(t, authHandler, registration)
-	rr := registerUser(t, authHandler, registration)
-	assertHeaders(t, http.StatusBadRequest, rr)
-	checkResponceError(t, rr, errs.ErrAlreadyExistsShort)
-}
-
-func TestRegisterMissmatch(t *testing.T) {
-	authHandler := NewAuthHandler(config.WrapCookieContext(context.Background(), &cfg.Cookie))
-	data := models.RegisterData{
-		Username:         "Mismatch",
-		Password:         "passwordFiRst1",
-		RepeatedPassword: "SeCond2password",
-	}
-	rr := registerUser(t, authHandler, data)
-	assertHeaders(t, http.StatusBadRequest, rr)
-	checkResponceError(t, rr, errs.ErrPasswordsMismatchShort)
-}
-
-func TestRegisterInvalidPassword(t *testing.T) {
-	authHandler := NewAuthHandler(config.WrapCookieContext(context.Background(), &cfg.Cookie))
-	data := models.RegisterData{
-		Username:         "invalidPassword",
-		Password:         "123",
-		RepeatedPassword: "123",
-	}
-	rr := registerUser(t, authHandler, data)
-	assertHeaders(t, http.StatusBadRequest, rr)
-	checkResponceError(t, rr, errs.ErrInvalidPasswordShort+": "+errs.ErrPasswordTooShort)
-}
-
-func TestLoginOK(t *testing.T) {
-	authHandler := NewAuthHandler(config.WrapCookieContext(context.Background(), &cfg.Cookie))
-	registerUser(t, authHandler, registration)
-	rr, cookie := loginUser(t, authHandler, login)
-	assertHeaders(t, http.StatusOK, rr)
-	checkResponseMessage(t, rr, messages.SuccessfulLogin)
-	assert.NotNil(t, cookie, errs.ErrSessionNotExists)
-	assert.NotEmpty(t, cookie.Value, errs.ErrCookieEmpty)
-	assert.True(t, cookie.HttpOnly, errs.ErrCookieHttpOnly)
-}
-
-func TestLoginFail(t *testing.T) {
-	authHandler := NewAuthHandler(config.WrapCookieContext(context.Background(), &cfg.Cookie))
-	rr, cookie := loginUser(t, authHandler, login)
-	assertHeaders(t, http.StatusUnauthorized, rr)
-	expected := "not_found: crypto/bcrypt: hashedSecret too short to be a bcrypted password"
-	checkResponceError(t, rr, expected)
-	assert.Empty(t, cookie, errs.ErrSessionCreated)
-}
-
-func TestLogout(t *testing.T) {
-	authHandler := NewAuthHandler(config.WrapCookieContext(context.Background(), &cfg.Cookie))
-	registerUser(t, authHandler, registration)
-	_, cookie := loginUser(t, authHandler, login)
-	rr := logoutUser(t, authHandler, login, cookie)
-	assertHeaders(t, http.StatusOK, rr)
-	checkResponseMessage(t, rr, messages.SuccessfulLogout)
-	assert.True(t, cookie.MaxAge <= 0, errs.ErrCookieExpire)
-}
-
-func TestLogoutNoCookie(t *testing.T) {
-	authHandler := NewAuthHandler(config.WrapCookieContext(context.Background(), &cfg.Cookie))
-	registerUser(t, authHandler, registration)
-	_, cookie := loginUser(t, authHandler, login)
-	cookie.Name = "something_else"
-	rr := logoutUser(t, authHandler, login, cookie)
-	assertHeaders(t, http.StatusUnauthorized, rr)
-	checkResponceError(t, rr, errs.ErrUnauthorizedShort+": "+http.ErrNoCookie.Error())
-}
-
-func TestLogoutNoSession(t *testing.T) {
-	var authHandler = NewAuthHandler(config.WrapCookieContext(context.Background(), &cfg.Cookie))
-	registerUser(t, authHandler, registration)
-	_, cookie := loginUser(t, authHandler, login)
-
-	for k := range authHandler.sessions {
-		delete(authHandler.sessions, k)
-	}
-
-	rr := logoutUser(t, authHandler, login, cookie)
-	assertHeaders(t, http.StatusNotFound, rr)
-	checkResponceError(t, rr, errs.ErrSessionNotExistsShort)
 }

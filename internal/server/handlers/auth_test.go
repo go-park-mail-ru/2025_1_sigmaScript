@@ -2,20 +2,15 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/ds"
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/messages"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -260,20 +255,4 @@ func logoutUser(t *testing.T, auth *AuthHandler, data any, cookie *http.Cookie) 
 	req.AddCookie(cookie)
 	auth.LogoutHandler(rr, req)
 	return rr
-}
-
-func checkResponseError(t *testing.T, rr *httptest.ResponseRecorder, expectedMessage string) {
-	var got jsonutil.ErrorResponse
-	expected := expectedMessage
-	err = json.NewDecoder(rr.Body).Decode(&got)
-	require.NoError(t, err, errs.ErrParseJSON)
-	assert.True(t, reflect.DeepEqual(got.Error, expected))
-}
-
-func checkResponseMessage(t *testing.T, rr *httptest.ResponseRecorder, expectedMessage string) {
-	var got ds.Response
-	expected := expectedMessage
-	err = json.NewDecoder(rr.Body).Decode(&got)
-	require.NoError(t, err, errs.ErrParseJSON)
-	assert.True(t, reflect.DeepEqual(got.Message, expected))
 }

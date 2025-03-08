@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/ds"
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -29,4 +32,20 @@ func getResponseRequest(t *testing.T, method, target string, data any) (*httptes
 func assertHeaders(t *testing.T, code int, rr *httptest.ResponseRecorder) {
 	assert.Equal(t, code, rr.Code, errs.ErrWrongResponseCode)
 	assert.Equal(t, "application/json", rr.Header().Get("Content-Type"), errs.ErrWrongHeaders)
+}
+
+func checkResponseError(t *testing.T, rr *httptest.ResponseRecorder, expectedMessage string) {
+	var got jsonutil.ErrorResponse
+	expected := expectedMessage
+	err = json.NewDecoder(rr.Body).Decode(&got)
+	require.NoError(t, err, errs.ErrParseJSON)
+	assert.True(t, reflect.DeepEqual(got.Error, expected))
+}
+
+func checkResponseMessage(t *testing.T, rr *httptest.ResponseRecorder, expectedMessage string) {
+	var got ds.Response
+	expected := expectedMessage
+	err = json.NewDecoder(rr.Body).Decode(&got)
+	require.NoError(t, err, errs.ErrParseJSON)
+	assert.True(t, reflect.DeepEqual(got.Message, expected))
 }

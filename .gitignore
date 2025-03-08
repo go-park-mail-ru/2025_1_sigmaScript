@@ -8,10 +8,10 @@
 
 *.out
 *.a
+*.html
+
+.env
 
 go.work
 
 .idea/
-.env
-*.env
-*/*.env

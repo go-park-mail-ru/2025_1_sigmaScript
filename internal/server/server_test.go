@@ -23,8 +23,8 @@ func TestAppIntegration(t *testing.T) {
   go func() {
     defer close(done)
 
-    srv.Run()
-    require.NoError(t, err)
+    err := srv.Run()
+    require.Equal(t, err.Error(), "http: Server closed")
   }()
 
   time.Sleep(1 * time.Second)

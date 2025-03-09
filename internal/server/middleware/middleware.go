@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	kinolkHostEnv             = "KINOLK_HOST"
+	kinolkHostEnv             = "KINOLK_FRONTEND_HOST"
 	kinolkAllowedMethodsEnv   = "KINOLK_METHODS"
 	kinolkAllowCredentialsEnv = "KINOLK_ALLOW_CRED"
 	kinolkAllowedHeadersEnv   = "KINOLK_ALLOW_HEADERS"

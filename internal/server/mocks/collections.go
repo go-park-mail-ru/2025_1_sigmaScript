@@ -37,6 +37,6 @@ var OskarNominees = Collection{
 }
 
 var MainPageCollections = Collections{
-	"BestOfAllTime": BestOfAllTime,
-	"OskarNominees": OskarNominees,
+	"Лучшие за всё время": BestOfAllTime,
+	"Номинанты на оскар":  OskarNominees,
 }

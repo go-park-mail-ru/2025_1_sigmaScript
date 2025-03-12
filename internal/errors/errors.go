@@ -41,6 +41,8 @@ const (
   ErrInvalidPasswordShort          = "invalid_password"
   ErrSomethingWentWrong            = "something went wrong"
   ErrBadPayload                    = "bad payload"
+  ErrInvalidEmail                  = "Invalid email"
+  ErrInvalidEmailShort             = "invalid_email"
 )
 
 // jsonutil

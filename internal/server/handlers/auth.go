@@ -81,6 +81,13 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
     return
   }
 
+  if err := auth.IsValidEmail(reg.Username); err != nil {
+    log.Error().Err(errors.Wrap(err, errs.ErrInvalidEmail)).Msg(errors.Wrap(err, errs.ErrInvalidEmail).Error())
+    jsonutil.SendError(w, http.StatusBadRequest, errors.Wrap(err, errs.ErrInvalidEmailShort).Error(),
+      errors.Wrap(err, errs.ErrInvalidEmail).Error())
+    return
+  }
+
   hashedPass, err := bcrypt.GenerateFromPassword([]byte(reg.Password), bcrypt.DefaultCost)
   if err != nil {
     log.Error().Err(errors.Wrap(err, errs.ErrBcrypt)).Msg(errors.Wrap(err, errs.ErrBcrypt).Error())

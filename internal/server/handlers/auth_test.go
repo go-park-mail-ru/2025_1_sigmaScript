@@ -33,7 +33,7 @@ func newAuthHandler(ctx context.Context) *AuthHandler {
 
 func TestRegister(t *testing.T) {
   registration := models.RegisterData{
-    Username:         "guestForTest",
+    Username:         "guestForTest@test.com",
     Password:         "guestPassword10",
     RepeatedPassword: "guestPassword10",
   }
@@ -66,7 +66,7 @@ func TestRegister(t *testing.T) {
       name:         "RegisterMismatch",
       registerUser: false,
       data: models.RegisterData{
-        Username:         "guestForTest",
+        Username:         "guestForTest@test.com",
         Password:         "passwordFirST1",
         RepeatedPassword: "SeCond2password",
       },
@@ -79,7 +79,7 @@ func TestRegister(t *testing.T) {
       registerUser: false,
       checkMessage: false,
       data: models.RegisterData{
-        Username:         "guestForTest",
+        Username:         "guestForTest@test.com",
         Password:         "123",
         RepeatedPassword: "123",
       },
@@ -105,13 +105,13 @@ func TestRegister(t *testing.T) {
 }
 func TestLogin(t *testing.T) {
   registration := models.RegisterData{
-    Username:         "guestForTest",
+    Username:         "guestForTest@test.com",
     Password:         "guestPassword10",
     RepeatedPassword: "guestPassword10",
   }
 
   login := models.LoginData{
-    Username: "guestForTest",
+    Username: "guestForTest@test.com",
     Password: "guestPassword10",
   }
 
@@ -165,13 +165,13 @@ func TestLogin(t *testing.T) {
 }
 func TestLogout(t *testing.T) {
   registration := models.RegisterData{
-    Username:         "guestForTest",
+    Username:         "guestForTest@test.com",
     Password:         "guestPassword10",
     RepeatedPassword: "guestPassword10",
   }
 
   login := models.LoginData{
-    Username: "guestForTest",
+    Username: "guestForTest@test.com",
     Password: "guestPassword10",
   }
 

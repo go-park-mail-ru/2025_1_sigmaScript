@@ -81,3 +81,102 @@ func TestEmptyPassword(t *testing.T) {
     })
   }
 }
+
+func TestValidEmail(t *testing.T) {
+  tests := []struct {
+    email string
+  }{
+    {"test@example.com"},
+    {"user.tag+tag@example.com"},
+    {"user@sub.example.com"},
+    {"validemail123@mail.ru"},
+  }
+  for _, tt := range tests {
+    t.Run(tt.email, func(t *testing.T) {
+      t.Parallel()
+      err := IsValidEmail(tt.email)
+      require.NoError(t, err)
+    })
+  }
+}
+
+func TestInvalidEmail(t *testing.T) {
+  tests := []struct {
+    email string
+  }{
+    {"invalid-email"},
+    {"invalid@.com"},
+    {"invalid@com"},
+    {"invalid@"},
+    {"invalid@com."},
+    {"invalid@com.."},
+    {"invalid@com "},
+    {"invalid@com("},
+    {"invalid@com,com"},
+    {"invalid@com;com"},
+    {"invalid@com:com"},
+  }
+  for _, tt := range tests {
+    t.Run(tt.email, func(t *testing.T) {
+      t.Parallel()
+      err := IsValidEmail(tt.email)
+      require.Error(t, err)
+      require.Equal(t, err.Error(), errs.ErrInvalidEmail)
+    })
+  }
+}
+
+func TestEmptyEmail(t *testing.T) {
+  tests := []struct {
+    email string
+  }{
+    {""},
+    {" "},
+    {"  "},
+    {"   "},
+  }
+  for _, tt := range tests {
+    t.Run(tt.email, func(t *testing.T) {
+      t.Parallel()
+      err := IsValidEmail(tt.email)
+      require.Error(t, err)
+      require.Equal(t, err.Error(), errs.ErrInvalidEmail)
+    })
+  }
+}
+
+func TestEmailWithoutAtSymbol(t *testing.T) {
+  tests := []struct {
+    email string
+  }{
+    {"invalidemail.com"},
+    {"invalidemail"},
+    {"invalid.email.com"},
+  }
+  for _, tt := range tests {
+    t.Run(tt.email, func(t *testing.T) {
+      t.Parallel()
+      err := IsValidEmail(tt.email)
+      require.Error(t, err)
+      require.Equal(t, err.Error(), errs.ErrInvalidEmail)
+    })
+  }
+}
+
+func TestEmailWithMultipleAtSymbols(t *testing.T) {
+  tests := []struct {
+    email string
+  }{
+    {"invalid@@example.com"},
+    {"invalid@example@com"},
+    {"invalid@example@com@"},
+  }
+  for _, tt := range tests {
+    t.Run(tt.email, func(t *testing.T) {
+      t.Parallel()
+      err := IsValidEmail(tt.email)
+      require.Error(t, err)
+      require.Equal(t, err.Error(), errs.ErrInvalidEmail)
+    })
+  }
+}

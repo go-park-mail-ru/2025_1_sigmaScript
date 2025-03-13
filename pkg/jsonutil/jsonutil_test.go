@@ -13,27 +13,27 @@ import (
 )
 
 type Film struct {
-	Header string `json:"Header"`
-	Body   string `json:"Beader"`
+	Position string `json:"position"`
+	Title    string `json:"title"`
 }
 
-type Test struct {
-	Name string `json:"Neader"`
-	Data []Film `json:"Data"`
+type TestCase struct {
+	Name string `json:"name"`
+	Data []Film `json:"data"`
 }
 
 func TestSendOK(t *testing.T) {
-	tests := []Test{
+	tests := []TestCase{
 		{
 			Name: "simple 1",
 			Data: []Film{
 				{
-					Header: "top 1",
-					Body:   "Pulp Fiction",
+					Position: "top 1",
+					Title:    "Pulp Fiction",
 				},
 				{
-					Header: "top 2",
-					Body:   "Spider-Man",
+					Position: "top 2",
+					Title:    "Spider-Man",
 				},
 			},
 		},
@@ -41,12 +41,12 @@ func TestSendOK(t *testing.T) {
 			Name: "simple 2",
 			Data: []Film{
 				{
-					Header: "top 1",
-					Body:   "Star Wars",
+					Position: "top 1",
+					Title:    "Star Wars",
 				},
 				{
-					Header: "top 2",
-					Body:   "Inside Out",
+					Position: "top 2",
+					Title:    "Inside Out",
 				},
 			},
 		},
@@ -61,7 +61,7 @@ func TestSendOK(t *testing.T) {
 			expected := test.Data
 			err = json.NewDecoder(rr.Body).Decode(&got)
 			require.NoError(t, err, errs.ErrParseJSON)
-			assert.True(t, CompareFilmSlice(got, expected))
+			assert.ElementsMatch(t, got, expected)
 		})
 	}
 }
@@ -77,17 +77,17 @@ func TestSendFail(t *testing.T) {
 }
 
 func TestReadOK(t *testing.T) {
-	tests := []Test{
+	tests := []TestCase{
 		{
 			Name: "simple 1",
 			Data: []Film{
 				{
-					Header: "top 1",
-					Body:   "Pulp Fiction",
+					Position: "top 1",
+					Title:    "Pulp Fiction",
 				},
 				{
-					Header: "top 2",
-					Body:   "Spider-Man",
+					Position: "top 2",
+					Title:    "Spider-Man",
 				},
 			},
 		},
@@ -95,12 +95,12 @@ func TestReadOK(t *testing.T) {
 			Name: "simple 2",
 			Data: []Film{
 				{
-					Header: "top 1",
-					Body:   "Star Wars",
+					Position: "top 1",
+					Title:    "Star Wars",
 				},
 				{
-					Header: "top 2",
-					Body:   "Inside Out",
+					Position: "top 2",
+					Title:    "Inside Out",
 				},
 			},
 		},
@@ -116,7 +116,7 @@ func TestReadOK(t *testing.T) {
 			err = ReadJSON(req, &got)
 			expected := test.Data
 			require.NoError(t, err)
-			assert.True(t, CompareFilmSlice(got, expected))
+			assert.ElementsMatch(t, got, expected)
 		})
 	}
 }
@@ -137,16 +137,4 @@ func TestReadFail(t *testing.T) {
 		err = ReadJSON(req, &got)
 		require.Error(t, err)
 	})
-}
-
-func CompareFilmSlice(first, second []Film) bool {
-	if len(first) != len(second) {
-		return false
-	}
-	for ind := range first {
-		if first[ind].Header != second[ind].Header || first[ind].Body != second[ind].Body {
-			return false
-		}
-	}
-	return true
 }

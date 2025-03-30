@@ -1,51 +1,47 @@
 package auth
 
 import (
-  "strings"
-  "unicode/utf8"
+	"strings"
+	"unicode/utf8"
 
-  errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
-  "github.com/pkg/errors"
+	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
+	"github.com/pkg/errors"
 )
 
 const (
-  MinPasswordLength = 6
-  MaxPasswordLength = 18
+	MinPasswordLength = 6
+	MaxPasswordLength = 18
 )
 
 func IsValidPassword(password string) error {
-  if utf8.RuneCountInString(password) < MinPasswordLength {
-    return errors.New(errs.ErrPasswordTooShort)
-  }
-  if strings.TrimSpace(password) == "" {
-    return errors.New(errs.ErrEmptyPassword)
-  }
-  if utf8.RuneCountInString(password) > MaxPasswordLength {
-    return errors.New(errs.ErrPasswordTooLong)
-  }
-  return nil
+	if utf8.RuneCountInString(password) < MinPasswordLength {
+		return errors.New(errs.ErrPasswordTooShort)
+	}
+	if strings.TrimSpace(password) == "" {
+		return errors.New(errs.ErrEmptyPassword)
+	}
+	if utf8.RuneCountInString(password) > MaxPasswordLength {
+		return errors.New(errs.ErrPasswordTooLong)
+	}
+	return nil
 }
 
-func IsValidEmail(email string) error {
-  atIndex := strings.Index(email, "@")
-  if atIndex == -1 || atIndex != strings.LastIndex(email, "@") {
-    return errors.New(errs.ErrInvalidEmail)
-  }
+func IsValidLogin(login string) error {
 
-  local := email[:atIndex]
-  domain := email[atIndex+1:]
+	if login = strings.TrimSpace(login); login == "" {
+		return errors.New(errs.ErrEmptyLogin)
+	}
 
-  if len(local) == 0 || len(domain) == 0 {
-    return errors.New(errs.ErrInvalidEmail)
-  }
+	cnt := utf8.RuneCountInString(login)
+	if cnt < 2 || cnt > 18 {
+		return errors.New(errs.ErrLengthLogin)
+	}
 
-  if !strings.Contains(domain, ".") {
-    return errors.New(errs.ErrInvalidEmail)
-  }
-
-  if domain[0] == '.' || domain[len(domain)-1] == '.' {
-    return errors.New(errs.ErrInvalidEmail)
-  }
-
-  return nil
+	allowedLocalChars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-"
+	for _, char := range login {
+		if !strings.ContainsRune(allowedLocalChars, char) {
+			return errors.New(errs.ErrInvalidLogin)
+		}
+	}
+	return nil
 }

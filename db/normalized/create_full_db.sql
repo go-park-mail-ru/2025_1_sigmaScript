@@ -1,0 +1,124 @@
+
+DROP TABLE IF EXISTS "Like" CASCADE;
+DROP TABLE IF EXISTS "Dislike" CASCADE;
+DROP TABLE IF EXISTS "Review" CASCADE;
+DROP TABLE IF EXISTS "Movie_Genre" CASCADE;
+DROP TABLE IF EXISTS "Movie_Staff" CASCADE;
+DROP TABLE IF EXISTS "Collection_Movie" CASCADE;
+DROP TABLE IF EXISTS "Genre" CASCADE;
+DROP TABLE IF EXISTS "Person" CASCADE;
+DROP TABLE IF EXISTS "Collection" CASCADE;
+DROP TABLE IF EXISTS "User" CASCADE;
+DROP TABLE IF EXISTS "Movie" CASCADE;
+
+CREATE TABLE "User" (
+    ID SERIAL PRIMARY KEY,
+    Login TEXT UNIQUE NOT NULL,
+    HashedPassword TEXT NOT NULL,
+    Avatar TEXT DEFAULT '/static/avatars/avatar_default_picture.svg',
+    BirthDate DATE,
+    CreatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Collection (
+    ID SERIAL PRIMARY KEY,
+    Name TEXT NOT NULL,
+    Slug TEXT NOT NULL,
+    CreatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Person (
+    ID SERIAL PRIMARY KEY,
+    FullName TEXT NOT NULL,
+    EnFullName TEXT,
+    Photo TEXT DEFAULT '/static/avatars/avatar_default_picture.svg',
+    About TEXT DEFAULT 'Информация по этому человеку не указана',
+    Sex TEXT DEFAULT 'not_set',
+    Growth TEXT DEFAULT 'not_set',
+    Birthday DATE,
+    Death DATE,
+    Age INTERVAL,
+    Birthplace TEXT DEFAULT 'not_set',
+    Deathplace TEXT DEFAULT 'not_set',
+    CreatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Genre (
+    GenreID SERIAL PRIMARY KEY,
+    Name TEXT NOT NULL UNIQUE,
+    CreatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Movie (
+    ID SERIAL PRIMARY KEY,
+    Name TEXT NOT NULL,
+    About TEXT DEFAULT 'Информация по этому фильму не указана',
+    Poster TEXT DEFAULT '/static/movies/poster_default_picture.webp',
+    Card TEXT DEFAULT '/static/movies/card_default_picture.webp',
+    ReleaseYear DATE NOT NULL,
+    Country TEXT DEFAULT 'not_set',
+    Slogan TEXT DEFAULT 'not_set',
+    Director TEXT DEFAULT 'not_set',
+    Budget INTEGER DEFAULT 0,
+    BoxOfficeUS TEXT DEFAULT 'not_set',
+    BoxOfficeGlobal TEXT DEFAULT 'not_set',
+    BoxOfficeRussia TEXT DEFAULT 'not_set',
+    PremiereRussia DATE,
+    PremiereGlobal DATE,
+    Rating NUMERIC(4,2) CHECK (Rating <= 10.00),
+    Duration TEXT DEFAULT 'not_set',
+    CreatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Collection_Movie (
+    CollectionID INTEGER REFERENCES Collection(ID) ON DELETE CASCADE,
+    MovieID INTEGER REFERENCES Movie(ID) ON DELETE CASCADE,
+    PRIMARY KEY (CollectionID, MovieID)
+);
+
+CREATE TABLE Movie_Staff (
+    StaffID INTEGER REFERENCES Person(ID) ON DELETE CASCADE,
+    MovieID INTEGER REFERENCES Movie(ID) ON DELETE CASCADE,
+    Role TEXT DEFAULT 'actor',
+    PRIMARY KEY (StaffID, MovieID)
+);
+
+CREATE TABLE Movie_Genre (
+    GenreID INTEGER REFERENCES Genre(GenreID) ON DELETE CASCADE,
+    MovieID INTEGER REFERENCES Movie(ID) ON DELETE CASCADE,
+    PRIMARY KEY (GenreID, MovieID)
+);
+
+CREATE TABLE Review (
+    ReviewID SERIAL PRIMARY KEY,
+    UserID INTEGER REFERENCES "User"(ID) ON DELETE CASCADE,
+    MovieID INTEGER REFERENCES Movie(ID) ON DELETE CASCADE,
+    ReviewText TEXT NOT NULL,
+    Score NUMERIC(4,2) CHECK (Score <= 10.00),
+    CreatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "Like" (
+    LikeID SERIAL PRIMARY KEY,
+    UserID INTEGER REFERENCES "User"(ID) ON DELETE CASCADE,
+    ReviewID INTEGER REFERENCES Review(ReviewID) ON DELETE CASCADE,
+    IsValid BOOLEAN DEFAULT FALSE,
+    CreatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Dislike (
+    DislikeID SERIAL PRIMARY KEY,
+    UserID INTEGER REFERENCES "User"(ID) ON DELETE CASCADE,
+    ReviewID INTEGER REFERENCES Review(ReviewID) ON DELETE CASCADE,
+    IsValid BOOLEAN DEFAULT FALSE,
+    CreatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+

@@ -1,5 +1,3 @@
----
-
 Relation User:
 
 {ID} -> Login, HashedPassword, Avatar, BirthDate, CreatedAt, UpdatedAt
@@ -63,6 +61,4 @@ Relation Like:
 Relation Dislike:
 
 {DislikeID} -> UserID, ReviewID, IsValid, CreatedAt, UpdatedAt
-
----
 

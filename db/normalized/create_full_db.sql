@@ -58,7 +58,9 @@ CREATE TABLE country (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name TEXT NOT NULL,
     code TEXT NOT NULL,
-    flag TEXT DEFAULT '/static/flags/flag_default_picture.webp'
+    flag TEXT DEFAULT '/static/flags/flag_default_picture.webp',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE "movie" (

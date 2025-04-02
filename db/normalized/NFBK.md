@@ -58,12 +58,7 @@ Relation review:
 
 ---
 
-Relation like:
+Relation user_rate:
 
-{id} -> user_id, review_id, is_valid, created_at, updated_at
+{id} -> user_id, review_id, is_like, created_at, updated_at
 
----
-
-Relation dislike:
-
-{id} -> user_id, review_id, is_valid, created_at, updated_at

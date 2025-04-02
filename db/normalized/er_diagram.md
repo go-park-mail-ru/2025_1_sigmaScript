@@ -28,9 +28,6 @@ erDiagram
         TEXT growth
         DATE birthday
         DATE death
-        INTERVAL age
-        TEXT birth_place
-        TEXT death_place
         TIMESTAMPTZ created_at
         TIMESTAMPTZ updated_at
     }
@@ -53,13 +50,13 @@ erDiagram
         TEXT poster
         TEXT card
         DATE release_year
-        INTEGER country_id FK
+        INTEGER country FK
         TEXT slogan
         TEXT director
-        INTEGER budget
+        DECIMAL budget
         TEXT box_office_us
         TEXT box_office_global
-        TEXT boxo_office_russia
+        TEXT box_office_russia
         DATE premiere_russia
         DATE premiere_global
         NUMERIC rating
@@ -89,29 +86,20 @@ erDiagram
         TIMESTAMPTZ created_at
         TIMESTAMPTZ updated_at
     }
-    like {
+    user_rate {
         INTEGER id PK
         INTEGER user_id FK
         INTEGER review_id FK
-        BOOLEAN is_valid
-        TIMESTAMPTZ created_at
-        TIMESTAMPTZ updated_at
-    }
-    dislike {
-        INTEGER id PK
-        INTEGER user_id FK
-        INTEGER review_id FK
-        BOOLEAN is_valid
+        BOOLEAN is_like
         TIMESTAMPTZ created_at
         TIMESTAMPTZ updated_at
     }
 
     user                ||--o{ review           : "writes"
     movie               ||--o{ review           : "has"
-    user                ||--o{ like             : "gives"
-    review              ||--o{ like             : "receives"
-    user                ||--o{ dislike          : "gives"
-    review              ||--o{ dislike          : "receives"
+    user                ||--o{ user_rate        : "gives"
+    review              ||--o{ user_rate        : "receives"
+
     country             ||--o{ movie            : "originates_from"
 
     collection          ||--o{ collection_movie : "groups"

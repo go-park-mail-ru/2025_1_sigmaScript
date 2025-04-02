@@ -1,6 +1,5 @@
 
-DROP TABLE IF EXISTS "dislike" CASCADE;
-DROP TABLE IF EXISTS "like" CASCADE;
+DROP TABLE IF EXISTS "user_rate" CASCADE;
 DROP TABLE IF EXISTS "review" CASCADE;
 DROP TABLE IF EXISTS "movie_genre" CASCADE;
 DROP TABLE IF EXISTS "movie_staff" CASCADE;
@@ -36,13 +35,10 @@ CREATE TABLE "person" (
     en_full_name TEXT,
     photo TEXT DEFAULT '/static/avatars/avatar_default_picture.svg',
     about TEXT DEFAULT 'Информация по этому человеку не указана',
-    sex TEXT DEFAULT NULL,
+    sex TEXT DEFAULT 'secret',
     growth TEXT DEFAULT NULL,
     birthday DATE,
     death DATE,
-    age INTERVAL,
-    birth_place TEXT DEFAULT NULL,
-    death_place TEXT DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -73,13 +69,13 @@ CREATE TABLE "movie" (
     country INTEGER REFERENCES country(id),
     slogan TEXT DEFAULT NULL,
     director TEXT DEFAULT NULL,
-    budget INTEGER DEFAULT 0,
+    budget DECIMAL DEFAULT 0, # decimal
     box_office_us TEXT DEFAULT NULL,
     box_office_global TEXT DEFAULT NULL,
-    boxo_office_russia TEXT DEFAULT NULL,
+    box_office_russia TEXT DEFAULT NULL,
     premiere_russia DATE,
     premiere_global DATE,
-    rating NUMERIC(4,2) CHECK (rating <= 10.00),
+    rating NUMERIC(4,2) CHECK (rating <= 10.00) DEFAULT 5.00,
     duration TEXT DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -114,21 +110,12 @@ CREATE TABLE "review" (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE "like" (
+-- like or dislike of the review
+CREATE TABLE "user_rate" (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id INTEGER REFERENCES "user"(id) ON DELETE CASCADE,
     review_id INTEGER REFERENCES review(id) ON DELETE CASCADE,
-    is_valid BOOLEAN DEFAULT FALSE,
+    is_like BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE TABLE "dislike" (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id INTEGER REFERENCES "user"(id) ON DELETE CASCADE,
-    review_id INTEGER REFERENCES review(id) ON DELETE CASCADE,
-    is_valid BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-

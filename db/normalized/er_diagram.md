@@ -106,22 +106,21 @@ erDiagram
         TIMESTAMPTZ updated_at
     }
 
-    user                ||--o{ review           : "пишет"
-    movie               ||--o{ review           : "имеет"
-    user                ||--o{ like             : "ставит"
-    review              ||--o{ like             : "получает"
-    user                ||--o{ dislike          : "ставит"
-    review              ||--o{ dislike          : "получает"
-    country             ||--o{ movie            : "страна_производства"
+    user                ||--o{ review           : "writes"
+    movie               ||--o{ review           : "has"
+    user                ||--o{ like             : "gives"
+    review              ||--o{ like             : "receives"
+    user                ||--o{ dislike          : "gives"
+    review              ||--o{ dislike          : "receives"
+    country             ||--o{ movie            : "originates_from"
 
-    collection          ||--o{ collection_movie : "содержит"
-    movie               ||--o{ collection_movie : "содержится_в"
+    collection          ||--o{ collection_movie : "groups"
+    movie               ||--o{ collection_movie : "is_grouped_in"
 
-    person              ||--o{ movie_staff      : "участвует_в"
-    movie               ||--o{ movie_staff      : "имеет_состав"
+    person              ||--o{ movie_staff      : "is_staff_for"
+    movie               ||--o{ movie_staff      : "has_staff"
 
-    genre               ||--o{ movie_genre      : "определяет"
-    movie               ||--o{ movie_genre      : "принадлежит_к"
+    genre               ||--o{ movie_genre      : "categorizes"
+    movie               ||--o{ movie_genre      : "has_genre"
 
-    
 ```

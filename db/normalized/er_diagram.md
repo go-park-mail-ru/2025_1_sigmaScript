@@ -70,18 +70,18 @@ erDiagram
     collection_movie {
         int collection_id FK
         int movie_id FK
-        PRIMARY KEY (collection_id, movie_id)
+        PRIMARY KEY collection_id, movie_id
     }
     movie_staff {
         int staff_id FK
         int movie_id FK
         text role
-        PRIMARY KEY (staff_id, movie_id)
+        PRIMARY KEY staff_id, movie_id
     }
     movie_genre {
         int genre_id FK
         int movie_id FK
-        PRIMARY KEY (genre_id, movie_id)
+        PRIMARY KEY genre_id, movie_id
     }
     review {
         int id PK

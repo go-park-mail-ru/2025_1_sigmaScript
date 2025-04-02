@@ -76,20 +76,20 @@ erDiagram
     collection_movie {
         int collection_id FK
         int movie_id FK
-        (collection_id, movie_id) PK
+        PK collection_id, movie_id
     }
 
     movie_staff {
         int staff_id FK
         int movie_id FK
         text role
-        (staff_id, movie_id) PK
+        PK staff_id, movie_id
     }
 
     movie_genre {
         int genre_id FK
         int movie_id FK
-        (genre_id, movie_id) PK
+        PK genre_id, movie_id
     }
 
     review {

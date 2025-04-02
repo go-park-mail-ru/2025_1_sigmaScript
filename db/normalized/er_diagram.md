@@ -2,20 +2,6 @@
 
 ```mermaid
 erDiagram
-    USER ||--o{ REVIEW : writes
-    USER ||--o{ LIKE : gives
-    USER ||--o{ DISLIKE : gives
-    REVIEW ||--o{ LIKE : has
-    REVIEW ||--o{ DISLIKE : has
-    REVIEW }o--|| MOVIE : belongs_to
-    COLLECTION ||--o{ COLLECTION_MOVIE : contains
-    COLLECTION_MOVIE }o--|| MOVIE : includes
-    MOVIE ||--o{ MOVIE_GENRE : categorized_as
-    GENRE ||--o{ MOVIE_GENRE : belongs_to
-    MOVIE ||--o{ MOVIE_STAFF : has
-    PERSON ||--o{ MOVIE_STAFF : works_in
-    MOVIE }o--|| COUNTRY : produced_in
-
     USER {
         id
         login
@@ -25,7 +11,7 @@ erDiagram
         created_at
         updated_at
     }
-    
+
     COLLECTION {
         id
         name
@@ -33,7 +19,7 @@ erDiagram
         created_at
         updated_at
     }
-    
+
     PERSON {
         id
         full_name
@@ -129,4 +115,18 @@ erDiagram
         created_at
         updated_at
     }
+
+    USER ||--o{ REVIEW : writes
+    USER ||--o{ LIKE : gives
+    USER ||--o{ DISLIKE : gives
+    REVIEW ||--o{ LIKE : has
+    REVIEW ||--o{ DISLIKE : has
+    REVIEW }o--|| MOVIE : belongs_to
+    COLLECTION ||--o{ COLLECTION_MOVIE : contains
+    COLLECTION_MOVIE }o--|| MOVIE : includes
+    MOVIE ||--o{ MOVIE_GENRE : categorized_as
+    GENRE ||--o{ MOVIE_GENRE : belongs_to
+    MOVIE ||--o{ MOVIE_STAFF : has
+    PERSON ||--o{ MOVIE_STAFF : works_in
+    MOVIE }o--|| COUNTRY : produced_in
 ```

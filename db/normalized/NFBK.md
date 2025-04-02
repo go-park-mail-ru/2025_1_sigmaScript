@@ -1,64 +1,69 @@
-Relation User:
+Relation user:
 
-{ID} -> Login, HashedPassword, Avatar, BirthDate, CreatedAt, UpdatedAt
-
----
-
-Relation Collection:
-
-{ID} -> Name, Slug, CreatedAt, UpdatedAt
+{id} -> login, hashed_password, avatar, birth_date, created_at, updated_at
 
 ---
 
-Relation Person:
+Relation collection:
 
-{ID} -> FullName, EnFullName, Photo, About, Sex, Growth, Birthday, Death, Age, Birthplace, Deathplace, CreatedAt, UpdatedAt
-
----
-
-Relation Genre:
-
-{GenreID} -> Name, CreatedAt, UpdatedAt
+{id} -> name, slug, created_at, updated_at
 
 ---
 
-Relation Movie:
+Relation person:
 
-{ID} -> Name, About, Poster, Card, ReleaseYear, Country, Slogan, Director, Budget, BoxOfficeUS, BoxOfficeGlobal, BoxOfficeRussia, PremiereRussia, PremiereGlobal, Rating, Duration, CreatedAt, UpdatedAt
-
----
-
-Relation Collection_Movie:
-
-{CollectionID, MovieID} -> {}
+{id} -> full_name, en_full_name, photo, about, sex, growth, birthday, death, age, birth_place, death_place, created_at, updated_at
 
 ---
 
-Relation Movie_Staff:
+Relation genre:
 
-{StaffID, MovieID} -> Role
-
----
-
-Relation Movie_Genre:
-
-{GenreID, MovieID} -> {}
+{id} -> name, created_at, updated_at
 
 ---
 
-Relation Review:
+Relation country:
 
-{ReviewID} -> UserID, MovieID, ReviewText, Score, CreatedAt, UpdatedAt
-
----
-
-Relation Like:
-
-{LikeID} -> UserID, ReviewID, IsValid, CreatedAt, UpdatedAt
+{id} -> name, code, flag
 
 ---
 
-Relation Dislike:
+Relation movie:
 
-{DislikeID} -> UserID, ReviewID, IsValid, CreatedAt, UpdatedAt
+{id} -> name, about, poster, card, release_year, country, slogan, director, budget, box_office_us, box_office_global, boxo_office_russia, premiere_russia, premiere_global, rating, duration, created_at, updated_at
 
+---
+
+Relation collection_movie:
+
+{collection_id, movie_id} -> {}
+
+---
+
+Relation movie_staff:
+
+{staff_id, movie_id} -> role
+
+---
+
+Relation movie_genre:
+
+{genre_id, movie_id} -> {}
+
+---
+
+Relation review:
+
+{id} -> user_id, movie_id, review_text, score, created_at, updated_at
+
+---
+
+Relation like:
+
+{id} -> user_id, review_id, is_valid, created_at, updated_at
+
+---
+
+Relation dislike:
+
+{id} -> user_id, review_id, is_valid, created_at, updated_at

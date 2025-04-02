@@ -1,124 +1,132 @@
 
-DROP TABLE IF EXISTS "Like" CASCADE;
-DROP TABLE IF EXISTS "Dislike" CASCADE;
-DROP TABLE IF EXISTS "Review" CASCADE;
-DROP TABLE IF EXISTS "Movie_Genre" CASCADE;
-DROP TABLE IF EXISTS "Movie_Staff" CASCADE;
-DROP TABLE IF EXISTS "Collection_Movie" CASCADE;
-DROP TABLE IF EXISTS "Genre" CASCADE;
-DROP TABLE IF EXISTS "Person" CASCADE;
-DROP TABLE IF EXISTS "Collection" CASCADE;
-DROP TABLE IF EXISTS "User" CASCADE;
-DROP TABLE IF EXISTS "Movie" CASCADE;
+DROP TABLE IF EXISTS "dislike" CASCADE;
+DROP TABLE IF EXISTS "like" CASCADE;
+DROP TABLE IF EXISTS "review" CASCADE;
+DROP TABLE IF EXISTS "movie_genre" CASCADE;
+DROP TABLE IF EXISTS "movie_staff" CASCADE;
+DROP TABLE IF EXISTS "collection_movie" CASCADE;
+DROP TABLE IF EXISTS "country" CASCADE;
+DROP TABLE IF EXISTS "genre" CASCADE;
+DROP TABLE IF EXISTS "person" CASCADE;
+DROP TABLE IF EXISTS "collection" CASCADE;
+DROP TABLE IF EXISTS "user" CASCADE;
+DROP TABLE IF EXISTS "movie" CASCADE;
 
-CREATE TABLE "User" (
-    ID SERIAL PRIMARY KEY,
-    Login TEXT UNIQUE NOT NULL,
-    HashedPassword TEXT NOT NULL,
-    Avatar TEXT DEFAULT '/static/avatars/avatar_default_picture.svg',
-    BirthDate DATE,
-    CreatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    UpdatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE "user" (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    login TEXT UNIQUE NOT NULL,
+    hashed_password TEXT NOT NULL,
+    avatar TEXT DEFAULT '/static/avatars/avatar_default_picture.svg',
+    birth_date DATE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE Collection (
-    ID SERIAL PRIMARY KEY,
-    Name TEXT NOT NULL,
-    Slug TEXT NOT NULL,
-    CreatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    UpdatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE "collection" (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name TEXT NOT NULL,
+    slug TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE Person (
-    ID SERIAL PRIMARY KEY,
-    FullName TEXT NOT NULL,
-    EnFullName TEXT,
-    Photo TEXT DEFAULT '/static/avatars/avatar_default_picture.svg',
-    About TEXT DEFAULT 'Информация по этому человеку не указана',
-    Sex TEXT DEFAULT 'not_set',
-    Growth TEXT DEFAULT 'not_set',
-    Birthday DATE,
-    Death DATE,
-    Age INTERVAL,
-    Birthplace TEXT DEFAULT 'not_set',
-    Deathplace TEXT DEFAULT 'not_set',
-    CreatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    UpdatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE "person" (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    full_name TEXT NOT NULL,
+    en_full_name TEXT,
+    photo TEXT DEFAULT '/static/avatars/avatar_default_picture.svg',
+    about TEXT DEFAULT 'Информация по этому человеку не указана',
+    sex TEXT DEFAULT NULL,
+    growth TEXT DEFAULT NULL,
+    birthday DATE,
+    death DATE,
+    age INTERVAL,
+    birth_place TEXT DEFAULT NULL,
+    death_place TEXT DEFAULT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE Genre (
-    GenreID SERIAL PRIMARY KEY,
-    Name TEXT NOT NULL UNIQUE,
-    CreatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    UpdatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE "genre" (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE Movie (
-    ID SERIAL PRIMARY KEY,
-    Name TEXT NOT NULL,
-    About TEXT DEFAULT 'Информация по этому фильму не указана',
-    Poster TEXT DEFAULT '/static/movies/poster_default_picture.webp',
-    Card TEXT DEFAULT '/static/movies/card_default_picture.webp',
-    ReleaseYear DATE NOT NULL,
-    Country TEXT DEFAULT 'not_set',
-    Slogan TEXT DEFAULT 'not_set',
-    Director TEXT DEFAULT 'not_set',
-    Budget INTEGER DEFAULT 0,
-    BoxOfficeUS TEXT DEFAULT 'not_set',
-    BoxOfficeGlobal TEXT DEFAULT 'not_set',
-    BoxOfficeRussia TEXT DEFAULT 'not_set',
-    PremiereRussia DATE,
-    PremiereGlobal DATE,
-    Rating NUMERIC(4,2) CHECK (Rating <= 10.00),
-    Duration TEXT DEFAULT 'not_set',
-    CreatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    UpdatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE country (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name TEXT NOT NULL,
+    code TEXT NOT NULL,
+    flag TEXT DEFAULT '/static/flags/flag_default_picture.webp'
 );
 
-CREATE TABLE Collection_Movie (
-    CollectionID INTEGER REFERENCES Collection(ID) ON DELETE CASCADE,
-    MovieID INTEGER REFERENCES Movie(ID) ON DELETE CASCADE,
-    PRIMARY KEY (CollectionID, MovieID)
+CREATE TABLE "movie" (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name TEXT NOT NULL,
+    about TEXT DEFAULT 'Информация по этому фильму не указана',
+    poster TEXT DEFAULT '/static/movies/poster_default_picture.webp',
+    card TEXT DEFAULT '/static/movies/card_default_picture.webp',
+    release_year DATE NOT NULL,
+    country INTEGER REFERENCES country(id),
+    slogan TEXT DEFAULT NULL,
+    director TEXT DEFAULT NULL,
+    budget INTEGER DEFAULT 0,
+    box_office_us TEXT DEFAULT NULL,
+    box_office_global TEXT DEFAULT NULL,
+    boxo_office_russia TEXT DEFAULT NULL,
+    premiere_russia DATE,
+    premiere_global DATE,
+    rating NUMERIC(4,2) CHECK (rating <= 10.00),
+    duration TEXT DEFAULT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE Movie_Staff (
-    StaffID INTEGER REFERENCES Person(ID) ON DELETE CASCADE,
-    MovieID INTEGER REFERENCES Movie(ID) ON DELETE CASCADE,
-    Role TEXT DEFAULT 'actor',
-    PRIMARY KEY (StaffID, MovieID)
+CREATE TABLE "collection_movie" (
+    collection_id INTEGER REFERENCES collection(id) ON DELETE CASCADE,
+    movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE,
+    PRIMARY KEY (collection_id, movie_id)
 );
 
-CREATE TABLE Movie_Genre (
-    GenreID INTEGER REFERENCES Genre(GenreID) ON DELETE CASCADE,
-    MovieID INTEGER REFERENCES Movie(ID) ON DELETE CASCADE,
-    PRIMARY KEY (GenreID, MovieID)
+CREATE TABLE "movie_staff" (
+    staff_id INTEGER REFERENCES person(id) ON DELETE CASCADE,
+    movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE,
+    role TEXT DEFAULT 'actor',
+    PRIMARY KEY (staff_id, movie_id)
 );
 
-CREATE TABLE Review (
-    ReviewID SERIAL PRIMARY KEY,
-    UserID INTEGER REFERENCES "User"(ID) ON DELETE CASCADE,
-    MovieID INTEGER REFERENCES Movie(ID) ON DELETE CASCADE,
-    ReviewText TEXT NOT NULL,
-    Score NUMERIC(4,2) CHECK (Score <= 10.00),
-    CreatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    UpdatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE "movie_genre" (
+    genre_id INTEGER REFERENCES genre(id) ON DELETE CASCADE,
+    movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE,
+    PRIMARY KEY (genre_id, movie_id)
 );
 
-CREATE TABLE "Like" (
-    LikeID SERIAL PRIMARY KEY,
-    UserID INTEGER REFERENCES "User"(ID) ON DELETE CASCADE,
-    ReviewID INTEGER REFERENCES Review(ReviewID) ON DELETE CASCADE,
-    IsValid BOOLEAN DEFAULT FALSE,
-    CreatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    UpdatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE "review" (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id INTEGER REFERENCES "user"(id) ON DELETE CASCADE,
+    movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE,
+    review_text TEXT NOT NULL,
+    score NUMERIC(4,2) CHECK (score <= 10.00),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE Dislike (
-    DislikeID SERIAL PRIMARY KEY,
-    UserID INTEGER REFERENCES "User"(ID) ON DELETE CASCADE,
-    ReviewID INTEGER REFERENCES Review(ReviewID) ON DELETE CASCADE,
-    IsValid BOOLEAN DEFAULT FALSE,
-    CreatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    UpdatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE "like" (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id INTEGER REFERENCES "user"(id) ON DELETE CASCADE,
+    review_id INTEGER REFERENCES review(id) ON DELETE CASCADE,
+    is_valid BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "dislike" (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id INTEGER REFERENCES "user"(id) ON DELETE CASCADE,
+    review_id INTEGER REFERENCES review(id) ON DELETE CASCADE,
+    is_valid BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 

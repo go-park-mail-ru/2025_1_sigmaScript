@@ -11,6 +11,9 @@ import (
 const (
 	MinPasswordLength = 6
 	MaxPasswordLength = 18
+	MinLoginLength    = 2
+	MaxLoginLength    = 18
+	AllowedChars      = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-"
 )
 
 func IsValidPassword(password string) error {
@@ -33,13 +36,12 @@ func IsValidLogin(login string) error {
 	}
 
 	cnt := utf8.RuneCountInString(login)
-	if cnt < 2 || cnt > 18 {
+	if cnt < MinLoginLength || cnt > MaxLoginLength {
 		return errors.New(errs.ErrLengthLogin)
 	}
 
-	allowedLocalChars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-"
 	for _, char := range login {
-		if !strings.ContainsRune(allowedLocalChars, char) {
+		if !strings.ContainsRune(AllowedChars, char) {
 			return errors.New(errs.ErrInvalidLogin)
 		}
 	}

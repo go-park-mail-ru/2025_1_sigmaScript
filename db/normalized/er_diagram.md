@@ -74,9 +74,8 @@ erDiagram
     }
 
     collection_movie {
-        int collection_id FK
-        int movie_id FK
-        collection_id, movie_id PK
+        int collection_id FK PK
+        int movie_id FK PK
     }
 
     movie_staff {

@@ -3,123 +3,127 @@
 ```mermaid
 erDiagram
     user {
-        int id PK
-        text login
-        text hashed_password
-        text avatar
-        date birth_date
-        timestamp created_at
-        timestamp updated_at
+        id
+        login
+        hashed_password
+        avatar
+        birth_date
+        created_at
+        updated_at
     }
     collection {
-        int id PK
-        text name
-        text slug
-        timestamp created_at
-        timestamp updated_at
+        id
+        name
+        slug
+        created_at
+        updated_at
     }
     person {
-        int id PK
-        text full_name
-        text en_full_name
-        text photo
-        text about
-        text sex
-        text growth
-        date birthday
-        date death
-        interval age
-        text birth_place
-        text death_place
-        timestamp created_at
-        timestamp updated_at
+        id
+        full_name
+        en_full_name
+        photo
+        about
+        sex
+        growth
+        birthday
+        death
+        age
+        birth_place
+        death_place
+        created_at
+        updated_at
     }
     genre {
-        int id PK
-        text name
-        timestamp created_at
-        timestamp updated_at
+        id
+        name
+        created_at
+        updated_at
     }
     country {
-        int id PK
-        text name
-        text code
-        text flag
+        id
+        name
+        code
+        flag
     }
     movie {
-        int id PK
-        text name
-        text about
-        text poster
-        text card
-        date release_year
-        int country FK
-        text slogan
-        text director
-        int budget
-        text box_office_us
-        text box_office_global
-        text boxo_office_russia
-        date premiere_russia
-        date premiere_global
-        numeric rating
-        text duration
-        timestamp created_at
-        timestamp updated_at
+        id
+        name
+        about
+        poster
+        card
+        release_year
+        country_id  // FK to country
+        slogan
+        director
+        budget
+        box_office_us
+        box_office_global
+        boxo_office_russia
+        premiere_russia
+        premiere_global
+        rating
+        duration
+        created_at
+        updated_at
     }
     collection_movie {
-        int collection_id FK
-        int movie_id FK
-        PRIMARY KEY collection_id, movie_id
+        collection_id // FK to collection
+        movie_id    // FK to movie
+        // Composite PK (collection_id, movie_id)
     }
     movie_staff {
-        int staff_id FK
-        int movie_id FK
-        text role
-        PRIMARY KEY staff_id, movie_id
+        staff_id   // FK to person
+        movie_id   // FK to movie
+        role
+        // Composite PK (staff_id, movie_id)
     }
     movie_genre {
-        int genre_id FK
-        int movie_id FK
-        PRIMARY KEY genre_id, movie_id
+        genre_id   // FK to genre
+        movie_id   // FK to movie
+        // Composite PK (genre_id, movie_id)
     }
     review {
-        int id PK
-        int user_id FK
-        int movie_id FK
-        text review_text
-        numeric score
-        timestamp created_at
-        timestamp updated_at
+        id
+        user_id    // FK to user
+        movie_id   // FK to movie
+        review_text
+        score
+        created_at
+        updated_at
     }
     like {
-        int id PK
-        int user_id FK
-        int review_id FK
-        boolean is_valid
-        timestamp created_at
-        timestamp updated_at
+        id
+        user_id    // FK to user
+        review_id  // FK to review
+        is_valid
+        created_at
+        updated_at
     }
     dislike {
-        int id PK
-        int user_id FK
-        int review_id FK
-        boolean is_valid
-        timestamp created_at
-        timestamp updated_at
+        id
+        user_id    // FK to user
+        review_id  // FK to review
+        is_valid
+        created_at
+        updated_at
     }
 
-    user ||--o{ review : "writes"
-    user ||--o{ like : "gives"
-    user ||--o{ dislike : "gives"
-    collection ||--o{ collection_movie : "contains"
-    movie ||--o{ collection_movie : "is in"
-    movie ||--o{ movie_staff : "has"
-    person ||--o{ movie_staff : "works on"
-    movie ||--o{ movie_genre : "has"
-    genre ||--o{ movie_genre : "is"
-    movie ||--o{ review : "is reviewed"
-    movie ||--o{ country : "is from"
-    review ||--o{ like : "has"
-    review ||--o{ dislike : "has"
+    user                ||--o{ review           : "пишет"
+    movie               ||--o{ review           : "имеет"
+    user                ||--o{ like             : "ставит"
+    review              ||--o{ like             : "получает"
+    user                ||--o{ dislike          : "ставит"
+    review              ||--o{ dislike          : "получает"
+    country             ||--o{ movie            : "страна_производства" // Связь Один-ко-Многим (одна страна -> много фильмов)
+
+    collection          ||--o{ collection_movie : "содержит" // Связь Один-ко-Многим (одна коллекция -> много записей в collection_movie)
+    movie               ||--o{ collection_movie : "содержится_в" // Связь Один-ко-Многим (один фильм -> много записей в collection_movie)
+
+    person              ||--o{ movie_staff      : "участвует_в" // Связь Один-ко-Многим (один человек -> много ролей в фильмах)
+    movie               ||--o{ movie_staff      : "имеет_состав" // Связь Один-ко-Многим (один фильм -> много участников)
+
+    genre               ||--o{ movie_genre      : "определяет" // Связь Один-ко-Многим (один жанр -> много записей в movie_genre)
+    movie               ||--o{ movie_genre      : "принадлежит_к" // Связь Один-ко-Многим (один фильм -> много записей в movie_genre)
+
 ```

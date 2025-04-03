@@ -1,6 +1,7 @@
 Relation user:
 
 {id} -> login, hashed_password, avatar, birth_date, created_at, updated_at
+{login} -> id
 
 ---
 
@@ -19,6 +20,7 @@ Relation person:
 Relation genre:
 
 {id} -> name, created_at, updated_at
+{name} -> id
 
 ---
 

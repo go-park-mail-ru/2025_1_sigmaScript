@@ -13,18 +13,18 @@ DROP TABLE IF EXISTS "movie" CASCADE;
 
 CREATE TABLE "user" (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    login TEXT UNIQUE NOT NULL,
+    login TEXT UNIQUE NOT NULL CONSTRAINT loginchk CHECK (char_length(login) <= 255),
     hashed_password TEXT NOT NULL,
     avatar TEXT DEFAULT '/static/avatars/avatar_default_picture.svg',
-    birth_date DATE,
+    birth_date DATE DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE "collection" (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name TEXT NOT NULL,
-    slug TEXT NOT NULL,
+    name TEXT NOT NULL CONSTRAINT collection_namechk CHECK (char_length(name) <= 255),
+    slug TEXT NOT NULL CONSTRAINT collection_slugchk CHECK (char_length(slug) <= 255),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -32,13 +32,13 @@ CREATE TABLE "collection" (
 CREATE TABLE "person" (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     full_name TEXT NOT NULL,
-    en_full_name TEXT,
+    en_full_name TEXT DEFAULT NULL,
     photo TEXT DEFAULT '/static/avatars/avatar_default_picture.svg',
     about TEXT DEFAULT 'Информация по этому человеку не указана',
     sex TEXT DEFAULT 'secret',
     growth TEXT DEFAULT NULL,
-    birthday DATE,
-    death DATE,
+    birthday DATE DEFAULT NULL,
+    death DATE DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -50,7 +50,7 @@ CREATE TABLE "genre" (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE country (
+CREATE TABLE "country" (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name TEXT NOT NULL,
     code TEXT NOT NULL,
@@ -61,7 +61,7 @@ CREATE TABLE country (
 
 CREATE TABLE "movie" (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name TEXT NOT NULL,
+    name TEXT NOT NULL CONSTRAINT movie_namechk CHECK (char_length(name) <= 255),
     about TEXT DEFAULT 'Информация по этому фильму не указана',
     poster TEXT DEFAULT '/static/movies/poster_default_picture.webp',
     card TEXT DEFAULT '/static/movies/card_default_picture.webp',
@@ -73,8 +73,8 @@ CREATE TABLE "movie" (
     box_office_us TEXT DEFAULT NULL,
     box_office_global TEXT DEFAULT NULL,
     box_office_russia TEXT DEFAULT NULL,
-    premiere_russia DATE,
-    premiere_global DATE,
+    premiere_russia DATE DEFAULT NULL,
+    premiere_global DATE DEFAULT NULL,
     rating NUMERIC(4,2) CHECK (rating <= 10.00) DEFAULT 5.00,
     duration TEXT DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

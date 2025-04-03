@@ -15,7 +15,7 @@ func GetCollections(w http.ResponseWriter, r *http.Request) {
 
 	collections := mocks.MainPageCollections
 
-	if err := jsonutil.SendJSON(w, collections); err != nil {
+	if err := jsonutil.SendJSON(r.Context(), w, collections); err != nil {
 		logger.Error().Err(err).Msg("Error sending JSON")
 		return
 	}

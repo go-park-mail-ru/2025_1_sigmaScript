@@ -35,7 +35,7 @@ func (sph *StaffPersonHandler) GetPersonByID(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		errMsg := errors.Wrapf(err, "getPersonByID action: bad request: %w", err)
 		logger.Error().Err(errMsg).Msg(errMsg.Error())
-		jsonutil.SendError(w, http.StatusBadRequest, errs.ErrBadPayload, errs.ErrBadPayload)
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, errs.ErrBadPayload)
 		return
 	}
 	logger.Info().Msgf("getting person by id: %d", personID)
@@ -44,16 +44,16 @@ func (sph *StaffPersonHandler) GetPersonByID(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		if errors.Is(err, errs.ErrPersonNotFound) {
 			logger.Error().Err(err).Msg(err.Error())
-			jsonutil.SendError(w, http.StatusNotFound, err.Error(), err.Error())
+			jsonutil.SendError(r.Context(), w, http.StatusNotFound, err.Error(), err.Error())
 			return
 		}
 		logger.Error().Err(err).Msg(err.Error())
-		jsonutil.SendError(w, http.StatusInternalServerError, errs.ErrSomethingWentWrong, errs.ErrSomethingWentWrong)
+		jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrSomethingWentWrong, errs.ErrSomethingWentWrong)
 		return
 	}
 
 	logger.Info().Msgf("successfully got person data by id: %d", personID)
-	if err := jsonutil.SendJSON(w, personJSON); err != nil {
+	if err := jsonutil.SendJSON(r.Context(), w, personJSON); err != nil {
 		logger.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSomethingWentWrong).Error())
 		return
 	}

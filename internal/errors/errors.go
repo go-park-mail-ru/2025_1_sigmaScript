@@ -1,5 +1,7 @@
 package errs
 
+import "errors"
+
 // main
 const (
 	ErrLoadConfig  = "Error loading config"
@@ -78,4 +80,9 @@ const (
 	ErrNegativeSessionIDLength = "Negative session ID length"
 	ErrLengthTooShort          = "Length too short"
 	ErrLengthTooLong           = "Length too long"
+)
+
+// staff person
+var (
+	ErrPersonNotFound = errors.New("person by this id not found")
 )

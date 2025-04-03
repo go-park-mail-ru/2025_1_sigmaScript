@@ -32,6 +32,7 @@ func SetupStaffPersonHandlers(router *mux.Router, staffPersonHandler handlers.St
 }
 
 func ApplyMiddlewares(router *mux.Router) {
+	router.Use(middleware.RequestWithLoggerMiddleware)
 	router.Use(middleware.PreventPanicMiddleware)
 	router.Use(middleware.MiddlewareCors)
 }

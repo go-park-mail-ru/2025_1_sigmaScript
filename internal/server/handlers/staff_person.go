@@ -29,30 +29,32 @@ func NewStaffPersonHandler(staffRepo *mocks.Persons) *StaffPersonHandler {
 
 // GetPersonByID handles GET request to obtain person info by id: actor, director, etc
 func (sph *StaffPersonHandler) GetPersonByID(w http.ResponseWriter, r *http.Request) {
+	logger := log.Ctx(r.Context())
+
 	personID, err := strconv.Atoi(mux.Vars(r)["person_id"])
 	if err != nil {
 		errMsg := errors.Wrapf(err, "getPersonByID action: bad request: %w", err)
-		log.Error().Err(errMsg).Msg(errMsg.Error())
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
 		jsonutil.SendError(w, http.StatusBadRequest, errs.ErrBadPayload, errs.ErrBadPayload)
 		return
 	}
-	log.Info().Msgf("getting person by id: %d", personID)
+	logger.Info().Msgf("getting person by id: %d", personID)
 
 	personJSON, err := sph.getPersonFromRepoByID(personID)
 	if err != nil {
 		if errors.Is(err, errs.ErrPersonNotFound) {
-			log.Error().Err(err).Msg(err.Error())
+			logger.Error().Err(err).Msg(err.Error())
 			jsonutil.SendError(w, http.StatusNotFound, err.Error(), err.Error())
 			return
 		}
-		log.Error().Err(err).Msg(err.Error())
+		logger.Error().Err(err).Msg(err.Error())
 		jsonutil.SendError(w, http.StatusInternalServerError, errs.ErrSomethingWentWrong, errs.ErrSomethingWentWrong)
 		return
 	}
 
-	log.Info().Msgf("successfully got person data by id: %d", personID)
+	logger.Info().Msgf("successfully got person data by id: %d", personID)
 	if err := jsonutil.SendJSON(w, personJSON); err != nil {
-		log.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSomethingWentWrong).Error())
+		logger.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSomethingWentWrong).Error())
 		return
 	}
 

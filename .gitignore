@@ -15,3 +15,5 @@
 go.work
 
 .idea/
+
+*.a

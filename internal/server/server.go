@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/handlers"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/router"
 	"github.com/rs/zerolog/log"
 )
@@ -34,6 +35,7 @@ func New(cfg *config.Config) *Server {
 
 func (s *Server) Run() error {
 	authHandler := handlers.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie))
+	staffPersonHandler := handlers.NewStaffPersonHandler(&mocks.ExistingActors)
 
 	mx := router.NewRouter()
 
@@ -42,6 +44,7 @@ func (s *Server) Run() error {
 	router.ApplyMiddlewares(mx)
 	router.SetupAuth(mx, authHandler)
 	router.SetupCollections(mx)
+	router.SetupStaffPersonHandlers(mx, staffPersonHandler)
 
 	log.Info().Msg("Routes configured successfully")
 

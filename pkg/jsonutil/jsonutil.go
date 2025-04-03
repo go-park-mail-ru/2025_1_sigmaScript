@@ -1,6 +1,7 @@
 package jsonutil
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -14,7 +15,9 @@ type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
-func SendError(w http.ResponseWriter, errCode int, errResp, msg string) {
+func SendError(ctx context.Context, w http.ResponseWriter, errCode int, errResp, msg string) {
+	logger := log.Ctx(ctx)
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(errCode)
 
@@ -23,14 +26,16 @@ func SendError(w http.ResponseWriter, errCode int, errResp, msg string) {
 		Message: msg,
 	}
 	if err := json.NewEncoder(w).Encode(errResponse); err != nil {
-		log.Error().Err(errors.Wrap(err, errs.ErrEncodeJSON)).Msg(errors.Wrap(err, errs.ErrEncodeJSON).Error())
+		logger.Error().Err(errors.Wrap(err, errs.ErrEncodeJSON)).Msg(errors.Wrap(err, errs.ErrEncodeJSON).Error())
 	}
 }
 
 func ReadJSON(r *http.Request, data interface{}) error {
+	logger := log.Ctx(r.Context())
+
 	defer func() {
 		if err := r.Body.Close(); err != nil {
-			log.Error().Err(errors.Wrap(err, errs.ErrCloseBody)).Msg(errors.Wrap(err, errs.ErrCloseBody).Error())
+			logger.Error().Err(errors.Wrap(err, errs.ErrCloseBody)).Msg(errors.Wrap(err, errs.ErrCloseBody).Error())
 		}
 	}()
 	if err := json.NewDecoder(r.Body).Decode(data); err != nil {
@@ -39,7 +44,9 @@ func ReadJSON(r *http.Request, data interface{}) error {
 	return nil
 }
 
-func SendJSON(w http.ResponseWriter, data interface{}) error {
+func SendJSON(ctx context.Context, w http.ResponseWriter, data interface{}) error {
+	logger := log.Ctx(ctx)
+
 	w.Header().Set("Content-Type", "application/json")
 
 	code := http.StatusOK
@@ -50,8 +57,8 @@ func SendJSON(w http.ResponseWriter, data interface{}) error {
 	}
 
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		log.Error().Err(errors.Wrap(err, errs.ErrEncodeJSON)).Msg(errors.Wrap(err, errs.ErrEncodeJSON).Error())
-		SendError(w, http.StatusInternalServerError, errors.Wrap(err, errs.ErrEncodeJSONShort).Error(), errors.Wrap(err, errs.ErrEncodeJSON).Error())
+		logger.Error().Err(errors.Wrap(err, errs.ErrEncodeJSON)).Msg(errors.Wrap(err, errs.ErrEncodeJSON).Error())
+		SendError(ctx, w, http.StatusInternalServerError, errors.Wrap(err, errs.ErrEncodeJSONShort).Error(), errors.Wrap(err, errs.ErrEncodeJSON).Error())
 		return errors.Wrap(err, errs.ErrParseJSON)
 	}
 	return nil

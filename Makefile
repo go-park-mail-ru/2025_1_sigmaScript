@@ -1,7 +1,7 @@
 COVERAGE_FILE := coverage.out
 COVERAGE_HTML := coverage.html
 COVERIGNORE_FILE := cover_ignore.txt
-APP_NAME := filmlook
+APP_NAME := filmlook.a
 
 UNAME := $(shell uname -s)
 ifeq ($(UNAME), Linux)

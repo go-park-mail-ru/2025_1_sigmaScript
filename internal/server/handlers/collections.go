@@ -9,12 +9,14 @@ import (
 )
 
 func GetCollections(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("GetCollections")
+	logger := log.Ctx(r.Context())
+
+	logger.Info().Msg("GetCollections")
 
 	collections := mocks.MainPageCollections
 
-	if err := jsonutil.SendJSON(w, collections); err != nil {
-		log.Error().Err(err).Msg("Error sending JSON")
+	if err := jsonutil.SendJSON(r.Context(), w, collections); err != nil {
+		logger.Error().Err(err).Msg("Error sending JSON")
 		return
 	}
 }

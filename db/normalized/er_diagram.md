@@ -54,9 +54,9 @@ erDiagram
         TEXT slogan
         TEXT director
         DECIMAL budget
-        TEXT box_office_us
-        TEXT box_office_global
-        TEXT box_office_russia
+        DECIMAL box_office_us
+        DECIMAL box_office_global
+        DECIMAL box_office_russia
         DATE premiere_russia
         DATE premiere_global
         NUMERIC rating

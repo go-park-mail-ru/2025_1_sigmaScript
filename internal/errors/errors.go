@@ -78,8 +78,8 @@ const (
 // session
 const (
 	ErrNegativeSessionIDLength = "Negative session ID length"
-	ErrLengthTooShort          = "Length too short"
-	ErrLengthTooLong           = "Length too long"
+	ErrMsgLengthTooShort       = "Length too short"
+	ErrMsgLengthTooLong        = "Length too long"
 )
 
 // staff person

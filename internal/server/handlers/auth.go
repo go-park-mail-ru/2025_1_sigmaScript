@@ -11,7 +11,7 @@ import (
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/messages"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/validation/auth"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/validation/auth"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/session"
 	synccredmap "github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/sync_cred_map"

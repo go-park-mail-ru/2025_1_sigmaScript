@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
@@ -40,10 +39,11 @@ func RequestWithLoggerMiddleware(next http.Handler) http.Handler {
 		customResponseWriter := NewResponseWriterWithStatus(w, r.URL.Path)
 
 		requestStartTime := time.Now()
+		bodyCopy := getBodyCopy(r)
 
 		next.ServeHTTP(customResponseWriter, r.WithContext(ctxtWithLogger))
 		status := customResponseWriter.Status
-		logRequestData(r, requestStartTime, logMiddleware, requestID, status, requestURLPath(w, r))
+		logRequestData(r.WithContext(ctxtWithLogger), requestStartTime, logMiddleware, requestID, status, requestURLPath(w, r), bodyCopy)
 	})
 }
 
@@ -95,18 +95,36 @@ func requestURLPath(w http.ResponseWriter, r *http.Request) string {
 	return urlPath.GetName()
 }
 
-func logRequestData(r *http.Request, start time.Time, msg string, requestID string, status int, path string) {
-	var bodyCopy bytes.Buffer
-	duration := time.Since(start)
+func getBodyCopy(r *http.Request) []byte {
+	logger := log.Ctx(r.Context())
 
-	tee := io.TeeReader(r.Body, &bodyCopy)
-	r.Body = io.NopCloser(&bodyCopy)
-	bodyBytes, err := io.ReadAll(tee)
+	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Error().Err(err).Msg(errs.ErrBadPayload)
+		logger.Error().Err(err).Msg("Failed to read request body")
+		errBodyClose := r.Body.Close()
+		if errBodyClose != nil {
+			logger.Error().Err(err).Msg("Failed to close original request body")
+		}
+		return nil
 	}
 
-	log.Info().
+	errBodyClose := r.Body.Close()
+	if errBodyClose != nil {
+		logger.Error().Err(err).Msg("Failed to close original request body")
+	}
+
+	// replace old read body with new bodyBytes
+	r.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+
+	return bodyBytes
+}
+
+func logRequestData(r *http.Request, start time.Time, msg string, requestID string, status int, path string, bodyBytes []byte) {
+	logger := log.Ctx(r.Context())
+
+	duration := time.Since(start)
+
+	logger.Info().
 		Str("method", r.Method).
 		Str("remote_addr", r.RemoteAddr).
 		Str("url", path).

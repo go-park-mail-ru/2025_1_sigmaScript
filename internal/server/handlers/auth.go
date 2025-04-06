@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -63,7 +62,6 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errors.Wrap(err, errs.ErrParseJSONShort).Error(), msg)
 		return
 	}
-	fmt.Println(reg)
 
 	if _, exists := a.users.Load(reg.Username); exists {
 		msg := "user with that name already exists"

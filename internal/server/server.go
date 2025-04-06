@@ -6,6 +6,9 @@ import (
 	"net/http"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/repository"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/handlers"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/router"
@@ -34,7 +37,11 @@ func New(cfg *config.Config) *Server {
 }
 
 func (s *Server) Run() error {
-	authHandler := handlers.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie))
+	// authHandler := handlers.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie))
+	authRepository := repository.NewAuthRepository()
+	authService := service.NewAuthService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), authRepository)
+	authHandler := delivery.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), authService)
+
 	staffPersonHandler := handlers.NewStaffPersonHandler(&mocks.ExistingActors)
 
 	mx := router.NewRouter()

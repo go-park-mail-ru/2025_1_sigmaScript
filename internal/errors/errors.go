@@ -86,3 +86,15 @@ const (
 var (
 	ErrPersonNotFound = errors.New("person by this id not found")
 )
+
+// service layer
+type ServiceError struct {
+	Code  int
+	Error error
+}
+
+// repository layer
+type RepoError struct {
+	Msg   string
+	Error error
+}

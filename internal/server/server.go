@@ -40,7 +40,6 @@ func New(cfg *config.Config) *Server {
 }
 
 func (s *Server) Run() error {
-	// authRepository := repoAuth.NewAuthRepository()
 	sessionRepo := repoAuth.NewSessionRepository()
 	userRepo := repoAuth.NewUserRepository()
 

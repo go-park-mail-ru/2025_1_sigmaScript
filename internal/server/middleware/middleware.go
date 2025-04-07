@@ -22,7 +22,7 @@ func MiddlewareCors(next http.Handler) http.Handler {
 
 		w.Header().Set("Access-Control-Allow-Origin", viper.GetString(kinolkHostEnv))
 		w.Header().Set("Access-Control-Allow-Methods", viper.GetString(kinolkAllowedMethodsEnv))
-		w.Header().Set("Access-Control-Allow-Credentials", viper.GetString(kinolkAllowCredentialsEnv)) // Разрешаем куки
+		w.Header().Set("Access-Control-Allow-Credentials", viper.GetString(kinolkAllowCredentialsEnv))
 		w.Header().Set("Access-Control-Allow-Headers", viper.GetString(kinolkAllowedHeadersEnv))
 
 		if r.Method == http.MethodOptions {

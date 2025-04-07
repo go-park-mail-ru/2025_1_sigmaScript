@@ -49,6 +49,7 @@ const (
 	ErrLengthLoginShort              = "length_login"
 	ErrEmptyLogin                    = "Empty login"
 	ErrEmptyLoginShort               = "empty_login"
+	ErrNotFoundShort                 = "not_found"
 )
 
 // jsonutil
@@ -77,9 +78,10 @@ const (
 
 // session
 const (
-	ErrNegativeSessionIDLength = "Negative session ID length"
-	ErrMsgLengthTooShort       = "Length too short"
-	ErrMsgLengthTooLong        = "Length too long"
+	ErrMsgNegativeSessionIDLength = "Negative session ID length"
+	ErrMsgLengthTooShort          = "Length too short"
+	ErrMsgLengthTooLong           = "Length too long"
+	ErrMsgFailedToGetSession      = "failed to get session"
 )
 
 // staff person
@@ -87,14 +89,15 @@ var (
 	ErrPersonNotFound = errors.New("person by this id not found")
 )
 
-// service layer
-type ServiceError struct {
-	Code  int
-	Error error
-}
+// TODO specific errors for microservices
+// // service layer
+// type ServiceError struct {
+// 	Code  int
+// 	Error error
+// }
 
-// repository layer
-type RepoError struct {
-	Msg   string
-	Error error
-}
+// // repository layer
+// type RepoError struct {
+// 	Msg   string
+// 	Error error
+// }

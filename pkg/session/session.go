@@ -16,7 +16,7 @@ const (
 
 func GenerateSessionID(length int) (string, error) {
 	if length < 0 {
-		return "", errors.New(errs.ErrNegativeSessionIDLength)
+		return "", errors.New(errs.ErrMsgNegativeSessionIDLength)
 	}
 	if length < MinSessionIDLength {
 		return "", errors.New(errs.ErrMsgLengthTooShort)

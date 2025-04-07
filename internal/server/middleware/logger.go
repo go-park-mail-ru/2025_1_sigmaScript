@@ -47,7 +47,6 @@ func RequestWithLoggerMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// createRequestID generates uuid4-style request id
 func createRequestID() string {
 	output := make([]byte, 32)
 	_, err := rand.Read(output)

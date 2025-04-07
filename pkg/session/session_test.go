@@ -76,7 +76,7 @@ func TestNegative(t *testing.T) {
 		t.Run(strconv.Itoa(tt.length), func(t *testing.T) {
 			t.Parallel()
 			_, err := GenerateSessionID(tt.length)
-			require.Equal(t, err.Error(), errs.ErrNegativeSessionIDLength)
+			require.Equal(t, err.Error(), errs.ErrMsgNegativeSessionIDLength)
 		})
 	}
 }

@@ -1,6 +1,7 @@
-package handlers
+package delivery
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 
@@ -13,22 +14,24 @@ import (
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 )
 
-type StaffPersonInterface interface {
-	GetPersonByID(w http.ResponseWriter, r *http.Request)
+type StaffPersonServiceInterface interface {
+	GetPersonByID(ctx context.Context, personID int) (*mocks.PersonJSON, error)
 }
 
 // StaffPersonHandler handles requests to staff person: actor, director, etc
 type StaffPersonHandler struct {
-	staffRepo *mocks.Persons
+	staffPersonService StaffPersonServiceInterface
 }
 
 // NewStaffPersonHandler returns new instance of StaffPersonHandler
-func NewStaffPersonHandler(staffRepo *mocks.Persons) *StaffPersonHandler {
-	return &StaffPersonHandler{staffRepo: staffRepo}
+func NewStaffPersonHandler(staffPersonService StaffPersonServiceInterface) *StaffPersonHandler {
+	return &StaffPersonHandler{
+		staffPersonService: staffPersonService,
+	}
 }
 
-// GetPersonByID handles GET request to obtain person info by id: actor, director, etc
-func (sph *StaffPersonHandler) GetPersonByID(w http.ResponseWriter, r *http.Request) {
+// GetPerson handles GET request to obtain person info by id
+func (h *StaffPersonHandler) GetPerson(w http.ResponseWriter, r *http.Request) {
 	logger := log.Ctx(r.Context())
 
 	personID, err := strconv.Atoi(mux.Vars(r)["person_id"])
@@ -38,33 +41,22 @@ func (sph *StaffPersonHandler) GetPersonByID(w http.ResponseWriter, r *http.Requ
 		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, errs.ErrBadPayload)
 		return
 	}
-	logger.Info().Msgf("getting person by id: %d", personID)
 
-	personJSON, err := sph.getPersonFromRepoByID(personID)
+	logger.Info().Msgf("getting person by id: %d", personID)
+	personJSON, err := h.staffPersonService.GetPersonByID(r.Context(), personID)
 	if err != nil {
+		logger.Error().Err(err).Msg(err.Error())
 		if errors.Is(err, errs.ErrPersonNotFound) {
-			logger.Error().Err(err).Msg(err.Error())
-			jsonutil.SendError(r.Context(), w, http.StatusNotFound, err.Error(), err.Error())
+			jsonutil.SendError(r.Context(), w, http.StatusNotFound, errors.Wrap(err, errs.ErrNotFoundShort).Error(), err.Error())
 			return
 		}
-		logger.Error().Err(err).Msg(err.Error())
 		jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrSomethingWentWrong, errs.ErrSomethingWentWrong)
 		return
 	}
-
 	logger.Info().Msgf("successfully got person data by id: %d", personID)
+
 	if err := jsonutil.SendJSON(r.Context(), w, personJSON); err != nil {
 		logger.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSomethingWentWrong).Error())
 		return
 	}
-
-}
-
-func (sph *StaffPersonHandler) getPersonFromRepoByID(personID int) (*mocks.PersonJSON, error) {
-	for _, val := range *sph.staffRepo {
-		if val.ID == personID {
-			return &val, nil
-		}
-	}
-	return nil, errs.ErrPersonNotFound
 }

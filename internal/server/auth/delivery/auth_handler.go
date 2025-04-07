@@ -6,11 +6,12 @@ import (
 	"time"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/common"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/ds"
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/messages"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/validation/auth"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -21,29 +22,28 @@ const (
 	COOKIE_EXPIRED_LAST_YEAR = -1
 )
 
-type AuthHandlerInterface interface {
-	Register(w http.ResponseWriter, r *http.Request)
-	Login(w http.ResponseWriter, r *http.Request)
-	Logout(w http.ResponseWriter, r *http.Request)
-	Session(w http.ResponseWriter, r *http.Request)
+type AuthServiceInterface interface {
+	Register(ctx context.Context, regUser models.RegisterData) (string, error)
+	GetSession(ctx context.Context, sessionID string) (string, error)
+	DeleteSession(ctx context.Context, sessionID string) error
+	Login(ctx context.Context, login models.LoginData) (string, error)
+	Logout(ctx context.Context, sessionID string) error
 }
 
 type AuthHandler struct {
-	authService service.AuthServiceInterface
-	cfg         *config.Cookie
+	authService AuthServiceInterface
+	cookie      *config.Cookie
 }
 
-func NewAuthHandler(ctx context.Context, authService service.AuthServiceInterface) AuthHandlerInterface {
-	res := &AuthHandler{
-		cfg:         config.FromCookieContext(ctx),
+func NewAuthHandler(ctx context.Context, authService AuthServiceInterface) *AuthHandler {
+	return &AuthHandler{
+		cookie:      config.FromCookieContext(ctx),
 		authService: authService,
 	}
-
-	return res
 }
 
 // Register http handler method
-func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	logger := log.Ctx(r.Context())
 
 	var reg models.RegisterData
@@ -56,16 +56,49 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newSessionID, errSession := a.authService.Register(r.Context(), reg)
-	if errSession != nil {
-		logger.Error().Err(errSession.Error).Msgf("error happened %v, with code %d", errSession.Error, errSession.Code)
-		jsonutil.SendError(r.Context(), w, errSession.Code, errors.New(errs.ErrAlreadyExistsShort).Error(), errs.ErrSomethingWentWrong)
+	if reg.Password != reg.RepeatedPassword {
+		logger.Info().Msg("Passwords mismatch")
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errors.New(errs.ErrPasswordsMismatchShort).Error(), errs.ErrPasswordsMismatch)
 		return
 	}
 
-	errOldSession := a.expireOldSessionCookie(w, r)
+	if err := auth.IsValidPassword(reg.Password); err != nil {
+		logger.Error().Err(errors.Wrap(err, errs.ErrInvalidPassword)).Msg(errors.Wrap(err, errs.ErrInvalidPassword).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errors.Wrap(err, errs.ErrInvalidPasswordShort).Error(),
+			errors.Wrap(err, errs.ErrInvalidPassword).Error())
+		return
+	}
+
+	if err := auth.IsValidLogin(reg.Username); err != nil {
+		logger.Error().Err(errors.Wrap(err, errs.ErrInvalidLogin)).Msg(errors.Wrap(err, errs.ErrInvalidLogin).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errors.Wrap(err, errs.ErrInvalidLoginShort).Error(),
+			errors.Wrap(err, errs.ErrInvalidLogin).Error())
+		return
+	}
+
+	newSessionID, errSession := h.authService.Register(r.Context(), reg)
+	if errSession != nil {
+		logger.Error().Err(errSession).Msgf("error happened: %v", errSession.Error)
+
+		switch errSession.Error() {
+		case errs.ErrInvalidPassword:
+			jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errors.Wrap(errSession, errs.ErrInvalidPasswordShort).Error(),
+				errors.Wrap(errSession, errs.ErrInvalidPassword).Error())
+			return
+		case errs.ErrAlreadyExists:
+			logger.Error().Err(errors.New(errs.ErrAlreadyExists)).Msg(errs.ErrAlreadyExists)
+			jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errors.New(errs.ErrAlreadyExistsShort).Error(),
+				common.MsgUserWithNameAlreadyExists)
+			return
+		default:
+			jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errors.New(errs.ErrSomethingWentWrong).Error(), errs.ErrSomethingWentWrong)
+			return
+		}
+	}
+
+	errOldSession := h.expireOldSessionCookie(w, r)
 	if errOldSession != nil {
-		logger.Error().Err(errOldSession.Error).Msg(errOldSession.Error.Error())
+		logger.Error().Err(errOldSession).Msg(errOldSession.Error())
 		jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrSomethingWentWrong,
 			errs.ErrSomethingWentWrong)
 		return
@@ -73,7 +106,7 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info().Msg("User registered successfully")
 
-	http.SetCookie(w, preparedNewCookie(a.cfg, newSessionID))
+	http.SetCookie(w, preparedNewCookie(h.cookie, newSessionID))
 
 	if err := jsonutil.SendJSON(r.Context(), w, ds.Response{Message: messages.SuccessfulRegister}); err != nil {
 		logger.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSomethingWentWrong).Error())
@@ -82,7 +115,7 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 // Expires old cookie if it exists
-func (a *AuthHandler) expireOldSessionCookie(w http.ResponseWriter, r *http.Request) *errs.ServiceError {
+func (h *AuthHandler) expireOldSessionCookie(w http.ResponseWriter, r *http.Request) error {
 	logger := log.Ctx(r.Context())
 
 	oldSessionCookie, err := r.Cookie("session_id")
@@ -91,8 +124,8 @@ func (a *AuthHandler) expireOldSessionCookie(w http.ResponseWriter, r *http.Requ
 	}
 
 	if oldSessionCookie != nil {
-		http.SetCookie(w, preparedExpiredCookie(a.cfg))
-		err := a.authService.DeleteSession(r.Context(), oldSessionCookie.Value)
+		http.SetCookie(w, preparedExpiredCookie(h.cookie))
+		err := h.authService.DeleteSession(r.Context(), oldSessionCookie.Value)
 		if err != nil {
 			return err
 		}
@@ -102,32 +135,32 @@ func (a *AuthHandler) expireOldSessionCookie(w http.ResponseWriter, r *http.Requ
 	return nil
 }
 
-func preparedNewCookie(cfg *config.Cookie, newSessionID string) *http.Cookie {
+func preparedNewCookie(cookie *config.Cookie, newSessionID string) *http.Cookie {
 	return &http.Cookie{
-		Name:     cfg.SessionName,
+		Name:     cookie.SessionName,
 		Value:    newSessionID,
-		HttpOnly: cfg.HTTPOnly,
-		Secure:   cfg.Secure,
-		SameSite: cfg.SameSite,
-		Path:     cfg.Path,
+		HttpOnly: cookie.HTTPOnly,
+		Secure:   cookie.Secure,
+		SameSite: cookie.SameSite,
+		Path:     cookie.Path,
 		Expires:  time.Now().AddDate(0, 0, COOKIE_DAYS_LIMIT),
 	}
 }
 
-func preparedExpiredCookie(cfg *config.Cookie) *http.Cookie {
+func preparedExpiredCookie(cookie *config.Cookie) *http.Cookie {
 	return &http.Cookie{
-		Name:     cfg.SessionName,
+		Name:     cookie.SessionName,
 		Value:    "",
-		HttpOnly: cfg.HTTPOnly,
-		Secure:   cfg.Secure,
-		SameSite: cfg.SameSite,
-		Path:     cfg.Path,
+		HttpOnly: cookie.HTTPOnly,
+		Secure:   cookie.Secure,
+		SameSite: cookie.SameSite,
+		Path:     cookie.Path,
 		Expires:  time.Now().AddDate(COOKIE_EXPIRED_LAST_YEAR, 0, 0),
 	}
 }
 
 // Session http handler method
-func (a *AuthHandler) Session(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Session(w http.ResponseWriter, r *http.Request) {
 	logger := log.Ctx(r.Context())
 
 	logger.Info().Msg("Checking session")
@@ -140,11 +173,10 @@ func (a *AuthHandler) Session(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username, errSession := a.authService.GetSession(r.Context(), sessionCookie.Value)
+	username, errSession := h.authService.GetSession(r.Context(), sessionCookie.Value)
 	if errSession != nil {
-		errMsg := "failed to get session"
-		logger.Error().Err(errors.Wrap(errSession.Error, errs.ErrSessionNotExists)).Msg(errMsg)
-		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrSessionNotExists, errMsg)
+		logger.Error().Err(errors.Wrap(errSession, errs.ErrSessionNotExists)).Msg(errs.ErrMsgFailedToGetSession)
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrSessionNotExists, errs.ErrMsgFailedToGetSession)
 		return
 	}
 
@@ -158,7 +190,7 @@ func (a *AuthHandler) Session(w http.ResponseWriter, r *http.Request) {
 }
 
 // Login http handler method
-func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	logger := log.Ctx(r.Context())
 
 	var login models.LoginData
@@ -172,17 +204,32 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newSessionID, errSession := a.authService.Login(r.Context(), login)
+	newSessionID, errSession := h.authService.Login(r.Context(), login)
 	if errSession != nil {
-		logger.Error().Err(errSession.Error).Msgf("error happened %v, with code %d", errSession.Error, errSession.Code)
-		jsonutil.SendError(r.Context(), w, errSession.Code, errSession.Error.Error(), errs.ErrSomethingWentWrong)
-		return
+		switch errSession.Error() {
+		case errs.ErrIncorrectLogin:
+			logger.Error().Err(errors.Wrap(errSession, errs.ErrIncorrectLoginOrPassword)).Msg(errSession.Error())
+
+			jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errors.Wrap(errSession, errs.ErrIncorrectLoginOrPasswordShort).Error(),
+				errors.Wrap(errSession, errs.ErrIncorrectLoginOrPassword).Error())
+			return
+		case errs.ErrIncorrectPassword:
+			logger.Error().Err(errors.Wrap(errSession, errs.ErrIncorrectLoginOrPassword)).Msg(errSession.Error())
+
+			jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errors.Wrap(errSession, errs.ErrIncorrectLoginOrPasswordShort).Error(),
+				errors.Wrap(errSession, errs.ErrIncorrectLoginOrPassword).Error())
+			return
+		default:
+			logger.Error().Err(errSession).Msgf("error happened: %v", errSession.Error)
+			jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrSomethingWentWrong, errs.ErrSomethingWentWrong)
+			return
+		}
 	}
 
 	// expire old cookie if it exists
-	errOldSession := a.expireOldSessionCookie(w, r)
+	errOldSession := h.expireOldSessionCookie(w, r)
 	if errOldSession != nil {
-		logger.Error().Err(errOldSession.Error).Msg(errOldSession.Error.Error())
+		logger.Error().Err(errOldSession).Msg(errOldSession.Error())
 		jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrSomethingWentWrong,
 			errs.ErrSomethingWentWrong)
 		return
@@ -190,7 +237,7 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info().Msg("User logged in successfully")
 
-	http.SetCookie(w, preparedNewCookie(a.cfg, newSessionID))
+	http.SetCookie(w, preparedNewCookie(h.cookie, newSessionID))
 
 	err := jsonutil.SendJSON(r.Context(), w, ds.Response{Message: messages.SuccessfulLogin})
 	if err != nil {
@@ -200,7 +247,7 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // Logout http handler method
-func (a *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	logger := log.Ctx(r.Context())
 
 	logger.Info().Msg("Logouting user")
@@ -208,21 +255,23 @@ func (a *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
 		logger.Warn().Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
-		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrUnauthorized,
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errors.Wrap(err, errs.ErrUnauthorizedShort).Error(),
 			errs.ErrUnauthorized)
 		return
 	}
 
 	sessionID := cookie.Value
 
-	errSession := a.authService.Logout(r.Context(), sessionID)
+	errSession := h.authService.Logout(r.Context(), sessionID)
 	if errSession != nil {
-		logger.Error().Err(errSession.Error).Msgf("error happened %v, with code %d", errSession.Error, errSession.Code)
-		jsonutil.SendError(r.Context(), w, errSession.Code, errs.ErrSessionNotExists, errs.ErrSomethingWentWrong)
+		logger.Err(errSession).Msgf("error happened: %v", errSession)
+
+		jsonutil.SendError(r.Context(), w, http.StatusNotFound, errors.Wrap(errSession, errs.ErrSessionNotExistsShort).Error(),
+			errs.ErrSessionNotExists)
 		return
 	}
 
-	http.SetCookie(w, preparedExpiredCookie(a.cfg))
+	http.SetCookie(w, preparedExpiredCookie(h.cookie))
 	logger.Info().Msg("Session deleted")
 
 	err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: messages.SuccessfulLogout})

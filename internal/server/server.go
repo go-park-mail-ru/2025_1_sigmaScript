@@ -9,9 +9,12 @@ import (
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/repository"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/handlers"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/router"
+	deliveryStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/delivery"
+	repoStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/repository"
+	serviceStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/service"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -38,11 +41,14 @@ func New(cfg *config.Config) *Server {
 
 func (s *Server) Run() error {
 	// authHandler := handlers.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie))
+
 	authRepository := repository.NewAuthRepository()
 	authService := service.NewAuthService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), authRepository)
 	authHandler := delivery.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), authService)
 
-	staffPersonHandler := handlers.NewStaffPersonHandler(&mocks.ExistingActors)
+	staffPersonRepo := repoStaff.NewStaffPersonRepository(&mocks.ExistingActors)
+	staffPersonService := serviceStaff.NewStaffPersonService(staffPersonRepo)
+	staffPersonHandler := deliveryStaff.NewStaffPersonHandler(staffPersonService)
 
 	mx := router.NewRouter()
 

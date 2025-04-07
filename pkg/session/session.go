@@ -26,7 +26,7 @@ func GenerateSessionID(length int) (string, error) {
 	}
 	session := make([]byte, length)
 	if _, err := rand.Read(session); err != nil {
-		return "", errors.Wrap(err, errs.ErrGenerateSession)
+		return "", errors.Wrap(err, errs.ErrMsgGenerateSession)
 	}
 	hash := sha256.Sum256(session)
 	return hex.EncodeToString(hash[:]), nil

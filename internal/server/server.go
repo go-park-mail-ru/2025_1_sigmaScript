@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/repository"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service"
+	deliveryAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
+	repoAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/repository"
+	serviceAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/router"
 	deliveryStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/delivery"
@@ -40,11 +40,13 @@ func New(cfg *config.Config) *Server {
 }
 
 func (s *Server) Run() error {
-	// authHandler := handlers.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie))
+	// authRepository := repoAuth.NewAuthRepository()
+	sessionRepo := repoAuth.NewSessionRepository()
+	userRepo := repoAuth.NewUserRepository()
 
-	authRepository := repository.NewAuthRepository()
-	authService := service.NewAuthService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), authRepository)
-	authHandler := delivery.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), authService)
+	userService := serviceAuth.NewUserService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userRepo)
+	sessionService := serviceAuth.NewSessionService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionRepo)
+	authHandler := deliveryAuth.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)
 
 	staffPersonRepo := repoStaff.NewStaffPersonRepository(&mocks.ExistingActors)
 	staffPersonService := serviceStaff.NewStaffPersonService(staffPersonRepo)

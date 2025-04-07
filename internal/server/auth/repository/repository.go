@@ -1,74 +1,71 @@
 package repository
 
-import (
-	"context"
-
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/common"
-	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
-	synccredmap "github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/sync_cred_map"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
-)
-
 const (
 	noData = ""
 )
 
-type AuthRepository struct {
-	// username --> hashedPass
-	users synccredmap.SyncCredentialsMap
-	// sessionID --> username
-	sessions synccredmap.SyncCredentialsMap
-}
+// type AuthRepository struct {
+// 	// username --> hashedPass
+// 	users synccredmap.SyncCredentialsMap
+// 	// sessionID --> username
+// 	sessions synccredmap.SyncCredentialsMap
+// }
 
-func NewAuthRepository() *AuthRepository {
-	return &AuthRepository{
-		users:    *synccredmap.NewSyncCredentialsMap(),
-		sessions: *synccredmap.NewSyncCredentialsMap(),
-	}
-}
+// func NewAuthRepository() *AuthRepository {
+// 	return &AuthRepository{
+// 		users:    *synccredmap.NewSyncCredentialsMap(),
+// 		sessions: *synccredmap.NewSyncCredentialsMap(),
+// 	}
+// }
 
-func (r *AuthRepository) GetSession(ctx context.Context, sessionID string) (string, error) {
-	logger := log.Ctx(ctx)
+// func (r *AuthRepository) GetSession(ctx context.Context, sessionID string) (string, error) {
+// 	logger := log.Ctx(ctx)
 
-	username, ok := r.sessions.Load(sessionID)
-	if !ok {
-		err := errors.New(errs.ErrMsgFailedToGetSession)
-		logger.Error().Err(errors.Wrap(err, errs.ErrSessionNotExists)).Msg(errors.Wrap(err, errs.ErrSessionNotExists).Error())
-		return noData, errors.New(errs.ErrSessionNotExists)
-	}
-	return username, nil
-}
+// 	username, ok := r.sessions.Load(sessionID)
+// 	if !ok {
+// 		logger.Error().Err(errors.Wrap(errs.ErrSessionNotExists, errs.ErrMsgFailedToGetSession)).Msg(errs.ErrMsgSessionNotExists)
+// 		return noData, errs.ErrSessionNotExists
+// 	}
+// 	return username, nil
+// }
 
-func (r *AuthRepository) DeleteSession(ctx context.Context, sessionID string) error {
-	r.sessions.Delete(sessionID)
-	return nil
-}
+// func (r *AuthRepository) DeleteSession(ctx context.Context, sessionID string) error {
+// 	logger := log.Ctx(ctx)
 
-func (r *AuthRepository) StoreSession(ctx context.Context, newSessionID, login string) error {
-	r.sessions.Store(newSessionID, login)
-	return nil
-}
+// 	_, ok := r.sessions.Load(sessionID)
+// 	if !ok {
+// 		logger.Error().Err(errors.Wrap(errs.ErrSessionNotExists, errs.ErrMsgFailedToGetSession)).Msg(errs.ErrMsgSessionNotExists)
+// 		return errs.ErrSessionNotExists
+// 	}
 
-func (r *AuthRepository) CreateUser(ctx context.Context, login, hashedPass string) error {
-	logger := log.Ctx(ctx)
+// 	r.sessions.Delete(sessionID)
+// 	return nil
+// }
 
-	if _, exists := r.users.Load(login); exists {
-		logger.Error().Err(errors.New(errs.ErrAlreadyExists)).Msg(common.MsgUserWithNameAlreadyExists)
-		return errors.New(errs.ErrAlreadyExists)
-	}
-	r.users.Store(login, string(hashedPass))
-	return nil
-}
+// func (r *AuthRepository) StoreSession(ctx context.Context, newSessionID, login string) error {
+// 	r.sessions.Store(newSessionID, login)
+// 	return nil
+// }
 
-func (r *AuthRepository) GetUser(ctx context.Context, login string) (hashedPass string, errRepo error) {
-	logger := log.Ctx(ctx)
+// func (r *AuthRepository) CreateUser(ctx context.Context, login, hashedPass string) error {
+// 	logger := log.Ctx(ctx)
 
-	hashedPass, exists := r.users.Load(login)
-	if exists {
-		return hashedPass, nil
-	}
-	err := errors.New(errs.ErrIncorrectLogin)
-	logger.Error().Err(errors.Wrap(err, errs.ErrIncorrectLoginOrPassword)).Msg(err.Error())
-	return noData, err
-}
+// 	if _, exists := r.users.Load(login); exists {
+// 		logger.Error().Err(errors.New(errs.ErrAlreadyExists)).Msg(common.MsgUserWithNameAlreadyExists)
+// 		return errors.New(errs.ErrAlreadyExists)
+// 	}
+// 	r.users.Store(login, string(hashedPass))
+// 	return nil
+// }
+
+// func (r *AuthRepository) GetUser(ctx context.Context, login string) (hashedPass string, errRepo error) {
+// 	logger := log.Ctx(ctx)
+
+// 	hashedPass, exists := r.users.Load(login)
+// 	if exists {
+// 		return hashedPass, nil
+// 	}
+// 	err := errors.New(errs.ErrIncorrectLogin)
+// 	logger.Error().Err(errors.Wrap(err, errs.ErrIncorrectLoginOrPassword)).Msg(err.Error())
+// 	return noData, err
+// }

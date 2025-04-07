@@ -1,162 +1,122 @@
 package service
 
-import (
-	"context"
+// import (
+// 	"context"
 
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
-	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/session"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
-	"golang.org/x/crypto/bcrypt"
-)
+// 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
+// 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
+// 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
+// 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/session"
+// 	"github.com/pkg/errors"
+// 	"github.com/rs/zerolog/log"
+// 	"golang.org/x/crypto/bcrypt"
+// )
 
-const (
-	noData = ""
-)
+// // type UserRepositoryInterface interface {
+// // 	CreateUser(ctx context.Context, login, hashedPass string) error
+// // 	GetUser(ctx context.Context, login string) (hashedPass string, errRepo error)
+// // }
 
-type AuthRepositoryInterface interface {
-	CreateUser(ctx context.Context, login, hashedPass string) error
-	GetUser(ctx context.Context, login string) (hashedPass string, errRepo error)
-	StoreSession(ctx context.Context, newSessionID, login string) error
-	DeleteSession(ctx context.Context, sessionID string) error
-	GetSession(ctx context.Context, sessionID string) (string, error)
-}
+// // type SessionRepositoryInterface interface {
+// // 	StoreSession(ctx context.Context, newSessionID, login string) error
+// // 	DeleteSession(ctx context.Context, sessionID string) error
+// // 	GetSession(ctx context.Context, sessionID string) (string, error)
+// // }
 
-type AuthService struct {
-	authRepo      AuthRepositoryInterface
-	sessionLength int
-}
+// type AuthService struct {
+// 	userRepo      UserRepositoryInterface
+// 	sessionRepo   SessionRepositoryInterface
+// 	sessionLength int
+// }
 
-func NewAuthService(ctx context.Context, authRepo AuthRepositoryInterface) *AuthService {
-	return &AuthService{
-		sessionLength: config.FromCookieContext(ctx).SessionLength,
-		authRepo:      authRepo,
-	}
-}
+// func NewAuthService(ctx context.Context, userRepo UserRepositoryInterface,
+// 	sessionRepo SessionRepositoryInterface) *AuthService {
+// 	return &AuthService{
+// 		userRepo:      userRepo,
+// 		sessionRepo:   sessionRepo,
+// 		sessionLength: config.FromCookieContext(ctx).SessionLength,
+// 	}
+// }
 
-// Register user with given parameters
-func (s *AuthService) Register(ctx context.Context, regUser models.RegisterData) (string, error) {
-	logger := log.Ctx(ctx)
+// // Register method registers user with given parameters
+// func (s *AuthService) Register(ctx context.Context, regUser models.RegisterData) error {
+// 	logger := log.Ctx(ctx)
 
-	hashedPass, err := bcrypt.GenerateFromPassword([]byte(regUser.Password), bcrypt.DefaultCost)
-	if err != nil {
-		logger.Error().Err(errors.Wrap(err, errs.ErrBcrypt)).Msg(errs.ErrInvalidPassword)
-		return noData, errors.New(errs.ErrInvalidPassword)
-	}
+// 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(regUser.Password), bcrypt.DefaultCost)
+// 	if err != nil {
+// 		logger.Error().Err(errors.Wrap(err, errs.ErrBcrypt)).Msg(errs.ErrInvalidPassword)
+// 		return errors.New(errs.ErrInvalidPassword)
+// 	}
 
-	// create user
-	errRepo := s.authRepo.CreateUser(ctx, regUser.Username, string(hashedPass))
-	if errRepo != nil {
-		logger.Error().Err(errRepo).Msg(errRepo.Error())
-		return noData, errRepo
-	}
+// 	errRepo := s.userRepo.CreateUser(ctx, regUser.Username, string(hashedPass))
+// 	if errRepo != nil {
+// 		logger.Error().Err(errRepo).Msg(errRepo.Error())
+// 		return errRepo
+// 	}
+// 	return nil
+// }
 
-	// session service
-	newSessionID, errSession := s.createNewSession(ctx)
-	if errSession != nil {
-		return noData, errors.New(errs.ErrSomethingWentWrong)
-	}
+// // CreateSession method creates new sessionID and stores username by sessionID
+// func (s *AuthService) CreateSession(ctx context.Context, username string) (string, error) {
+// 	logger := log.Ctx(ctx)
 
-	errRepo = s.authRepo.StoreSession(ctx, newSessionID, regUser.Username)
-	if errRepo != nil {
-		logger.Error().Err(errRepo).Msg(errRepo.Error())
-		return noData, errRepo
-	}
-	logger.Info().Msg("Session created")
-	/////////////////////////////
+// 	newSessionID, err := session.GenerateSessionID(s.sessionLength)
+// 	if err != nil {
+// 		logger.Error().Err(errors.Wrap(err, errs.ErrMsgGenerateSession)).Msg(errors.Wrap(err, errs.ErrMsgGenerateSession).Error())
+// 		return noData, errs.ErrGenerateSession
+// 	}
 
-	return newSessionID, nil
-}
+// 	errRepo := s.sessionRepo.StoreSession(ctx, newSessionID, username)
+// 	if errRepo != nil {
+// 		logger.Error().Err(errRepo).Msg(errRepo.Error())
+// 		return noData, errRepo
+// 	}
+// 	logger.Info().Msg("Session created")
+// 	return newSessionID, nil
+// }
 
-func (s *AuthService) createNewSession(ctx context.Context) (string, error) {
-	logger := log.Ctx(ctx)
+// // DeleteSession method deletes session by sessionID
+// func (s *AuthService) DeleteSession(ctx context.Context, sessionID string) error {
+// 	logger := log.Ctx(ctx)
 
-	// create new session for user
-	newSessionID, err := session.GenerateSessionID(s.sessionLength)
-	if err != nil {
-		logger.Error().Err(errors.Wrap(err, errs.ErrGenerateSession)).Msg(errors.Wrap(err, errs.ErrGenerateSession).Error())
-		return noData, errors.Wrap(err, errs.ErrSomethingWentWrong)
-	}
+// 	errRepo := s.sessionRepo.DeleteSession(ctx, sessionID)
+// 	if errRepo != nil {
+// 		logger.Error().Err(errRepo).Msg(errRepo.Error())
+// 		return errRepo
+// 	}
 
-	return newSessionID, nil
-}
+// 	logger.Info().Msg("session successfully deleted")
 
-func (s *AuthService) DeleteSession(ctx context.Context, sessionID string) error {
-	logger := log.Ctx(ctx)
+// 	return nil
+// }
 
-	errRepo := s.authRepo.DeleteSession(ctx, sessionID)
-	if errRepo != nil {
-		logger.Error().Err(errRepo).Msg(errRepo.Error())
-		return errRepo
-	}
+// // GetSession method gets session by sessionID
+// func (s *AuthService) GetSession(ctx context.Context, sessionID string) (string, error) {
+// 	logger := log.Ctx(ctx)
 
-	logger.Info().Msg("session successfully deleted")
+// 	username, errRepo := s.sessionRepo.GetSession(ctx, sessionID)
+// 	if errRepo != nil {
+// 		logger.Error().Err(errors.Wrap(errRepo, errs.ErrMsgSessionNotExists)).Msg(errRepo.Error())
+// 		return noData, errRepo
+// 	}
 
-	return nil
-}
+// 	return username, nil
+// }
 
-// Session http handler method
-func (s *AuthService) GetSession(ctx context.Context, sessionID string) (string, error) {
-	logger := log.Ctx(ctx)
+// // Login method checks if user with given credentials exists
+// func (s *AuthService) Login(ctx context.Context, loginData models.LoginData) error {
+// 	logger := log.Ctx(ctx)
 
-	username, errRepo := s.authRepo.GetSession(ctx, sessionID)
-	if errRepo != nil {
-		logger.Error().Err(errors.Wrap(errRepo, errs.ErrSessionNotExists)).Msg(errRepo.Error())
-		return noData, errRepo
-	}
+// 	hashedPass, errRepo := s.userRepo.GetUser(ctx, loginData.Username)
+// 	if errRepo != nil {
+// 		logger.Error().Err(errors.Wrap(errRepo, errs.ErrIncorrectLoginOrPassword)).Msg(errRepo.Error())
+// 		return errRepo
+// 	}
 
-	return username, nil
-}
+// 	if err := bcrypt.CompareHashAndPassword([]byte(hashedPass), []byte(loginData.Password)); err != nil {
+// 		logger.Error().Err(errors.Wrap(err, errs.ErrIncorrectLoginOrPassword)).Msg(errs.ErrIncorrectPassword)
+// 		return errors.New(errs.ErrIncorrectPassword)
+// 	}
 
-// Login http handler method
-func (s *AuthService) Login(ctx context.Context, loginData models.LoginData) (string, error) {
-	logger := log.Ctx(ctx)
-
-	hashedPass, errRepo := s.authRepo.GetUser(ctx, loginData.Username)
-	if errRepo != nil {
-		logger.Error().Err(errors.Wrap(errRepo, errs.ErrIncorrectLoginOrPassword)).Msg(errRepo.Error())
-		return noData, errRepo
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(hashedPass), []byte(loginData.Password)); err != nil {
-		logger.Error().Err(errors.Wrap(err, errs.ErrIncorrectLoginOrPassword)).Msg(errs.ErrIncorrectPassword)
-		return noData, errors.New(errs.ErrIncorrectPassword)
-	}
-
-	newSessionID, errSession := s.createNewSession(ctx)
-	if errSession != nil {
-		return noData, errors.New(errs.ErrSomethingWentWrong)
-	}
-
-	// repo session
-	errRepo = s.authRepo.StoreSession(ctx, newSessionID, loginData.Username)
-	if errRepo != nil {
-
-		logger.Error().Err(errRepo).Msg(errRepo.Error())
-		return noData, errRepo
-	}
-
-	logger.Info().Msg("Session created")
-
-	return newSessionID, nil
-}
-
-// Logout http handler method
-func (s *AuthService) Logout(ctx context.Context, sessionID string) error {
-	logger := log.Ctx(ctx)
-
-	if _, errRepo := s.authRepo.GetSession(ctx, sessionID); errRepo != nil {
-		logger.Err(errRepo).Msg(errs.ErrSessionNotExists)
-		return errRepo
-	}
-
-	errRepo := s.authRepo.DeleteSession(ctx, sessionID)
-	if errRepo != nil {
-		logger.Error().Err(errRepo).Msg(errRepo.Error())
-		return errRepo
-	}
-
-	return nil
-}
+// 	return nil
+// }

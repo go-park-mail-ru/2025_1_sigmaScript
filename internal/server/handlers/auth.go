@@ -181,9 +181,9 @@ func (a *AuthHandler) createNewSessionWithCookie(w http.ResponseWriter, r *http.
 	// create new session for user
 	newSessionID, err := session.GenerateSessionID(a.cfg.SessionLength)
 	if err != nil {
-		logger.Error().Err(errors.Wrap(err, errs.ErrGenerateSession)).Msg(errors.Wrap(err, errs.ErrGenerateSession).Error())
-		jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errors.Wrap(err, errs.ErrGenerateSessionShort).Error(),
-			errors.Wrap(err, errs.ErrGenerateSession).Error())
+		logger.Error().Err(errors.Wrap(err, errs.ErrMsgGenerateSession)).Msg(errors.Wrap(err, errs.ErrMsgGenerateSession).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errors.Wrap(err, errs.ErrMsgGenerateSessionShort).Error(),
+			errors.Wrap(err, errs.ErrMsgGenerateSession).Error())
 		return "", nil
 	}
 
@@ -213,8 +213,8 @@ func (a *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	sessionID := cookie.Value
 	if _, exists := a.sessions.Load(sessionID); !exists {
 		err := errors.New("session does not exist")
-		logger.Warn().Msg(errs.ErrSessionNotExists)
-		jsonutil.SendError(r.Context(), w, http.StatusNotFound, errors.Wrap(err, errs.ErrSessionNotExistsShort).Error(), errs.ErrSessionNotExists)
+		logger.Warn().Msg(errs.ErrMsgSessionNotExists)
+		jsonutil.SendError(r.Context(), w, http.StatusNotFound, errors.Wrap(err, errs.ErrMsgSessionNotExistsShort).Error(), errs.ErrMsgSessionNotExists)
 		return
 	}
 
@@ -246,9 +246,9 @@ func (a *AuthHandler) Session(w http.ResponseWriter, r *http.Request) {
 	username, ok := a.sessions.Load(sessionCookie.Value)
 	if !ok {
 		err := errors.New("failed to get session")
-		logger.Error().Err(errors.Wrap(err, errs.ErrSessionNotExists)).Msg(errors.Wrap(err, errs.ErrSessionNotExists).Error())
-		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errors.Wrap(err, errs.ErrSessionNotExists).Error(),
-			errors.Wrap(err, errs.ErrSessionNotExists).Error())
+		logger.Error().Err(errors.Wrap(err, errs.ErrMsgSessionNotExists)).Msg(errors.Wrap(err, errs.ErrMsgSessionNotExists).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errors.Wrap(err, errs.ErrMsgSessionNotExists).Error(),
+			errors.Wrap(err, errs.ErrMsgSessionNotExists).Error())
 		return
 	}
 

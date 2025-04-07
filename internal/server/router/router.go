@@ -3,7 +3,6 @@ package router
 import (
 	"net/http"
 
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/handlers"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/middleware"
 	"github.com/gorilla/mux"
 )
@@ -23,8 +22,8 @@ func SetupAuth(router *mux.Router, authHandler AuthHandlerInterface) {
 	authSubRouter.HandleFunc("/session", authHandler.Session).Methods(http.MethodGet, http.MethodOptions).Name("SessionRoute")
 }
 
-func SetupCollections(router *mux.Router) {
-	router.HandleFunc("/collections/", handlers.GetCollections).Methods(http.MethodGet, http.MethodOptions).Name("CollectionsRoute")
+func SetupCollections(router *mux.Router, collectionHandler CollectionHandlerInterface) {
+	router.HandleFunc("/collections/", collectionHandler.GetMainPageCollections).Methods(http.MethodGet, http.MethodOptions).Name("CollectionsRoute")
 }
 
 func SetupStaffPersonHandlers(router *mux.Router, staffPersonHandler StaffPersonHandlerInterface) {

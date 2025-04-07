@@ -9,8 +9,12 @@ import (
 	deliveryAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
 	repoAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/repository"
 	serviceAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service"
+	deliveryCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/delivery"
+	repoCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/repository"
+	serviceCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/service"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/router"
+
 	deliveryStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/delivery"
 	repoStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/repository"
 	serviceStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/service"
@@ -51,13 +55,17 @@ func (s *Server) Run() error {
 	staffPersonService := serviceStaff.NewStaffPersonService(staffPersonRepo)
 	staffPersonHandler := deliveryStaff.NewStaffPersonHandler(staffPersonService)
 
+	collectionRepo := repoCollection.NewCollectionRepository(&mocks.MainPageCollections)
+	collectionService := serviceCollection.NewCollectionService(collectionRepo)
+	collectionHandler := deliveryCollection.NewCollectionHandler(collectionService)
+
 	mx := router.NewRouter()
 
 	log.Info().Msg("Configuring routes")
 
 	router.ApplyMiddlewares(mx)
 	router.SetupAuth(mx, authHandler)
-	router.SetupCollections(mx)
+	router.SetupCollections(mx, collectionHandler)
 	router.SetupStaffPersonHandlers(mx, staffPersonHandler)
 
 	log.Info().Msg("Routes configured successfully")

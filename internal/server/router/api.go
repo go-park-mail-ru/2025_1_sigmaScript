@@ -12,3 +12,7 @@ type AuthHandlerInterface interface {
 type StaffPersonHandlerInterface interface {
 	GetPerson(w http.ResponseWriter, r *http.Request)
 }
+
+type CollectionHandlerInterface interface {
+	GetMainPageCollections(w http.ResponseWriter, r *http.Request)
+}

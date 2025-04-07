@@ -95,6 +95,11 @@ var (
 	ErrSessionNotExists = errors.New(ErrMsgSessionNotExists)
 )
 
+// collection
+var (
+	ErrCollectionNotExist = errors.New("collection does not exist")
+)
+
 // TODO specific errors for microservices
 // // service layer
 // type ServiceError struct {

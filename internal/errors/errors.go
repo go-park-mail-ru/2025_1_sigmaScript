@@ -84,31 +84,12 @@ const (
 	ErrMsgFailedToGetSession      = "failed to get session"
 )
 
-// staff person
+// error types
 var (
 	ErrPersonNotFound = errors.New("person by this id not found")
-)
 
-// session
-var (
+	ErrCollectionNotExist = errors.New("collection does not exist")
+
 	ErrGenerateSession  = errors.New(ErrMsgGenerateSession)
 	ErrSessionNotExists = errors.New(ErrMsgSessionNotExists)
 )
-
-// collection
-var (
-	ErrCollectionNotExist = errors.New("collection does not exist")
-)
-
-// TODO specific errors for microservices
-// // service layer
-// type ServiceError struct {
-// 	Code  int
-// 	Error error
-// }
-
-// // repository layer
-// type RepoError struct {
-// 	Msg   string
-// 	Error error
-// }

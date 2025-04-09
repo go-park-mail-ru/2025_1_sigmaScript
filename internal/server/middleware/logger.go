@@ -3,12 +3,13 @@ package middleware
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
 	"io"
 	"net"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -48,19 +49,7 @@ func RequestWithLoggerMiddleware(next http.Handler) http.Handler {
 }
 
 func createRequestID() string {
-	output := make([]byte, 32)
-	_, err := rand.Read(output)
-	if err != nil {
-		return ""
-	}
-
-	for pos := range output {
-		output[pos] = symbols[uint8(output[pos])%uint8(len(symbols))]
-	}
-
-	// uuid4 styled string
-	return string(output[0:8]) + "-" + string(output[8:12]) + "-4" +
-		string(output[13:16]) + "-" + string(output[16:20]) + "-" + string(output[20:32])
+	return uuid.New().String()
 }
 
 type responseWriterWithStatus struct {

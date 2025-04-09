@@ -36,13 +36,13 @@ type SessionServiceInterface interface {
 type AuthHandler struct {
 	userService    UserServiceInterface
 	sessionService SessionServiceInterface
-	cookie         *config.Cookie
+	cookieData     *config.Cookie
 }
 
 func NewAuthHandler(ctx context.Context, userService UserServiceInterface,
 	sessionService SessionServiceInterface) *AuthHandler {
 	return &AuthHandler{
-		cookie:         config.FromCookieContext(ctx),
+		cookieData:     config.FromCookieContext(ctx),
 		userService:    userService,
 		sessionService: sessionService,
 	}
@@ -122,7 +122,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.SetCookie(w, preparedNewCookie(h.cookie, newSessionID))
+	http.SetCookie(w, preparedNewCookie(h.cookieData, newSessionID))
 
 	if err := jsonutil.SendJSON(r.Context(), w, ds.Response{Message: messages.SuccessfulRegister}); err != nil {
 		logger.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSomethingWentWrong).Error())
@@ -141,7 +141,7 @@ func (h *AuthHandler) expireOldSessionCookie(w http.ResponseWriter, r *http.Requ
 	}
 
 	if oldSessionCookie != nil {
-		http.SetCookie(w, preparedExpiredCookie(h.cookie))
+		http.SetCookie(w, preparedExpiredCookie(h.cookieData))
 		err := h.sessionService.DeleteSession(r.Context(), oldSessionCookie.Value)
 		if err != nil {
 			return err
@@ -261,7 +261,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.SetCookie(w, preparedNewCookie(h.cookie, newSessionID))
+	http.SetCookie(w, preparedNewCookie(h.cookieData, newSessionID))
 
 	err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: messages.SuccessfulLogin})
 	if err != nil {
@@ -291,7 +291,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.SetCookie(w, preparedExpiredCookie(h.cookie))
+	http.SetCookie(w, preparedExpiredCookie(h.cookieData))
 	logger.Info().Msg("Session deleted")
 
 	err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: messages.SuccessfulLogout})

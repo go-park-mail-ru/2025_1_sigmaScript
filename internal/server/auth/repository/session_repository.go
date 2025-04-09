@@ -12,13 +12,13 @@ import (
 
 type SessionRepository struct {
 	// sessionID --> username
-	sessions synccredmap.SyncCredentialsMap
-	cfg      *config.Cookie
+	rdb synccredmap.SyncCredentialsMap
+	cfg *config.Cookie
 }
 
 func NewSessionRepository() *SessionRepository {
 	res := &SessionRepository{
-		sessions: *synccredmap.NewSyncCredentialsMap(),
+		rdb: *synccredmap.NewSyncCredentialsMap(),
 	}
 
 	return res
@@ -27,7 +27,7 @@ func NewSessionRepository() *SessionRepository {
 func (r *SessionRepository) GetSession(ctx context.Context, sessionID string) (string, error) {
 	logger := log.Ctx(ctx)
 
-	username, ok := r.sessions.Load(sessionID)
+	username, ok := r.rdb.Load(sessionID)
 	if !ok {
 		logger.Error().Err(errors.Wrap(errs.ErrSessionNotExists, errs.ErrMsgFailedToGetSession)).Msg(errs.ErrMsgSessionNotExists)
 		return noData, errs.ErrSessionNotExists
@@ -38,17 +38,17 @@ func (r *SessionRepository) GetSession(ctx context.Context, sessionID string) (s
 func (r *SessionRepository) DeleteSession(ctx context.Context, sessionID string) error {
 	logger := log.Ctx(ctx)
 
-	_, ok := r.sessions.Load(sessionID)
+	_, ok := r.rdb.Load(sessionID)
 	if !ok {
 		logger.Error().Err(errors.Wrap(errs.ErrSessionNotExists, errs.ErrMsgFailedToGetSession)).Msg(errs.ErrMsgSessionNotExists)
 		return errs.ErrSessionNotExists
 	}
 
-	r.sessions.Delete(sessionID)
+	r.rdb.Delete(sessionID)
 	return nil
 }
 
 func (r *SessionRepository) StoreSession(ctx context.Context, newSessionID, login string) error {
-	r.sessions.Store(newSessionID, login)
+	r.rdb.Store(newSessionID, login)
 	return nil
 }

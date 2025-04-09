@@ -7,8 +7,12 @@ import (
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
 	deliveryAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
-	repoAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/repository"
+	repoAuthSessions "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/repository"
 	serviceAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service"
+
+	repoUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/users/repository"
+	serviceUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/users/service"
+
 	deliveryCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/delivery"
 	repoCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/repository"
 	serviceCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/service"
@@ -44,10 +48,10 @@ func New(cfg *config.Config) *Server {
 }
 
 func (s *Server) Run() error {
-	sessionRepo := repoAuth.NewSessionRepository()
-	userRepo := repoAuth.NewUserRepository()
+	sessionRepo := repoAuthSessions.NewSessionRepository()
+	userRepo := repoUsers.NewUserRepository()
 
-	userService := serviceAuth.NewUserService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userRepo)
+	userService := serviceUsers.NewUserService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userRepo)
 	sessionService := serviceAuth.NewSessionService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionRepo)
 	authHandler := deliveryAuth.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)
 

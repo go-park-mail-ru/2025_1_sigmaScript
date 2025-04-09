@@ -10,19 +10,19 @@ import (
 
 // StaffPersonRepository collect and process data of staff person
 type StaffPersonRepository struct {
-	staffRepo *mocks.Persons
+	db *mocks.Persons
 }
 
 // NewStaffPersonRepository returns new instance of StaffPersonRepository
 func NewStaffPersonRepository(staffRepo *mocks.Persons) *StaffPersonRepository {
-	return &StaffPersonRepository{staffRepo: staffRepo}
+	return &StaffPersonRepository{db: staffRepo}
 }
 
 // GetPersonFromRepoByID obtains person info from repo by id
 func (r *StaffPersonRepository) GetPersonFromRepoByID(ctx context.Context, personID int) (*mocks.PersonJSON, error) {
 	logger := log.Ctx(ctx)
 
-	for _, val := range *r.staffRepo {
+	for _, val := range *r.db {
 		if val.ID == personID {
 			return &val, nil
 		}

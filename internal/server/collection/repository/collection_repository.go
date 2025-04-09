@@ -8,12 +8,12 @@ import (
 )
 
 type CollectionRepository struct {
-	repo mocks.Collections
+	db *mocks.Collections
 }
 
 func NewCollectionRepository(repo *mocks.Collections) *CollectionRepository {
 	return &CollectionRepository{
-		repo: *repo,
+		db: repo,
 	}
 }
 
@@ -22,5 +22,5 @@ func (r *CollectionRepository) GetMainPageCollectionsFromRepo(ctx context.Contex
 
 	logger.Info().Msg("Get Collections from repo")
 
-	return r.repo, nil
+	return *r.db, nil
 }

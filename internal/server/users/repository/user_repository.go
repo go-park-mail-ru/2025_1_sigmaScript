@@ -11,15 +11,19 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	noData = ""
+)
+
 type UserRepository struct {
 	// username --> hashedPass
-	users synccredmap.SyncCredentialsMap
-	cfg   *config.Cookie
+	db  synccredmap.SyncCredentialsMap
+	cfg *config.Cookie
 }
 
 func NewUserRepository() *UserRepository {
 	res := &UserRepository{
-		users: *synccredmap.NewSyncCredentialsMap(),
+		db: *synccredmap.NewSyncCredentialsMap(),
 	}
 
 	return res
@@ -28,18 +32,18 @@ func NewUserRepository() *UserRepository {
 func (r *UserRepository) CreateUser(ctx context.Context, login, hashedPass string) error {
 	logger := log.Ctx(ctx)
 
-	if _, exists := r.users.Load(login); exists {
+	if _, exists := r.db.Load(login); exists {
 		logger.Error().Err(errors.New(errs.ErrAlreadyExists)).Msg(common.MsgUserWithNameAlreadyExists)
 		return errors.New(errs.ErrAlreadyExists)
 	}
-	r.users.Store(login, string(hashedPass))
+	r.db.Store(login, string(hashedPass))
 	return nil
 }
 
 func (r *UserRepository) GetUser(ctx context.Context, login string) (hashedPass string, errRepo error) {
 	logger := log.Ctx(ctx)
 
-	hashedPass, exists := r.users.Load(login)
+	hashedPass, exists := r.db.Load(login)
 	if exists {
 		return hashedPass, nil
 	}

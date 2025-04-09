@@ -54,7 +54,7 @@ func TestSendOK(t *testing.T) {
 	rr := httptest.NewRecorder()
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
-			err := SendJSON(rr, test.Data)
+			err := SendJSON(t.Context(), rr, test.Data)
 			require.NoError(t, err)
 
 			var got []Film
@@ -70,7 +70,7 @@ func TestSendFail(t *testing.T) {
 	ch := make(chan int)
 	rr := httptest.NewRecorder()
 	t.Run("json encode error", func(t *testing.T) {
-		err := SendJSON(rr, ch)
+		err := SendJSON(t.Context(), rr, ch)
 		fmt.Println(err.Error())
 		require.Error(t, err)
 	})

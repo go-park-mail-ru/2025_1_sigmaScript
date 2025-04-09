@@ -6,8 +6,23 @@ import (
 	"net/http"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/handlers"
+	deliveryAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
+	repoAuthSessions "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/repository"
+	serviceAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service"
+
+	repoUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/users/repository"
+	serviceUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/users/service"
+
+	deliveryCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/delivery"
+	repoCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/repository"
+	serviceCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/service"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/router"
+
+	deliveryStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/delivery"
+	repoStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/repository"
+	serviceStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/service"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -33,7 +48,20 @@ func New(cfg *config.Config) *Server {
 }
 
 func (s *Server) Run() error {
-	authHandler := handlers.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie))
+	sessionRepo := repoAuthSessions.NewSessionRepository()
+	userRepo := repoUsers.NewUserRepository()
+
+	userService := serviceUsers.NewUserService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userRepo)
+	sessionService := serviceAuth.NewSessionService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionRepo)
+	authHandler := deliveryAuth.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)
+
+	staffPersonRepo := repoStaff.NewStaffPersonRepository(&mocks.ExistingActors)
+	staffPersonService := serviceStaff.NewStaffPersonService(staffPersonRepo)
+	staffPersonHandler := deliveryStaff.NewStaffPersonHandler(staffPersonService)
+
+	collectionRepo := repoCollection.NewCollectionRepository(&mocks.MainPageCollections)
+	collectionService := serviceCollection.NewCollectionService(collectionRepo)
+	collectionHandler := deliveryCollection.NewCollectionHandler(collectionService)
 
 	mx := router.NewRouter()
 
@@ -41,7 +69,8 @@ func (s *Server) Run() error {
 
 	router.ApplyMiddlewares(mx)
 	router.SetupAuth(mx, authHandler)
-	router.SetupCollections(mx)
+	router.SetupCollections(mx, collectionHandler)
+	router.SetupStaffPersonHandlers(mx, staffPersonHandler)
 
 	log.Info().Msg("Routes configured successfully")
 

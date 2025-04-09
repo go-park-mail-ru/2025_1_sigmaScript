@@ -154,7 +154,7 @@ func TestLogin(t *testing.T) {
 				checkResponseError(t, rr, test.expectedResponse)
 			}
 			if test.cookiesEnabled {
-				assert.NotNil(t, cookie, errs.ErrSessionNotExists)
+				assert.NotNil(t, cookie, errs.ErrMsgSessionNotExists)
 				assert.NotEmpty(t, cookie.Value, errs.ErrCookieEmpty)
 				assert.True(t, cookie.HttpOnly, errs.ErrCookieHttpOnly)
 			} else {
@@ -208,7 +208,7 @@ func TestLogout(t *testing.T) {
 			cookieChangeName:   false,
 			deleteSessions:     true,
 			checkMessage:       false,
-			expectedResponse:   fmt.Sprintf("%s: %s", errs.ErrSessionNotExistsShort, "session does not exist"),
+			expectedResponse:   fmt.Sprintf("%s: %s", errs.ErrMsgSessionNotExistsShort, "session does not exist"),
 			expectedStatus:     http.StatusNotFound,
 		},
 	}

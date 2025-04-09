@@ -1,5 +1,7 @@
 package errs
 
+import "errors"
+
 // main
 const (
 	ErrLoadConfig  = "Error loading config"
@@ -31,12 +33,12 @@ const (
 	ErrIncorrectPassword             = "provided password is incorrect"
 	ErrIncorrectLoginOrPassword      = "Incorrect login or password"
 	ErrIncorrectLoginOrPasswordShort = "not_found"
-	ErrGenerateSession               = "Error generating session ID"
-	ErrGenerateSessionShort          = "generate_session_error"
+	ErrMsgGenerateSession            = "Error generating session ID"
+	ErrMsgGenerateSessionShort       = "generate_session_error"
 	ErrUnauthorized                  = "Unauthorized"
 	ErrUnauthorizedShort             = "unauthorized"
-	ErrSessionNotExists              = "Session does not exist"
-	ErrSessionNotExistsShort         = "not_exists"
+	ErrMsgSessionNotExists           = "Session does not exist"
+	ErrMsgSessionNotExistsShort      = "not_exists"
 	ErrInvalidPassword               = "Invalid password"
 	ErrInvalidPasswordShort          = "invalid_password"
 	ErrSomethingWentWrong            = "something went wrong"
@@ -47,6 +49,7 @@ const (
 	ErrLengthLoginShort              = "length_login"
 	ErrEmptyLogin                    = "Empty login"
 	ErrEmptyLoginShort               = "empty_login"
+	ErrNotFoundShort                 = "not_found"
 )
 
 // jsonutil
@@ -75,7 +78,18 @@ const (
 
 // session
 const (
-	ErrNegativeSessionIDLength = "Negative session ID length"
-	ErrLengthTooShort          = "Length too short"
-	ErrLengthTooLong           = "Length too long"
+	ErrMsgNegativeSessionIDLength = "Negative session ID length"
+	ErrMsgLengthTooShort          = "Length too short"
+	ErrMsgLengthTooLong           = "Length too long"
+	ErrMsgFailedToGetSession      = "failed to get session"
+)
+
+// error types
+var (
+	ErrPersonNotFound = errors.New("person by this id not found")
+
+	ErrCollectionNotExist = errors.New("collection does not exist")
+
+	ErrGenerateSession  = errors.New(ErrMsgGenerateSession)
+	ErrSessionNotExists = errors.New(ErrMsgSessionNotExists)
 )

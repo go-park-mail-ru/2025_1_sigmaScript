@@ -18,15 +18,17 @@ const (
 // Middleware for enabling needed CORS
 func MiddlewareCors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logger := log.Ctx(r.Context())
+
 		w.Header().Set("Access-Control-Allow-Origin", viper.GetString(kinolkHostEnv))
 		w.Header().Set("Access-Control-Allow-Methods", viper.GetString(kinolkAllowedMethodsEnv))
-		w.Header().Set("Access-Control-Allow-Credentials", viper.GetString(kinolkAllowCredentialsEnv)) // Разрешаем куки
+		w.Header().Set("Access-Control-Allow-Credentials", viper.GetString(kinolkAllowCredentialsEnv))
 		w.Header().Set("Access-Control-Allow-Headers", viper.GetString(kinolkAllowedHeadersEnv))
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 
-			log.Info().Msg(fmt.Sprintf("options asked from %s", r.RequestURI))
+			logger.Info().Msg(fmt.Sprintf("options asked from %s", r.RequestURI))
 			return
 		}
 
@@ -40,9 +42,11 @@ func MiddlewareCors(next http.Handler) http.Handler {
 func PreventPanicMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
+			logger := log.Ctx(r.Context())
+
 			if err := recover(); err != nil {
 
-				log.Error().Msgf("Catched by middleware: panic happend: %v", err)
+				logger.Error().Msgf("Catched by middleware: panic happend: %v", err)
 
 				http.Error(w, "Internal server error", 500)
 			}

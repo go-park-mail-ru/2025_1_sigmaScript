@@ -89,7 +89,7 @@ erDiagram
     user_rate {
         INTEGER id PK
         INTEGER user_id FK
-        INTEGER review_id FK
+        INTEGER movie_id FK
         BOOLEAN is_like
         TIMESTAMPTZ created_at
         TIMESTAMPTZ updated_at

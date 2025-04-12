@@ -23,6 +23,10 @@ import (
 	repoStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/repository"
 	serviceStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/service"
 
+	deliveryMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/delivery"
+	repoMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/repository"
+	serviceMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/service"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -63,6 +67,10 @@ func (s *Server) Run() error {
 	collectionService := serviceCollection.NewCollectionService(collectionRepo)
 	collectionHandler := deliveryCollection.NewCollectionHandler(collectionService)
 
+	movieRepo := repoMovie.NewMovieRepository(&mocks.ExistingMovies)
+	movieService := serviceMovie.NewMovieService(movieRepo)
+	movieHandler := deliveryMovie.NewMovieHandler(movieService)
+
 	mx := router.NewRouter()
 
 	log.Info().Msg("Configuring routes")
@@ -71,6 +79,7 @@ func (s *Server) Run() error {
 	router.SetupAuth(mx, authHandler)
 	router.SetupCollections(mx, collectionHandler)
 	router.SetupStaffPersonHandlers(mx, staffPersonHandler)
+	router.SetupMovieHandlers(mx, movieHandler)
 
 	log.Info().Msg("Routes configured successfully")
 

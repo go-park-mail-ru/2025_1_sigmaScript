@@ -30,6 +30,10 @@ func SetupStaffPersonHandlers(router *mux.Router, staffPersonHandler StaffPerson
 	router.HandleFunc("/name/{person_id}", staffPersonHandler.GetPerson).Methods(http.MethodGet, http.MethodOptions).Name("StaffPersonRoute")
 }
 
+func SetupMovieHandlers(router *mux.Router, movieHandler MovieHandlerInterface) {
+	router.HandleFunc("/movie/{movie_id}", movieHandler.GetMovie).Methods(http.MethodGet, http.MethodOptions).Name("MovieRoute")
+}
+
 func ApplyMiddlewares(router *mux.Router) {
 	router.Use(middleware.RequestWithLoggerMiddleware)
 	router.Use(middleware.PreventPanicMiddleware)

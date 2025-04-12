@@ -11,16 +11,16 @@ type Collection map[int]Film
 type Collections map[string]Collection
 
 var BestOfAllTime = Collection{
-	0: {ID: 1, Title: "Бойцовский клуб", PreviewURL: "/img/0.webp"},
-	1: {ID: 2, Title: "Тёмный рыцарь", PreviewURL: "/img/1.webp"},
-	2: {ID: 3, Title: "Форрест Гамп", PreviewURL: "/img/2.webp"},
-	3: {ID: 4, Title: "Крестный отец", PreviewURL: "/img/3.webp"},
-	4: {ID: 5, Title: "Интерстеллар", PreviewURL: "/img/4.webp"},
-	5: {ID: 6, Title: "Криминальное чтиво ", PreviewURL: "/img/5.webp"},
-	6: {ID: 7, Title: "Побег из Шоушенка", PreviewURL: "/img/6.webp"},
-	7: {ID: 8, Title: "Матрица", PreviewURL: "/img/7.webp"},
-	8: {ID: 9, Title: "Зелёная миля", PreviewURL: "/img/8.webp"},
-	9: {ID: 10, Title: "Одержимость", PreviewURL: "/img/9.webp"},
+	0: {ID: 0, Title: "Бойцовский клуб", PreviewURL: "/img/0.webp"},
+	1: {ID: 1, Title: "Тёмный рыцарь", PreviewURL: "/img/1.webp"},
+	2: {ID: 2, Title: "Форрест Гамп", PreviewURL: "/img/2.webp"},
+	3: {ID: 3, Title: "Крестный отец", PreviewURL: "/img/3.webp"},
+	4: {ID: 4, Title: "Интерстеллар", PreviewURL: "/img/4.webp"},
+	5: {ID: 5, Title: "Криминальное чтиво ", PreviewURL: "/img/5.webp"},
+	6: {ID: 6, Title: "Побег из Шоушенка", PreviewURL: "/img/6.webp"},
+	7: {ID: 7, Title: "Матрица", PreviewURL: "/img/7.webp"},
+	8: {ID: 8, Title: "Зелёная миля", PreviewURL: "/img/8.webp"},
+	9: {ID: 9, Title: "Одержимость", PreviewURL: "/img/9.webp"},
 }
 
 var OskarNominees = Collection{

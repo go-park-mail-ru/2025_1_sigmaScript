@@ -87,6 +87,7 @@ const (
 // error types
 var (
 	ErrPersonNotFound = errors.New("person by this id not found")
+	ErrMovieNotFound  = errors.New("movie by this id not found")
 
 	ErrCollectionNotExist = errors.New("collection does not exist")
 

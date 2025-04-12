@@ -86,19 +86,9 @@ erDiagram
         TIMESTAMPTZ created_at
         TIMESTAMPTZ updated_at
     }
-    user_rate {
-        INTEGER id PK
-        INTEGER user_id FK
-        INTEGER movie_id FK
-        BOOLEAN is_like
-        TIMESTAMPTZ created_at
-        TIMESTAMPTZ updated_at
-    }
 
     user                ||--o{ review           : "writes"
     movie               ||--o{ review           : "has"
-    user                ||--o{ user_rate        : "gives"
-    review              ||--o{ user_rate        : "receives"
 
     country             ||--o{ movie            : "originates_from"
 

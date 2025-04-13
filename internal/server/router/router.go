@@ -3,7 +3,11 @@ package router
 import (
 	"net/http"
 
+	authDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
+	collectionDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/delivery"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/middleware"
+	staffDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/delivery"
+	userDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/delivery/http"
 	"github.com/gorilla/mux"
 )
 
@@ -13,7 +17,7 @@ func NewRouter() *mux.Router {
 	return router
 }
 
-func SetupAuth(router *mux.Router, authHandler AuthHandlerInterface) {
+func SetupAuth(router *mux.Router, authHandler authDelivery.AuthHandlerInterface) {
 	authSubRouter := router.PathPrefix("/auth").Subrouter()
 
 	authSubRouter.HandleFunc("/login", authHandler.Login).Methods(http.MethodPost, http.MethodOptions).Name("LoginRoute")
@@ -22,15 +26,15 @@ func SetupAuth(router *mux.Router, authHandler AuthHandlerInterface) {
 	authSubRouter.HandleFunc("/session", authHandler.Session).Methods(http.MethodGet, http.MethodOptions).Name("SessionRoute")
 }
 
-func SetupCollections(router *mux.Router, collectionHandler CollectionHandlerInterface) {
+func SetupCollections(router *mux.Router, collectionHandler collectionDelivery.CollectionHandlerInterface) {
 	router.HandleFunc("/collections/", collectionHandler.GetMainPageCollections).Methods(http.MethodGet, http.MethodOptions).Name("CollectionsRoute")
 }
 
-func SetupStaffPersonHandlers(router *mux.Router, staffPersonHandler StaffPersonHandlerInterface) {
+func SetupStaffPersonHandlers(router *mux.Router, staffPersonHandler staffDelivery.StaffPersonHandlerInterface) {
 	router.HandleFunc("/name/{person_id}", staffPersonHandler.GetPerson).Methods(http.MethodGet, http.MethodOptions).Name("StaffPersonRoute")
 }
 
-func SetupUserHandlers(router *mux.Router, userHandler UserHandlerInterface) {
+func SetupUserHandlers(router *mux.Router, userHandler userDelivery.UserHandlerInterface) {
 	router.HandleFunc("/users", userHandler.UpdateUser).Methods(http.MethodPost, http.MethodOptions).Name("UpdateUserRoute")
 }
 

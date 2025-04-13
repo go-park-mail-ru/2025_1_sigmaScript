@@ -10,7 +10,7 @@ import (
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery/interfaces"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/service/dto"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/delivery/http/dto"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/validation/auth"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/cookie"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"

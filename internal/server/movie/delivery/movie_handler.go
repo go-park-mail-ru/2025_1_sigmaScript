@@ -36,7 +36,6 @@ func (h *MovieHandler) GetMovie(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		errMsg := errors.New("movie_id not found in path variables")
 		logger.Error().Err(errMsg).Msg(errMsg.Error())
-		// !!!!!!!
 		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, "Missing movie_id parameter")
 		return
 	}

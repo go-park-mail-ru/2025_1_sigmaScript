@@ -1,17 +1,16 @@
 package mocks
 
 type UserJSON struct {
-	ID     int    `json:"id"`
 	Login  string `json:"login"`
 	Avatar string `json:"avatar,omitempty"`
 }
 
 type ReviewJSON struct {
 	ID         int      `json:"id"`
-	User       UserJSON `json:"user"`
-	ReviewText string   `json:"review_text"`
 	Score      int      `json:"score"`
+	ReviewText string   `json:"review_text"`
 	CreatedAt  string   `json:"created_at"`
+	User       UserJSON `json:"user"`
 }
 
 type GenreJSON struct {
@@ -89,35 +88,35 @@ var ExistingMovies = Movies{
 		Reviews: []ReviewJSON{
 			{
 				ID:         1,
-				User:       UserJSON{ID: 101, Login: "KinoKritik77"},
+				User:       UserJSON{Login: "KinoKritik77"},
 				ReviewText: "Абсолютный шедевр! Фильм, который заставляет задуматься о современном обществе, консьюмеризме и поиске себя. Потрясающая игра актеров и неожиданный финал.",
 				Score:      10,
 				CreatedAt:  "15.10.2023",
 			},
 			{
 				ID:         2,
-				User:       UserJSON{ID: 102, Login: "Alice_F"},
+				User:       UserJSON{Login: "Alice_F"},
 				ReviewText: "Сначала показался странным и жестоким, но потом поняла глубину. Финал просто взрывает мозг! Пересматривала несколько раз.",
 				Score:      9,
 				CreatedAt:  "20.01.2024",
 			},
 			{
 				ID:         3,
-				User:       UserJSON{ID: 103, Login: "Sergey_N"},
+				User:       UserJSON{Login: "Sergey_N"},
 				ReviewText: "Не мое. Слишком много неоправданного насилия и псевдофилософии. Пытается быть глубоким, но выглядит претенциозно. Финал предсказуем, если внимательно смотреть.",
 				Score:      5,
 				CreatedAt:  "01.11.2023",
 			},
 			{
 				ID:         4,
-				User:       UserJSON{ID: 205, Login: "Tyler_Fan99"},
+				User:       UserJSON{Login: "Tyler_Fan99"},
 				ReviewText: "Лучший фильм ЭВЕР! Нортон и Питт на высоте. Идея анархии и разрушения системы - то, что нужно! Первое правило - никому не рассказывать!",
 				Score:      10,
 				CreatedAt:  "08.03.2024",
 			},
 			{
 				ID:         5,
-				User:       UserJSON{ID: 310, Login: "RegularViewer"},
+				User:       UserJSON{Login: "RegularViewer"},
 				ReviewText: "Интересный фильм с неожиданным поворотом. Хорошая сатира на общество потребления, но местами затянуто. Стоит посмотреть хотя бы раз.",
 				Score:      7,
 				CreatedAt:  "25.12.2023",

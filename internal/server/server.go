@@ -9,9 +9,9 @@ import (
 	deliveryAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
 	repoAuthSessions "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/repository"
 	serviceAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service"
+	repoUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/repository"
 
 	deliveryUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/delivery/http"
-	repoUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/repository/memory"
 	serviceUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/service"
 
 	deliveryCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/delivery"

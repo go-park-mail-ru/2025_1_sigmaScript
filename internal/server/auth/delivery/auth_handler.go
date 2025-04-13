@@ -84,7 +84,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	err := h.userService.Register(r.Context(), reg)
 	if err != nil {
-		logger.Error().Err(err).Msgf("error happened: %v", err.Error)
+		logger.Err(err).Msgf("error happened: %v", err)
 
 		switch err.Error() {
 		case errs.ErrInvalidPassword:
@@ -110,7 +110,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	newSessionID, err := h.sessionService.CreateSession(r.Context(), reg.Username)
 	if err != nil {
-		logger.Error().Err(err).Msgf("error happened: %v", err.Error)
+		logger.Error().Err(err).Msgf("error happened: %v", err)
 
 		if errors.Is(err, errs.ErrGenerateSession) {
 			jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrMsgGenerateSessionShort,
@@ -234,7 +234,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 				errors.Wrap(err, errs.ErrIncorrectLoginOrPassword).Error())
 			return
 		default:
-			logger.Error().Err(err).Msgf("error happened: %v", err.Error)
+			logger.Error().Err(err).Msgf("error happened: %v", err)
 			jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrSomethingWentWrong, errs.ErrSomethingWentWrong)
 			return
 		}
@@ -249,7 +249,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	newSessionID, err := h.sessionService.CreateSession(r.Context(), login.Username)
 	if err != nil {
-		logger.Error().Err(err).Msgf("error happened: %v", err.Error)
+		logger.Error().Err(err).Msgf("error happened: %v", err)
 
 		if errors.Is(err, errs.ErrGenerateSession) {
 			jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrMsgGenerateSessionShort,

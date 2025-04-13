@@ -16,3 +16,7 @@ type StaffPersonHandlerInterface interface {
 type CollectionHandlerInterface interface {
 	GetMainPageCollections(w http.ResponseWriter, r *http.Request)
 }
+
+type UserHandlerInterface interface {
+	UpdateUser(w http.ResponseWriter, r *http.Request)
+}

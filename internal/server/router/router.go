@@ -30,6 +30,10 @@ func SetupStaffPersonHandlers(router *mux.Router, staffPersonHandler StaffPerson
 	router.HandleFunc("/name/{person_id}", staffPersonHandler.GetPerson).Methods(http.MethodGet, http.MethodOptions).Name("StaffPersonRoute")
 }
 
+func SetupUserHandlers(router *mux.Router, userHandler UserHandlerInterface) {
+	router.HandleFunc("/users", userHandler.UpdateUser).Methods(http.MethodPost, http.MethodOptions).Name("UpdateUserRoute")
+}
+
 func ApplyMiddlewares(router *mux.Router) {
 	router.Use(middleware.RequestWithLoggerMiddleware)
 	router.Use(middleware.PreventPanicMiddleware)

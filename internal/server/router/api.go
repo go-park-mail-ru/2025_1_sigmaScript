@@ -16,3 +16,7 @@ type StaffPersonHandlerInterface interface {
 type CollectionHandlerInterface interface {
 	GetMainPageCollections(w http.ResponseWriter, r *http.Request)
 }
+
+type MovieHandlerInterface interface {
+	GetMovie(w http.ResponseWriter, r *http.Request)
+}

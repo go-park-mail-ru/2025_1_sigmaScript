@@ -10,33 +10,62 @@ import (
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/ds"
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/messages"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery/interfaces"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/validation/auth"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/cookie"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthHandler struct {
-	userService    interfaces.UserServiceInterface
-	sessionService interfaces.SessionServiceInterface
+type ReviewHandlerInterface interface {
+	GetReview(w http.ResponseWriter, r *http.Request)
+	GetReviewsOfMovie(w http.ResponseWriter, r *http.Request)
+	CreateReview(w http.ResponseWriter, r *http.Request)
+	UpdateReview(w http.ResponseWriter, r *http.Request)
+	DeleteReview(w http.ResponseWriter, r *http.Request)
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+
+type UserServiceInterface interface {
+	Register(ctx context.Context, regUser models.RegisterData) error
+	Login(ctx context.Context, login models.LoginData) error
+}
+
+type SessionServiceInterface interface {
+	GetSession(ctx context.Context, sessionID string) (string, error)
+	DeleteSession(ctx context.Context, sessionID string) error
+	CreateSession(ctx context.Context, username string) (string, error)
+}
+
+type ReviewServiceInterface interface {
+	GetReview(ctx context.Context, movieID, userID int) (mocks.ReviewJSON, error)
+	GetReviewsOfMovie(ctx context.Context, movieID int, paginatorPageNumber ...int) ([]mocks.ReviewJSON, error)
+	CreateReview(ctx context.Context, newReview mocks.ReviewJSON) error
+	UpdateReview(ctx context.Context, updatedReview mocks.ReviewJSON) error
+	DeleteReview(ctx context.Context, reviewID int) error
+}
+
+type ReviewHandler struct {
+	userService    UserServiceInterface
+	sessionService SessionServiceInterface
+	reviewService  ReviewServiceInterface
 	cookieData     *config.Cookie
 }
 
-func NewAuthHandler(ctx context.Context, userService interfaces.UserServiceInterface,
-	sessionService interfaces.SessionServiceInterface) *AuthHandler {
-	return &AuthHandler{
+func NewReviewHandler(ctx context.Context, userService UserServiceInterface,
+	sessionService SessionServiceInterface, reviewService ReviewServiceInterface) *ReviewHandler {
+	return &ReviewHandler{
 		cookieData:     config.FromCookieContext(ctx),
 		userService:    userService,
 		sessionService: sessionService,
+		reviewService:  reviewService,
 	}
 }
 
-// Register http handler method
-func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+// GetReview http handler method
+func (h *ReviewHandler) Register(w http.ResponseWriter, r *http.Request) {
 	logger := log.Ctx(r.Context())
 
 	var reg models.RegisterData
@@ -69,23 +98,9 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedPass, err := bcrypt.GenerateFromPassword([]byte(reg.Password), bcrypt.DefaultCost)
+	err := h.userService.Register(r.Context(), reg)
 	if err != nil {
-		logger.Error().Err(errors.Wrap(err, errs.ErrBcrypt)).Msg(errors.Wrap(err, errs.ErrBcrypt).Error())
-		jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errors.Wrap(err, errs.ErrInvalidPasswordShort).Error(),
-			errors.Wrap(err, errs.ErrInvalidPassword).Error())
-		return
-	}
-
-	user := &models.User{
-		Username:       reg.Username,
-		HashedPassword: string(hashedPass),
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
-	}
-	err = h.userService.CreateUser(r.Context(), user)
-	if err != nil {
-		logger.Err(err).Msgf("error happened: %v", err)
+		logger.Error().Err(err).Msgf("error happened: %v", err.Error)
 
 		switch err.Error() {
 		case errs.ErrInvalidPassword:
@@ -104,14 +119,14 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	logger.Info().Msg("User registered successfully")
 
 	// expire old session cookie if it exists
-	errOldSession := cookie.ExpireOldSessionCookie(w, r, h.cookieData, h.sessionService)
+	errOldSession := h.expireOldSessionCookie(w, r)
 	if errOldSession != nil {
 		logger.Warn().Err(errOldSession).Msg(errOldSession.Error())
 	}
 
 	newSessionID, err := h.sessionService.CreateSession(r.Context(), reg.Username)
 	if err != nil {
-		logger.Error().Err(err).Msgf("error happened: %v", err)
+		logger.Error().Err(err).Msgf("error happened: %v", err.Error)
 
 		if errors.Is(err, errs.ErrGenerateSession) {
 			jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrMsgGenerateSessionShort,
@@ -123,7 +138,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.SetCookie(w, cookie.PreparedNewCookie(h.cookieData, newSessionID))
+	http.SetCookie(w, preparedNewCookie(h.cookieData, newSessionID))
 
 	if err := jsonutil.SendJSON(r.Context(), w, ds.Response{Message: messages.SuccessfulRegister}); err != nil {
 		logger.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSomethingWentWrong).Error())
@@ -132,9 +147,53 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 // expires old session cookie if it exists
+func (h *ReviewHandler) expireOldSessionCookie(w http.ResponseWriter, r *http.Request) error {
+	logger := log.Ctx(r.Context())
+
+	oldSessionCookie, err := r.Cookie("session_id")
+	if errors.Is(err, http.ErrNoCookie) {
+		logger.Info().Msg("user dont have old cookie")
+		return nil
+	}
+
+	if oldSessionCookie != nil {
+		http.SetCookie(w, preparedExpiredCookie(h.cookieData))
+		err := h.sessionService.DeleteSession(r.Context(), oldSessionCookie.Value)
+		if err != nil {
+			return err
+		}
+		logger.Info().Msg("successfully expired old sesssion cookie")
+	}
+
+	return nil
+}
+
+func preparedNewCookie(cookie *config.Cookie, newSessionID string) *http.Cookie {
+	return &http.Cookie{
+		Name:     cookie.SessionName,
+		Value:    newSessionID,
+		HttpOnly: cookie.HTTPOnly,
+		Secure:   cookie.Secure,
+		SameSite: cookie.SameSite,
+		Path:     cookie.Path,
+		Expires:  time.Now().AddDate(0, 0, common.COOKIE_DAYS_LIMIT),
+	}
+}
+
+func preparedExpiredCookie(cookie *config.Cookie) *http.Cookie {
+	return &http.Cookie{
+		Name:     cookie.SessionName,
+		Value:    "",
+		HttpOnly: cookie.HTTPOnly,
+		Secure:   cookie.Secure,
+		SameSite: cookie.SameSite,
+		Path:     cookie.Path,
+		Expires:  time.Now().AddDate(common.COOKIE_EXPIRED_LAST_YEAR, 0, 0),
+	}
+}
 
 // Session http handler method gets user data by session
-func (h *AuthHandler) Session(w http.ResponseWriter, r *http.Request) {
+func (h *ReviewHandler) Session(w http.ResponseWriter, r *http.Request) {
 	logger := log.Ctx(r.Context())
 
 	logger.Info().Msg("Checking session")
@@ -154,15 +213,7 @@ func (h *AuthHandler) Session(w http.ResponseWriter, r *http.Request) {
 	}
 	logger.Info().Interface("session username", username).Msg("getSession success")
 
-	user, err := h.userService.GetUser(r.Context(), username)
-	if err != nil {
-		wrapped := errors.Wrap(err, "error getting user")
-		logger.Error().Err(wrapped).Msg(wrapped.Error())
-		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
-		return
-	}
-
-	err = jsonutil.SendJSON(r.Context(), w, user)
+	err = jsonutil.SendJSON(r.Context(), w, ds.User{Username: username})
 	if err != nil {
 		logger.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSendJSON).Error())
 		return
@@ -170,7 +221,7 @@ func (h *AuthHandler) Session(w http.ResponseWriter, r *http.Request) {
 }
 
 // Login http handler method
-func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *ReviewHandler) Login(w http.ResponseWriter, r *http.Request) {
 	logger := log.Ctx(r.Context())
 
 	var login models.LoginData
@@ -199,7 +250,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 				errors.Wrap(err, errs.ErrIncorrectLoginOrPassword).Error())
 			return
 		default:
-			logger.Error().Err(err).Msgf("error happened: %v", err)
+			logger.Error().Err(err).Msgf("error happened: %v", err.Error)
 			jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrSomethingWentWrong, errs.ErrSomethingWentWrong)
 			return
 		}
@@ -207,14 +258,14 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	logger.Info().Msg("User logged in successfully")
 
 	// expire old session cookie if it exists
-	errOldSession := cookie.ExpireOldSessionCookie(w, r, h.cookieData, h.sessionService)
+	errOldSession := h.expireOldSessionCookie(w, r)
 	if errOldSession != nil {
 		logger.Warn().Err(errOldSession).Msg(errOldSession.Error())
 	}
 
 	newSessionID, err := h.sessionService.CreateSession(r.Context(), login.Username)
 	if err != nil {
-		logger.Error().Err(err).Msgf("error happened: %v", err)
+		logger.Error().Err(err).Msgf("error happened: %v", err.Error)
 
 		if errors.Is(err, errs.ErrGenerateSession) {
 			jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrMsgGenerateSessionShort,
@@ -226,7 +277,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.SetCookie(w, cookie.PreparedNewCookie(h.cookieData, newSessionID))
+	http.SetCookie(w, preparedNewCookie(h.cookieData, newSessionID))
 
 	err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: messages.SuccessfulLogin})
 	if err != nil {
@@ -236,11 +287,11 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // Logout http handler method
-func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+func (h *ReviewHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	logger := log.Ctx(r.Context())
 
 	logger.Info().Msg("Logouting user")
-	ck, err := r.Cookie("session_id")
+	cookie, err := r.Cookie("session_id")
 	if err != nil {
 		logger.Warn().Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
 		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errors.Wrap(err, errs.ErrUnauthorizedShort).Error(),
@@ -248,7 +299,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errSession := h.sessionService.DeleteSession(r.Context(), ck.Value)
+	errSession := h.sessionService.DeleteSession(r.Context(), cookie.Value)
 	if errSession != nil {
 		logger.Err(errSession).Msgf("error happened: %v", errSession)
 		jsonutil.SendError(r.Context(), w, http.StatusNotFound, errors.Wrap(errSession, errs.ErrMsgSessionNotExistsShort).Error(),
@@ -256,7 +307,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.SetCookie(w, cookie.PreparedExpiredCookie(h.cookieData))
+	http.SetCookie(w, preparedExpiredCookie(h.cookieData))
 	logger.Info().Msg("Session deleted")
 
 	err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: messages.SuccessfulLogout})

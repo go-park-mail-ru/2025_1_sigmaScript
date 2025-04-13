@@ -36,7 +36,7 @@ func (h *StaffPersonHandler) GetPerson(w http.ResponseWriter, r *http.Request) {
 
 	personID, err := strconv.Atoi(mux.Vars(r)["person_id"])
 	if err != nil {
-		errMsg := errors.Wrapf(err, "getPersonByID action: bad request: %w", err)
+		errMsg := errors.Wrap(err, "getPersonByID action: bad request")
 		logger.Error().Err(errMsg).Msg(errMsg.Error())
 		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, errs.ErrBadPayload)
 		return

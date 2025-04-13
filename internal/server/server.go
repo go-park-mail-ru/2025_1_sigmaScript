@@ -9,9 +9,10 @@ import (
 	deliveryAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
 	repoAuthSessions "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/repository"
 	serviceAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service"
+	repoUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/repository"
 
-	repoUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/users/repository"
-	serviceUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/users/service"
+	deliveryUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/delivery/http"
+	serviceUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/service"
 
 	deliveryCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/delivery"
 	repoCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/repository"
@@ -53,10 +54,12 @@ func New(cfg *config.Config) *Server {
 
 func (s *Server) Run() error {
 	sessionRepo := repoAuthSessions.NewSessionRepository()
-	userRepo := repoUsers.NewUserRepository()
-
-	userService := serviceUsers.NewUserService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userRepo)
 	sessionService := serviceAuth.NewSessionService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionRepo)
+
+	userRepo := repoUsers.NewUserRepository()
+	userService := serviceUsers.NewUserService(userRepo)
+	userHandler := deliveryUsers.NewUserHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)
+
 	authHandler := deliveryAuth.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)
 
 	staffPersonRepo := repoStaff.NewStaffPersonRepository(&mocks.ExistingActors)
@@ -79,6 +82,7 @@ func (s *Server) Run() error {
 	router.SetupAuth(mx, authHandler)
 	router.SetupCollections(mx, collectionHandler)
 	router.SetupStaffPersonHandlers(mx, staffPersonHandler)
+	router.SetupUserHandlers(mx, userHandler)
 	router.SetupMovieHandlers(mx, movieHandler)
 
 	log.Info().Msg("Routes configured successfully")

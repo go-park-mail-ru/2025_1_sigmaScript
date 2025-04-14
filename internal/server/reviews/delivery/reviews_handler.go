@@ -1,202 +1,101 @@
 package delivery
 
 import (
-	"context"
+	"fmt"
 	"net/http"
-	"time"
+	"strconv"
 
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/common"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/ds"
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/messages"
+	authInterfaces "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery/interfaces"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/validation/auth"
+	movieInterfaces "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/delivery"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/reviews/delivery/dto"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
 
-type ReviewHandlerInterface interface {
-	GetReview(w http.ResponseWriter, r *http.Request)
-	GetReviewsOfMovie(w http.ResponseWriter, r *http.Request)
-	CreateReview(w http.ResponseWriter, r *http.Request)
-	UpdateReview(w http.ResponseWriter, r *http.Request)
-	DeleteReview(w http.ResponseWriter, r *http.Request)
-}
-
-/////////////////////////////////////////////////////////////////////////////////
-
-type UserServiceInterface interface {
-	Register(ctx context.Context, regUser models.RegisterData) error
-	Login(ctx context.Context, login models.LoginData) error
-}
-
-type SessionServiceInterface interface {
-	GetSession(ctx context.Context, sessionID string) (string, error)
-	DeleteSession(ctx context.Context, sessionID string) error
-	CreateSession(ctx context.Context, username string) (string, error)
-}
-
-type ReviewServiceInterface interface {
-	GetReview(ctx context.Context, movieID, userID int) (mocks.ReviewJSON, error)
-	GetReviewsOfMovie(ctx context.Context, movieID int, paginatorPageNumber ...int) ([]mocks.ReviewJSON, error)
-	CreateReview(ctx context.Context, newReview mocks.ReviewJSON) error
-	UpdateReview(ctx context.Context, updatedReview mocks.ReviewJSON) error
-	DeleteReview(ctx context.Context, reviewID int) error
-}
+const (
+	NEW_REVIEW_PLACEHOLDER_ID = -1
+)
 
 type ReviewHandler struct {
-	userService    UserServiceInterface
-	sessionService SessionServiceInterface
-	reviewService  ReviewServiceInterface
-	cookieData     *config.Cookie
+	userService    authInterfaces.UserServiceInterface
+	sessionService authInterfaces.SessionServiceInterface
+	movieService   movieInterfaces.MovieServiceInterface
 }
 
-func NewReviewHandler(ctx context.Context, userService UserServiceInterface,
-	sessionService SessionServiceInterface, reviewService ReviewServiceInterface) *ReviewHandler {
+func NewReviewHandler(userService authInterfaces.UserServiceInterface,
+	sessionService authInterfaces.SessionServiceInterface, movieService movieInterfaces.MovieServiceInterface) *ReviewHandler {
 	return &ReviewHandler{
-		cookieData:     config.FromCookieContext(ctx),
 		userService:    userService,
 		sessionService: sessionService,
-		reviewService:  reviewService,
+		movieService:   movieService,
 	}
 }
 
-// GetReview http handler method
-func (h *ReviewHandler) Register(w http.ResponseWriter, r *http.Request) {
+// GetPerson handles GET request to obtain person info by id
+func (h *ReviewHandler) GetAllReviewsOfMovie(w http.ResponseWriter, r *http.Request) {
 	logger := log.Ctx(r.Context())
 
-	var reg models.RegisterData
-	logger.Info().Msg("Registering user")
-
-	if err := jsonutil.ReadJSON(r, &reg); err != nil {
-		msg := errs.ErrBadPayload
-		logger.Error().Err(errors.Wrap(err, errs.ErrParseJSON)).Msg(errors.Wrap(err, errs.ErrParseJSON).Error())
-		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errors.Wrap(err, errs.ErrParseJSONShort).Error(), msg)
+	vars := mux.Vars(r)
+	movieIDStr, ok := vars["movie_id"]
+	if !ok {
+		errMsg := errors.New("movie_id not found in path variables")
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, "Missing movie_id parameter")
 		return
 	}
 
-	if reg.Password != reg.RepeatedPassword {
-		logger.Info().Msg("Passwords mismatch")
-		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errors.New(errs.ErrPasswordsMismatchShort).Error(), errs.ErrPasswordsMismatch)
-		return
-	}
-
-	if err := auth.IsValidPassword(reg.Password); err != nil {
-		logger.Error().Err(errors.Wrap(err, errs.ErrInvalidPassword)).Msg(errors.Wrap(err, errs.ErrInvalidPassword).Error())
-		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errors.Wrap(err, errs.ErrInvalidPasswordShort).Error(),
-			errors.Wrap(err, errs.ErrInvalidPassword).Error())
-		return
-	}
-
-	if err := auth.IsValidLogin(reg.Username); err != nil {
-		logger.Error().Err(errors.Wrap(err, errs.ErrInvalidLogin)).Msg(errors.Wrap(err, errs.ErrInvalidLogin).Error())
-		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errors.Wrap(err, errs.ErrInvalidLoginShort).Error(),
-			errors.Wrap(err, errs.ErrInvalidLogin).Error())
-		return
-	}
-
-	err := h.userService.Register(r.Context(), reg)
+	movieID, err := strconv.Atoi(movieIDStr)
 	if err != nil {
-		logger.Error().Err(err).Msgf("error happened: %v", err.Error)
+		errMsg := errors.Wrapf(err, "getMovie action: bad request: %v", err)
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, errs.ErrBadPayload)
+		return
+	}
 
-		switch err.Error() {
-		case errs.ErrInvalidPassword:
-			jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errors.Wrap(err, errs.ErrInvalidPasswordShort).Error(),
-				errors.Wrap(err, errs.ErrInvalidPassword).Error())
-			return
-		case errs.ErrAlreadyExists:
-			jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errors.New(errs.ErrAlreadyExistsShort).Error(),
-				common.MsgUserWithNameAlreadyExists)
-			return
-		default:
-			jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errors.New(errs.ErrSomethingWentWrong).Error(), errs.ErrSomethingWentWrong)
+	logger.Info().Msgf("getting all reviews of movie by it`s id: %d", movieID)
+	reviewsJSON, err := h.movieService.GetAllReviewsOfMovieByID(r.Context(), movieID)
+	if err != nil {
+		logger.Error().Err(err).Msg(err.Error())
+		if errors.Is(err, errs.ErrMovieNotFound) {
+			jsonutil.SendError(r.Context(), w, http.StatusNotFound, errors.Wrap(err, errs.ErrNotFoundShort).Error(), err.Error())
 			return
 		}
-	}
-	logger.Info().Msg("User registered successfully")
-
-	// expire old session cookie if it exists
-	errOldSession := h.expireOldSessionCookie(w, r)
-	if errOldSession != nil {
-		logger.Warn().Err(errOldSession).Msg(errOldSession.Error())
-	}
-
-	newSessionID, err := h.sessionService.CreateSession(r.Context(), reg.Username)
-	if err != nil {
-		logger.Error().Err(err).Msgf("error happened: %v", err.Error)
-
-		if errors.Is(err, errs.ErrGenerateSession) {
-			jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrMsgGenerateSessionShort,
-				errs.ErrMsgGenerateSession)
-			return
-		}
-		jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrSomethingWentWrong,
-			errs.ErrSomethingWentWrong)
+		jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrSomethingWentWrong, errs.ErrSomethingWentWrong)
 		return
 	}
+	logger.Info().Msgf("successfully got all movie reviews data by it`s id: %d", movieID)
 
-	http.SetCookie(w, preparedNewCookie(h.cookieData, newSessionID))
-
-	if err := jsonutil.SendJSON(r.Context(), w, ds.Response{Message: messages.SuccessfulRegister}); err != nil {
+	if err := jsonutil.SendJSON(r.Context(), w, reviewsJSON); err != nil {
 		logger.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSomethingWentWrong).Error())
 		return
 	}
 }
 
-// expires old session cookie if it exists
-func (h *ReviewHandler) expireOldSessionCookie(w http.ResponseWriter, r *http.Request) error {
+func (h *ReviewHandler) CreateReview(w http.ResponseWriter, r *http.Request) {
 	logger := log.Ctx(r.Context())
+	var newReviewDataJSON *dto.NewReviewDataJSON
 
-	oldSessionCookie, err := r.Cookie("session_id")
-	if errors.Is(err, http.ErrNoCookie) {
-		logger.Info().Msg("user dont have old cookie")
-		return nil
+	vars := mux.Vars(r)
+	movieIDStr, ok := vars["movie_id"]
+	if !ok {
+		errMsg := errors.New("movie_id not found in path variables")
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, "Missing movie_id parameter")
+		return
+	}
+	movieID, err := strconv.Atoi(movieIDStr)
+	if err != nil {
+		errMsg := errors.Wrapf(err, "getMovie action: bad request: %v", err)
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, errs.ErrBadPayload)
+		return
 	}
 
-	if oldSessionCookie != nil {
-		http.SetCookie(w, preparedExpiredCookie(h.cookieData))
-		err := h.sessionService.DeleteSession(r.Context(), oldSessionCookie.Value)
-		if err != nil {
-			return err
-		}
-		logger.Info().Msg("successfully expired old sesssion cookie")
-	}
-
-	return nil
-}
-
-func preparedNewCookie(cookie *config.Cookie, newSessionID string) *http.Cookie {
-	return &http.Cookie{
-		Name:     cookie.SessionName,
-		Value:    newSessionID,
-		HttpOnly: cookie.HTTPOnly,
-		Secure:   cookie.Secure,
-		SameSite: cookie.SameSite,
-		Path:     cookie.Path,
-		Expires:  time.Now().AddDate(0, 0, common.COOKIE_DAYS_LIMIT),
-	}
-}
-
-func preparedExpiredCookie(cookie *config.Cookie) *http.Cookie {
-	return &http.Cookie{
-		Name:     cookie.SessionName,
-		Value:    "",
-		HttpOnly: cookie.HTTPOnly,
-		Secure:   cookie.Secure,
-		SameSite: cookie.SameSite,
-		Path:     cookie.Path,
-		Expires:  time.Now().AddDate(common.COOKIE_EXPIRED_LAST_YEAR, 0, 0),
-	}
-}
-
-// Session http handler method gets user data by session
-func (h *ReviewHandler) Session(w http.ResponseWriter, r *http.Request) {
-	logger := log.Ctx(r.Context())
-
-	logger.Info().Msg("Checking session")
 	sessionCookie, err := r.Cookie("session_id")
 	if err != nil {
 		logger.Warn().Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
@@ -211,108 +110,43 @@ func (h *ReviewHandler) Session(w http.ResponseWriter, r *http.Request) {
 		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrMsgSessionNotExists, errs.ErrMsgFailedToGetSession)
 		return
 	}
-	logger.Info().Interface("session username", username).Msg("getSession success")
 
-	err = jsonutil.SendJSON(r.Context(), w, ds.User{Username: username})
-	if err != nil {
-		logger.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSendJSON).Error())
-		return
-	}
-}
-
-// Login http handler method
-func (h *ReviewHandler) Login(w http.ResponseWriter, r *http.Request) {
-	logger := log.Ctx(r.Context())
-
-	var login models.LoginData
-	logger.Info().Msg("Logining user")
-
-	// get user credentials from request body
-	err := jsonutil.ReadJSON(r, &login)
-	if err != nil {
+	if err = jsonutil.ReadJSON(r, &newReviewDataJSON); err != nil {
 		logger.Error().Err(errors.Wrap(err, errs.ErrParseJSON)).Msg(errors.Wrap(err, errs.ErrParseJSON).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errors.Wrap(err, errs.ErrParseJSONShort).Error(), errs.ErrBadPayload)
+		return
+	}
+
+	if newReviewDataJSON.Score < 1 || newReviewDataJSON.Score > 10 {
+		logger.Error().Err(errors.New(errs.ErrBadPayload)).Msg(fmt.Sprintf("bad score of new review: %d", newReviewDataJSON.Score))
 		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload,
-			errors.Wrap(err, errs.ErrSomethingWentWrong).Error())
+			errs.ErrBadPayload)
 		return
 	}
 
-	err = h.userService.Login(r.Context(), login)
+	user, err := h.userService.GetUser(r.Context(), username)
 	if err != nil {
-		switch err.Error() {
-		case errs.ErrIncorrectLogin:
-			logger.Error().Err(errors.Wrap(err, errs.ErrIncorrectLoginOrPassword)).Msg(err.Error())
-			jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errors.Wrap(err, errs.ErrIncorrectLoginOrPasswordShort).Error(),
-				errors.Wrap(err, errs.ErrIncorrectLoginOrPassword).Error())
-			return
-		case errs.ErrIncorrectPassword:
-			logger.Error().Err(errors.Wrap(err, errs.ErrIncorrectLoginOrPassword)).Msg(err.Error())
-			jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errors.Wrap(err, errs.ErrIncorrectLoginOrPasswordShort).Error(),
-				errors.Wrap(err, errs.ErrIncorrectLoginOrPassword).Error())
-			return
-		default:
-			logger.Error().Err(err).Msgf("error happened: %v", err.Error)
-			jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrSomethingWentWrong, errs.ErrSomethingWentWrong)
-			return
-		}
-	}
-	logger.Info().Msg("User logged in successfully")
-
-	// expire old session cookie if it exists
-	errOldSession := h.expireOldSessionCookie(w, r)
-	if errOldSession != nil {
-		logger.Warn().Err(errOldSession).Msg(errOldSession.Error())
-	}
-
-	newSessionID, err := h.sessionService.CreateSession(r.Context(), login.Username)
-	if err != nil {
-		logger.Error().Err(err).Msgf("error happened: %v", err.Error)
-
-		if errors.Is(err, errs.ErrGenerateSession) {
-			jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrMsgGenerateSessionShort,
-				errs.ErrMsgGenerateSession)
-			return
-		}
-		jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrSomethingWentWrong,
-			errs.ErrSomethingWentWrong)
+		wrapped := errors.Wrap(err, "error getting user")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
 		return
 	}
 
-	http.SetCookie(w, preparedNewCookie(h.cookieData, newSessionID))
-
-	err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: messages.SuccessfulLogin})
-	if err != nil {
-		logger.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSendJSON).Error())
-		return
-	}
-}
-
-// Logout http handler method
-func (h *ReviewHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	logger := log.Ctx(r.Context())
-
-	logger.Info().Msg("Logouting user")
-	cookie, err := r.Cookie("session_id")
-	if err != nil {
-		logger.Warn().Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
-		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errors.Wrap(err, errs.ErrUnauthorizedShort).Error(),
-			errs.ErrUnauthorized)
-		return
+	newReview := mocks.ReviewJSON{
+		ID:         NEW_REVIEW_PLACEHOLDER_ID,
+		Score:      newReviewDataJSON.Score,
+		ReviewText: newReviewDataJSON.ReviewText,
+		CreatedAt:  "",
+		User: mocks.ReviewUserDataJSON{
+			Login:  user.Username,
+			Avatar: user.Avatar,
+		},
 	}
 
-	errSession := h.sessionService.DeleteSession(r.Context(), cookie.Value)
-	if errSession != nil {
-		logger.Err(errSession).Msgf("error happened: %v", errSession)
-		jsonutil.SendError(r.Context(), w, http.StatusNotFound, errors.Wrap(errSession, errs.ErrMsgSessionNotExistsShort).Error(),
-			errs.ErrMsgSessionNotExists)
-		return
-	}
+	h.movieService.CreateNewMovieReview(r.Context(), movieID, newReview)
 
-	http.SetCookie(w, preparedExpiredCookie(h.cookieData))
-	logger.Info().Msg("Session deleted")
-
-	err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: messages.SuccessfulLogout})
-	if err != nil {
-		logger.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSendJSON).Error())
+	if err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: "successfully created new review"}); err != nil {
+		logger.Error().Err(err).Msg(errs.ErrSendJSON)
 		return
 	}
 }

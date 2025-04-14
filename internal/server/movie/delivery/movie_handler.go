@@ -16,6 +16,8 @@ import (
 
 type MovieServiceInterface interface {
 	GetMovieByID(ctx context.Context, movieID int) (*mocks.MovieJSON, error)
+	GetAllReviewsOfMovieByID(ctx context.Context, movieID int) (*[]mocks.ReviewJSON, error)
+	CreateNewMovieReview(ctx context.Context, movieID int, newReview mocks.ReviewJSON) error
 }
 
 type MovieHandler struct {
@@ -42,7 +44,7 @@ func (h *MovieHandler) GetMovie(w http.ResponseWriter, r *http.Request) {
 
 	movieID, err := strconv.Atoi(movieIDStr)
 	if err != nil {
-		errMsg := errors.Wrapf(err, "getMovieByID action: bad request: %w", err)
+		errMsg := errors.Wrapf(err, "getMovie action: bad request: %v", err)
 		logger.Error().Err(errMsg).Msg(errMsg.Error())
 		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, errs.ErrBadPayload)
 		return

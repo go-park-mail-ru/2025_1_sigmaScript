@@ -2,10 +2,15 @@ package http
 
 import (
 	"context"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/common"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/ds"
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery/interfaces"
@@ -16,7 +21,13 @@ import (
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
+)
+
+const (
+	kinolkAvatarsFolder     = "KINOLK_AVATARS_FOLDER"
+	kinolkAvatarsStaticPath = "KINOLK_AVATARS_STATIC_PATH"
 )
 
 type UserHandler struct {
@@ -142,4 +153,126 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		logger.Error().Err(err).Msg(errs.ErrSendJSON)
 		return
 	}
+}
+
+func (h *UserHandler) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
+	uploadDir := viper.GetString(kinolkAvatarsFolder)
+	logger := log.Ctx(r.Context())
+
+	sessionCookie, err := r.Cookie("session_id")
+	if err != nil {
+		logger.Warn().Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrUnauthorizedShort,
+			errs.ErrUnauthorized)
+		return
+	}
+
+	username, errSession := h.sessionSvc.GetSession(r.Context(), sessionCookie.Value)
+	if errSession != nil {
+		logger.Error().Err(errors.Wrap(errSession, errs.ErrMsgSessionNotExists)).Msg(errs.ErrMsgFailedToGetSession)
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrMsgSessionNotExists, errs.ErrMsgFailedToGetSession)
+		return
+	}
+
+	err = r.ParseMultipartForm(common.LIMIT_MB * common.MB)
+	if err != nil {
+		wrapped := errors.Wrap(err, "error uploading file")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+	}
+
+	// Parse the multipart form, limit upload size
+	err = r.ParseMultipartForm(common.LIMIT_MB * common.MB)
+	if err != nil {
+		wrapped := errors.Wrap(err, "error uploading file")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+		return
+	}
+
+	// Get the file from the form data
+	file, header, err := r.FormFile("image")
+	if err != nil {
+		wrapped := errors.Wrap(err, "error uploading file")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+		return
+	}
+	defer file.Close()
+
+	// Check file extension
+	ext := strings.ToLower(filepath.Ext(header.Filename))
+	if !common.ALLOWED_IMAGE_TYPES[ext] {
+		wrapped := errors.Wrap(errs.ErrInvalidFileType, errs.ErrMsgOnlyAllowedImageFormats)
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+		return
+	}
+
+	// get user info
+	user, err := h.userSvc.GetUser(r.Context(), username)
+	if err != nil {
+		wrapped := errors.Wrap(err, "error getting user")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+		return
+	}
+
+	newUser := &models.User{
+		Username:       user.Username,
+		HashedPassword: user.HashedPassword,
+		Avatar:         viper.GetString(kinolkAvatarsStaticPath) + user.Username + header.Filename,
+		CreatedAt:      user.CreatedAt,
+		UpdatedAt:      time.Now(),
+	}
+
+	if err = h.userSvc.UpdateUser(r.Context(), username, newUser); err != nil {
+		wrapped := errors.Wrap(err, "error updating user")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+		return
+	}
+
+	// Create the destination file
+	filePath := filepath.Join(uploadDir, username+header.Filename)
+	dst, err := os.Create(filePath)
+	if err != nil {
+		wrapped := errors.Wrap(err, "error uploading file")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+		return
+	}
+	defer dst.Close()
+
+	// Copy the uploaded file to the destination file
+	_, err = io.Copy(dst, file)
+	if err != nil {
+		wrapped := errors.Wrap(err, "error uploading file")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+		return
+	}
+
+	if len(user.Avatar) > 0 && !strings.Contains(user.Avatar, "avatars/avatar_default_picture.svg") && !strings.Contains(user.Avatar, "img/avatar_placeholder.png") {
+		err = os.Remove(uploadDir + getFilenameInUserAvatarField(user.Avatar))
+		if err != nil {
+			wrapped := errors.Wrap(err, "error updating avatar")
+			logger.Error().Err(wrapped).Msg(wrapped.Error())
+			jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+			return
+		}
+	}
+
+	if err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: "successfully updated user avatar"}); err != nil {
+		logger.Error().Err(err).Msg(errs.ErrSendJSON)
+		return
+	}
+}
+
+func getFilenameInUserAvatarField(s string) string {
+	lastSlashIndex := strings.LastIndex(s, "/")
+	if lastSlashIndex == -1 {
+		return s
+	}
+	return s[lastSlashIndex+1:]
 }

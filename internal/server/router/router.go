@@ -47,6 +47,7 @@ func SetupMovieHandlers(router *mux.Router, movieHandler movieDelivery.MovieHand
 
 func SetupUserHandlers(router *mux.Router, userHandler userDelivery.UserHandlerInterface) {
 	router.HandleFunc("/users", userHandler.UpdateUser).Methods(http.MethodPost, http.MethodOptions).Name("UpdateUserRoute")
+	router.HandleFunc("/users/avatar", userHandler.UpdateUserAvatar).Methods(http.MethodPost, http.MethodOptions).Name("UpdateUserAvatarRoute")
 }
 
 func ApplyMiddlewares(router *mux.Router) {

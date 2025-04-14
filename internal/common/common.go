@@ -9,3 +9,16 @@ const (
 	COOKIE_EXPIRED_LAST_YEAR = -1
 	REVIEWS_PER_PAGE         = 20
 )
+
+var ALLOWED_IMAGE_TYPES = map[string]bool{
+	".svg":  true,
+	".png":  true,
+	".jpg":  true,
+	".jpeg": true,
+	".webp": true,
+}
+
+const (
+	MB       = 1 << 20
+	LIMIT_MB = 5
+)

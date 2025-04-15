@@ -4,6 +4,7 @@ type Film struct {
 	ID         int    `json:"id"`
 	Title      string `json:"title"`
 	PreviewURL string `json:"preview_url"`
+	Duration   string `json:"duration,omitempty"`
 }
 
 type Collection map[int]Film
@@ -28,7 +29,7 @@ var OskarNominees = Collection{
 	1: {ID: 12, Title: "Звёздные войны: Эпизод 4 – Новая надежда", PreviewURL: "/img/12.webp"},
 	2: {ID: 13, Title: "Рокки", PreviewURL: "/img/13.webp"},
 	3: {ID: 14, Title: "Джокер", PreviewURL: "/img/14.webp"},
-	4: {ID: 15, Title: "Игра в имитацию ", PreviewURL: "/img/15.webp"},
+	4: {ID: 15, Title: "Игра в имитацию", PreviewURL: "/img/15.webp"},
 	5: {ID: 16, Title: "Начало", PreviewURL: "/img/16.webp"},
 	6: {ID: 17, Title: "Назад в будущее", PreviewURL: "/img/17.webp"},
 	7: {ID: 18, Title: "Гладиатор", PreviewURL: "/img/18.webp"},
@@ -39,4 +40,11 @@ var OskarNominees = Collection{
 var MainPageCollections = Collections{
 	"Лучшие за всё время": BestOfAllTime,
 	"Номинанты на оскар":  OskarNominees,
+	"promo":               Promo,
+}
+
+var Promo = Collection{
+	0: {ID: 21, Title: "Пророк. История Александра Пушкина", PreviewURL: "/img/promo_prorok.jpeg", Duration: "1ч 53м"},
+	1: {ID: 22, Title: "Финист. первый Богатырь", PreviewURL: "/img/promo_bogatyr.jpeg", Duration: "1ч 52м"},
+	2: {ID: 23, Title: "Батя", PreviewURL: "/img/promo_batya.jpeg", Duration: "1ч 16м"},
 }

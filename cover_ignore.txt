@@ -3,3 +3,9 @@ github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/delivery/http
 github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/service/mocks
 github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery/mocks
 github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service/mocks
+github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/delivery/delivery_mocks
+github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/service/service_mocks
+github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/delivery/delivery_mocks
+github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/service/service_mocks
+github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/delivery/delivery_mocks
+github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/service/service_mocks

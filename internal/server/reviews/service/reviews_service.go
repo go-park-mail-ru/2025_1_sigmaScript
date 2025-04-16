@@ -36,8 +36,16 @@ func (s *ReviewService) GetReviewsOfMovie(ctx context.Context, movieID int, pagi
 	return []mocks.ReviewJSON{}
 }
 
-func (s *ReviewService) GetReview(ctx context.Context, movieID, userID int) (mocks.ReviewJSON, error)
+func (s *ReviewService) GetReview(ctx context.Context, movieID, userID int) (mocks.ReviewJSON, error) {
+	return mocks.ReviewJSON{}, nil
+}
 
-func (s *ReviewService) CreateReview(ctx context.Context, newReview mocks.ReviewJSON) error
-func (s *ReviewService) UpdateReview(ctx context.Context, updatedReview mocks.ReviewJSON) error
-func (s *ReviewService) DeleteReview(ctx context.Context, reviewID int) error
+func (s *ReviewService) CreateReview(ctx context.Context, newReview mocks.ReviewJSON) error {
+	return nil
+}
+func (s *ReviewService) UpdateReview(ctx context.Context, updatedReview mocks.ReviewJSON) error {
+	return nil
+}
+func (s *ReviewService) DeleteReview(ctx context.Context, reviewID int) error {
+	return nil
+}

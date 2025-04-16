@@ -16,13 +16,13 @@ func TestCollectionRepository_GetMainPageCollectionsFromRepo(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name:        "Success - Get collections",
+			name:        "OK. Get collections",
 			dbSetup:     mocks.MainPageCollections,
 			expected:    mocks.MainPageCollections,
 			expectedErr: nil,
 		},
 		{
-			name:        "Success - Empty collections",
+			name:        "OK. Empty collections",
 			dbSetup:     make(mocks.Collections),
 			expected:    make(mocks.Collections),
 			expectedErr: nil,

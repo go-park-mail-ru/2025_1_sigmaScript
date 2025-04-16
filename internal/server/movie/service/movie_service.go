@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-//go:generate mockgen -source=$GOFILE -destination=service_mocks/mock_repository.go -package=service_mocks MovieRepositoryInterface
+//go:generate mockgen -source=$GOFILE -destination=mocks/mocks.go -package=service_mocks MovieRepositoryInterface
 type MovieRepositoryInterface interface {
 	GetMovieFromRepoByID(ctx context.Context, movieID int) (*mocks.MovieJSON, error)
 	GetAllReviewsOfMovieFromRepoByID(ctx context.Context, movieID int) (*[]mocks.ReviewJSON, error)

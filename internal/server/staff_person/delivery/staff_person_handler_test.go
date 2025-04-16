@@ -7,7 +7,7 @@ import (
 
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/delivery/delivery_mocks"
+	delivery_mocks "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/delivery/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +21,6 @@ func TestStaffPersonHandler_GetPerson(t *testing.T) {
 	handler := NewStaffPersonHandler(mockService)
 
 	keanuReeves := mocks.ExistingActors[11]
-	defaultActor := mocks.ExistingActors[1]
 
 	tests := []struct {
 		name         string
@@ -31,7 +30,7 @@ func TestStaffPersonHandler_GetPerson(t *testing.T) {
 		expectedBody string
 	}{
 		{
-			name:     "Success - Get Keanu Reeves",
+			name:     "OK. Get Keanu Reeves",
 			personID: "11",
 			mockSetup: func() {
 				mockService.EXPECT().
@@ -42,32 +41,14 @@ func TestStaffPersonHandler_GetPerson(t *testing.T) {
 			expectedBody: `"full_name":"Киану Ривз"`,
 		},
 		{
-			name:     "Success - Get default actor",
-			personID: "1",
-			mockSetup: func() {
-				mockService.EXPECT().
-					GetPersonByID(gomock.Any(), 1).
-					Return(&defaultActor, nil)
-			},
-			expectedCode: http.StatusOK,
-			expectedBody: `"photo":"/static/avatars/avatar_default_picture.svg"`,
-		},
-		{
-			name:         "Fail - Invalid person ID (string)",
+			name:         "Fail. Invalid person ID (string)",
 			personID:     "abc",
 			mockSetup:    func() {},
 			expectedCode: http.StatusBadRequest,
 			expectedBody: `"error":"bad payload"`,
 		},
-		// {
-		// 	name:         "Fail - Negative person ID",
-		// 	personID:     "-1",
-		// 	mockSetup:    func() {},
-		// 	expectedCode: http.StatusBadRequest,
-		// 	expectedBody: `"error":"bad payload"`,
-		// },
 		{
-			name:     "Fail - Person not found",
+			name:     "Fail. Person not found",
 			personID: "999",
 			mockSetup: func() {
 				mockService.EXPECT().

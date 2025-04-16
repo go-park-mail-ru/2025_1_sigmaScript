@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/service/service_mocks"
+	service_mocks "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/service/mocks"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -25,7 +25,7 @@ func TestCollectionService_GetMainPageCollections(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name: "Success - Get collections",
+			name: "OK. Get collections",
 			mockSetup: func() {
 				mockRepo.EXPECT().
 					GetMainPageCollectionsFromRepo(gomock.Any()).
@@ -35,7 +35,7 @@ func TestCollectionService_GetMainPageCollections(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name: "Fail - Empty collections",
+			name: "Fail. Empty collections",
 			mockSetup: func() {
 				mockRepo.EXPECT().
 					GetMainPageCollectionsFromRepo(gomock.Any()).

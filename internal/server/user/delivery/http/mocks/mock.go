@@ -45,3 +45,15 @@ func (mr *MockUserHandlerInterfaceMockRecorder) UpdateUser(w, r interface{}) *go
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockUserHandlerInterface)(nil).UpdateUser), w, r)
 }
+
+// UpdateUserAvatar mocks base method.
+func (m *MockUserHandlerInterface) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "UpdateUserAvatar", w, r)
+}
+
+// UpdateUserAvatar indicates an expected call of UpdateUserAvatar.
+func (mr *MockUserHandlerInterfaceMockRecorder) UpdateUserAvatar(w, r interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserAvatar", reflect.TypeOf((*MockUserHandlerInterface)(nil).UpdateUserAvatar), w, r)
+}

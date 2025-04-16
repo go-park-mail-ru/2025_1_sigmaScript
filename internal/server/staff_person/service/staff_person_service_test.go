@@ -6,7 +6,7 @@ import (
 
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/service/service_mocks"
+	service_mocks "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/service/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
@@ -28,7 +28,7 @@ func TestStaffPersonService_GetPersonByID(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name:     "Success - Get Keanu Reeves",
+			name:     "OK. Get Keanu Reeves",
 			personID: 11,
 			mockSetup: func() {
 				mockRepo.EXPECT().
@@ -39,7 +39,7 @@ func TestStaffPersonService_GetPersonByID(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name:     "Fail - Person not found",
+			name:     "Fail. Person not found",
 			personID: 999,
 			mockSetup: func() {
 				mockRepo.EXPECT().

@@ -35,6 +35,35 @@ func (m *MockMovieServiceInterface) EXPECT() *MockMovieServiceInterfaceMockRecor
 	return m.recorder
 }
 
+// CreateNewMovieReview mocks base method.
+func (m *MockMovieServiceInterface) CreateNewMovieReview(ctx context.Context, movieID int, newReview mocks.ReviewJSON) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateNewMovieReview", ctx, movieID, newReview)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateNewMovieReview indicates an expected call of CreateNewMovieReview.
+func (mr *MockMovieServiceInterfaceMockRecorder) CreateNewMovieReview(ctx, movieID, newReview interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNewMovieReview", reflect.TypeOf((*MockMovieServiceInterface)(nil).CreateNewMovieReview), ctx, movieID, newReview)
+}
+
+// GetAllReviewsOfMovieByID mocks base method.
+func (m *MockMovieServiceInterface) GetAllReviewsOfMovieByID(ctx context.Context, movieID int) (*[]mocks.ReviewJSON, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllReviewsOfMovieByID", ctx, movieID)
+	ret0, _ := ret[0].(*[]mocks.ReviewJSON)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllReviewsOfMovieByID indicates an expected call of GetAllReviewsOfMovieByID.
+func (mr *MockMovieServiceInterfaceMockRecorder) GetAllReviewsOfMovieByID(ctx, movieID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllReviewsOfMovieByID", reflect.TypeOf((*MockMovieServiceInterface)(nil).GetAllReviewsOfMovieByID), ctx, movieID)
+}
+
 // GetMovieByID mocks base method.
 func (m *MockMovieServiceInterface) GetMovieByID(ctx context.Context, movieID int) (*mocks.MovieJSON, error) {
 	m.ctrl.T.Helper()

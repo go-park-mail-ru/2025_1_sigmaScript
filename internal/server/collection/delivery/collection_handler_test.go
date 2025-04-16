@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/delivery/delivery_mocks"
+	delivery_mocks "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/delivery/mocks"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"

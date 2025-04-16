@@ -20,7 +20,7 @@ func TestStaffPersonRepository_GetPersonFromRepoByID(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name:     "Success - Get Keanu Reeves",
+			name:     "OK. Get Keanu Reeves",
 			personID: 11,
 			expected: func() *mocks.PersonJSON {
 				person := mocks.ExistingActors[11]
@@ -29,7 +29,7 @@ func TestStaffPersonRepository_GetPersonFromRepoByID(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name:        "Fail - Person not found",
+			name:        "Fail. Person not found",
 			personID:    999,
 			expected:    nil,
 			expectedErr: errs.ErrPersonNotFound,

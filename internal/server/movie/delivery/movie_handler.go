@@ -14,7 +14,7 @@ import (
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 )
 
-//go:generate mockgen -source=$GOFILE -destination=delivery_mocks/mock_service.go -package=delivery_mocks MovieServiceInterface
+//go:generate mockgen -source=$GOFILE -destination=mocks/mocks.go -package=delivery_mocks MovieServiceInterface
 type MovieServiceInterface interface {
 	GetMovieByID(ctx context.Context, movieID int) (*mocks.MovieJSON, error)
 	GetAllReviewsOfMovieByID(ctx context.Context, movieID int) (*[]mocks.ReviewJSON, error)
@@ -35,13 +35,7 @@ func (h *MovieHandler) GetMovie(w http.ResponseWriter, r *http.Request) {
 	logger := log.Ctx(r.Context())
 
 	vars := mux.Vars(r)
-	movieIDStr, _ := vars["movie_id"]
-	// if !ok {
-	// 	errMsg := errors.New("movie_id not found in path variables")
-	// 	logger.Error().Err(errMsg).Msg(errMsg.Error())
-	// 	jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, "Missing movie_id parameter")
-	// 	return
-	// }
+	movieIDStr := vars["movie_id"]
 
 	movieID, err := strconv.Atoi(movieIDStr)
 	if err != nil {

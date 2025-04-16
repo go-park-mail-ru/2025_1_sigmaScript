@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"crypto/subtle"
 	"net/http"
 	"strings"
 
@@ -32,12 +31,14 @@ func CsrfTokenMiddleware(next http.Handler) http.Handler {
 		}
 
 		token := cookieCSRFtoken.Value
+		logger.Info().Msgf("got CSRF from cookie %v", token)
 
 		headerCSRFtoken := r.Header.Get("X-CSRF-Token")
+		logger.Info().Msgf("got CSRF from HEADER /%v/.", headerCSRFtoken)
 
 		// compare tokens
-		if subtle.ConstantTimeCompare([]byte(headerCSRFtoken), []byte(token)) != 1 {
-			logger.Error().Msg(errors.Wrap(err, errs.ErrMsgBadCSRFToken).Error())
+		if headerCSRFtoken == "" || strings.Compare(headerCSRFtoken, token) != 0 {
+			logger.Error().Msg(errors.New(errs.ErrMsgBadCSRFToken).Error())
 			jsonutil.SendError(r.Context(), w, http.StatusForbidden, errs.ErrUnauthorizedShort,
 				errs.ErrMsgBadCSRFToken)
 			return

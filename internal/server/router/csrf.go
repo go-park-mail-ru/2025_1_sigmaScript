@@ -9,5 +9,5 @@ import (
 )
 
 func SetupCsrf(router *mux.Router, csrfTokenHandler csrfDelivery.CSRFHandlerInterface) {
-	router.HandleFunc("/csrf-token", csrfTokenHandler.CreateCSRFTokenHandler).Methods(http.MethodGet, http.MethodOptions).Name("CsrfTokenRoute")
+	router.HandleFunc("/auth/csrf-token", csrfTokenHandler.CreateCSRFTokenHandler).Methods(http.MethodGet, http.MethodOptions).Name("CsrfTokenRoute")
 }

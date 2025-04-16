@@ -50,6 +50,8 @@ const (
 	ErrEmptyLogin                    = "Empty login"
 	ErrEmptyLoginShort               = "empty_login"
 	ErrNotFoundShort                 = "not_found"
+	ErrMsgGenerateCSRFToken          = "error generating CSRF token"
+	ErrMsgBadCSRFToken               = "bad csrf token"
 )
 
 // jsonutil

@@ -29,6 +29,8 @@ import (
 	serviceMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/service"
 
 	"github.com/rs/zerolog/log"
+
+	csrfDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/csrf/delivery"
 )
 
 type Server struct {
@@ -62,6 +64,8 @@ func (s *Server) Run() error {
 
 	authHandler := deliveryAuth.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)
 
+	csrfHandler := csrfDelivery.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionService)
+
 	staffPersonRepo := repoStaff.NewStaffPersonRepository(&mocks.ExistingActors)
 	staffPersonService := serviceStaff.NewStaffPersonService(staffPersonRepo)
 	staffPersonHandler := deliveryStaff.NewStaffPersonHandler(staffPersonService)
@@ -80,6 +84,8 @@ func (s *Server) Run() error {
 
 	router.ApplyMiddlewares(mx)
 	router.SetupAuth(mx, authHandler)
+	router.SetupCsrf(mx, csrfHandler)
+
 	router.SetupCollections(mx, collectionHandler)
 	router.SetupStaffPersonHandlers(mx, staffPersonHandler)
 	router.SetupUserHandlers(mx, userHandler)

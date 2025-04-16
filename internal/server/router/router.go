@@ -7,6 +7,7 @@ import (
 	collectionDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/delivery"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/middleware"
 	movieDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/delivery"
+	reviewsDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/reviews/delivery"
 	staffDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/delivery"
 	userDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/delivery/http"
 	"github.com/gorilla/mux"
@@ -35,16 +36,24 @@ func SetupStaffPersonHandlers(router *mux.Router, staffPersonHandler staffDelive
 	router.HandleFunc("/name/{person_id}", staffPersonHandler.GetPerson).Methods(http.MethodGet, http.MethodOptions).Name("StaffPersonRoute")
 }
 
+func SetupReviewsHandlers(router *mux.Router, reviewsHandler reviewsDelivery.ReviewHandlerInterface) {
+	router.HandleFunc("/movie/{movie_id}/reviews", reviewsHandler.GetAllReviewsOfMovie).Methods(http.MethodGet, http.MethodOptions).Name("GetReviewsOfMovieRoute")
+	router.HandleFunc("/movie/{movie_id}/reviews", reviewsHandler.CreateReview).Methods(http.MethodPost, http.MethodOptions).Name("CreateReviewOfMovieRoute")
+}
+
 func SetupMovieHandlers(router *mux.Router, movieHandler movieDelivery.MovieHandlerInterface) {
 	router.HandleFunc("/movie/{movie_id}", movieHandler.GetMovie).Methods(http.MethodGet, http.MethodOptions).Name("MovieRoute")
 }
 
 func SetupUserHandlers(router *mux.Router, userHandler userDelivery.UserHandlerInterface) {
 	router.HandleFunc("/users", userHandler.UpdateUser).Methods(http.MethodPost, http.MethodOptions).Name("UpdateUserRoute")
+	router.HandleFunc("/users/avatar", userHandler.UpdateUserAvatar).Methods(http.MethodPost, http.MethodOptions).Name("UpdateUserAvatarRoute")
 }
 
 func ApplyMiddlewares(router *mux.Router) {
 	router.Use(middleware.RequestWithLoggerMiddleware)
 	router.Use(middleware.PreventPanicMiddleware)
 	router.Use(middleware.MiddlewareCors)
+
+	router.Use(middleware.CsrfTokenMiddleware)
 }

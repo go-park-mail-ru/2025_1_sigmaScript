@@ -28,6 +28,8 @@ import (
 	repoMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/repository"
 	serviceMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/service"
 
+	csrfDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/csrf/delivery"
+	deliveryReviews "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/reviews/delivery"
 	"github.com/rs/zerolog/log"
 )
 
@@ -62,6 +64,8 @@ func (s *Server) Run() error {
 
 	authHandler := deliveryAuth.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)
 
+	csrfHandler := csrfDelivery.NewCSRFHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionService)
+
 	staffPersonRepo := repoStaff.NewStaffPersonRepository(&mocks.ExistingActors)
 	staffPersonService := serviceStaff.NewStaffPersonService(staffPersonRepo)
 	staffPersonHandler := deliveryStaff.NewStaffPersonHandler(staffPersonService)
@@ -74,16 +78,22 @@ func (s *Server) Run() error {
 	movieService := serviceMovie.NewMovieService(movieRepo)
 	movieHandler := deliveryMovie.NewMovieHandler(movieService)
 
+	movieReviewHandler := deliveryReviews.NewReviewHandler(userService, sessionService, movieService)
+
 	mx := router.NewRouter()
 
 	log.Info().Msg("Configuring routes")
 
 	router.ApplyMiddlewares(mx)
 	router.SetupAuth(mx, authHandler)
+
+	router.SetupCsrf(mx, csrfHandler)
+
 	router.SetupCollections(mx, collectionHandler)
 	router.SetupStaffPersonHandlers(mx, staffPersonHandler)
 	router.SetupUserHandlers(mx, userHandler)
 	router.SetupMovieHandlers(mx, movieHandler)
+	router.SetupReviewsHandlers(mx, movieReviewHandler)
 
 	log.Info().Msg("Routes configured successfully")
 

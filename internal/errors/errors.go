@@ -33,11 +33,11 @@ const (
 	ErrIncorrectPassword             = "provided password is incorrect"
 	ErrIncorrectLoginOrPassword      = "Incorrect login or password"
 	ErrIncorrectLoginOrPasswordShort = "not_found"
-	ErrMsgGenerateSession            = "Error generating session ID"
+	ErrMsgGenerateSession            = "error generating session ID"
 	ErrMsgGenerateSessionShort       = "generate_session_error"
 	ErrUnauthorized                  = "Unauthorized"
 	ErrUnauthorizedShort             = "unauthorized"
-	ErrMsgSessionNotExists           = "Session does not exist"
+	ErrMsgSessionNotExists           = "session does not exist"
 	ErrMsgSessionNotExistsShort      = "not_exists"
 	ErrInvalidPassword               = "Invalid password"
 	ErrInvalidPasswordShort          = "invalid_password"
@@ -50,6 +50,8 @@ const (
 	ErrEmptyLogin                    = "Empty login"
 	ErrEmptyLoginShort               = "empty_login"
 	ErrNotFoundShort                 = "not_found"
+	ErrMsgGenerateCSRFToken          = "error generating CSRF token"
+	ErrMsgBadCSRFToken               = "bad csrf token"
 )
 
 // jsonutil
@@ -84,6 +86,11 @@ const (
 	ErrMsgFailedToGetSession      = "failed to get session"
 )
 
+// user
+const (
+	ErrMsgOnlyAllowedImageFormats = "only SVG, PNG, JPG, JPEG, and WebP are allowed"
+)
+
 // error types
 var (
 	ErrPersonNotFound = errors.New("person by this id not found")
@@ -93,4 +100,6 @@ var (
 
 	ErrGenerateSession  = errors.New(ErrMsgGenerateSession)
 	ErrSessionNotExists = errors.New(ErrMsgSessionNotExists)
+
+	ErrInvalidFileType = errors.New("invalid_file_type")
 )

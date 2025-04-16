@@ -14,6 +14,7 @@ const (
 	noData = ""
 )
 
+//go:generate mockgen -source=sessionService.go -destination=mocks/mock.go
 type SessionRepositoryInterface interface {
 	StoreSession(ctx context.Context, newSessionID, login string) error
 	DeleteSession(ctx context.Context, sessionID string) error

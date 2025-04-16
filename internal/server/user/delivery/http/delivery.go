@@ -135,7 +135,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	newSessionID, err := h.sessionSvc.CreateSession(r.Context(), newUser.Username)
 	if err != nil {
-		logger.Error().Err(err).Msgf("error happened: %v", err)
+		logger.Error().Err(err).Msgf("error happened: %v", err.Error())
 
 		if errors.Is(err, errs.ErrGenerateSession) {
 			jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrMsgGenerateSessionShort,

@@ -54,4 +54,6 @@ func ApplyMiddlewares(router *mux.Router) {
 	router.Use(middleware.RequestWithLoggerMiddleware)
 	router.Use(middleware.PreventPanicMiddleware)
 	router.Use(middleware.MiddlewareCors)
+
+	router.Use(middleware.CsrfTokenMiddleware)
 }

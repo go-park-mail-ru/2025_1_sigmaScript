@@ -28,6 +28,7 @@ import (
 	repoMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/repository"
 	serviceMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/service"
 
+	csrfDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/csrf/delivery"
 	deliveryReviews "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/reviews/delivery"
 	"github.com/rs/zerolog/log"
 )
@@ -63,6 +64,8 @@ func (s *Server) Run() error {
 
 	authHandler := deliveryAuth.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)
 
+	csrfHandler := csrfDelivery.NewCSRFHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionService)
+
 	staffPersonRepo := repoStaff.NewStaffPersonRepository(&mocks.ExistingActors)
 	staffPersonService := serviceStaff.NewStaffPersonService(staffPersonRepo)
 	staffPersonHandler := deliveryStaff.NewStaffPersonHandler(staffPersonService)
@@ -83,6 +86,9 @@ func (s *Server) Run() error {
 
 	router.ApplyMiddlewares(mx)
 	router.SetupAuth(mx, authHandler)
+
+	router.SetupCsrf(mx, csrfHandler)
+
 	router.SetupCollections(mx, collectionHandler)
 	router.SetupStaffPersonHandlers(mx, staffPersonHandler)
 	router.SetupUserHandlers(mx, userHandler)

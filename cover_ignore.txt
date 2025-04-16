@@ -1,1 +1,5 @@
 github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks
+github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/delivery/http/mocks
+github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/service/mocks
+github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery/mocks
+github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service/mocks

@@ -17,6 +17,8 @@ import (
 //go:generate mockgen -source=$GOFILE -destination=delivery_mocks/mock_service.go -package=delivery_mocks MovieServiceInterface
 type MovieServiceInterface interface {
 	GetMovieByID(ctx context.Context, movieID int) (*mocks.MovieJSON, error)
+	GetAllReviewsOfMovieByID(ctx context.Context, movieID int) (*[]mocks.ReviewJSON, error)
+	CreateNewMovieReview(ctx context.Context, movieID int, newReview mocks.ReviewJSON) error
 }
 
 type MovieHandler struct {

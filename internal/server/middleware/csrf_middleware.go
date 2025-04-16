@@ -3,6 +3,7 @@ package middleware
 import (
 	"crypto/subtle"
 	"net/http"
+	"strings"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/common"
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
@@ -14,7 +15,7 @@ import (
 // CsrfMiddleware checks CSRF token in http Header and cookie
 func CsrfTokenMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet || r.URL.Path == "/csrf-token" {
+		if r.Method == http.MethodGet || r.URL.Path == "/csrf-token" || strings.HasPrefix(r.URL.Path, "/auth") {
 			next.ServeHTTP(w, r)
 			return
 		}

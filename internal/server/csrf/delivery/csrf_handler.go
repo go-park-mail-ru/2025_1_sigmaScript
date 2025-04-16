@@ -23,11 +23,11 @@ type CSRFHandler struct {
 	sessionService interfaces.SessionServiceInterface
 }
 
-func NewAuthHandler(ctx context.Context, sessionService interfaces.SessionServiceInterface) *CSRFHandler {
-	newCookieData := config.FromCookieContext(ctx)
+func NewCSRFHandler(ctx context.Context, sessionService interfaces.SessionServiceInterface) *CSRFHandler {
+	newCookieData := (*config.FromCookieContext(ctx))
 	newCookieData.SessionName = common.CSRF_TOKEN_NAME
 	return &CSRFHandler{
-		cookieData:     newCookieData,
+		cookieData:     &newCookieData,
 		sessionService: sessionService,
 	}
 }

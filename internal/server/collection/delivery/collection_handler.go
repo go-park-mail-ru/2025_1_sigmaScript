@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+//go:generate mockgen -source=$GOFILE -destination=mocks/mocks.go -package=delivery_mocks CollectionServiceInterface
 type CollectionServiceInterface interface {
 	GetMainPageCollections(ctx context.Context) (mocks.Collections, error)
 }

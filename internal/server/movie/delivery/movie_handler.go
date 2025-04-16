@@ -42,7 +42,7 @@ func (h *MovieHandler) GetMovie(w http.ResponseWriter, r *http.Request) {
 
 	movieID, err := strconv.Atoi(movieIDStr)
 	if err != nil {
-		errMsg := errors.Wrapf(err, "getMovieByID action: bad request: %w", err)
+		errMsg := errors.Wrapf(err, "getMovieByID action: bad request")
 		logger.Error().Err(errMsg).Msg(errMsg.Error())
 		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, errs.ErrBadPayload)
 		return

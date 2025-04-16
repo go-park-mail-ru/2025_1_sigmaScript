@@ -8,10 +8,6 @@ import (
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 )
 
-const (
-	noData = ""
-)
-
 type SessionRepositoryInterface interface {
 	GetSession(ctx context.Context, sessionID string) (string, error)
 }
@@ -34,18 +30,4 @@ func (s *ReviewService) GetReviewsOfMovie(ctx context.Context, movieID int, pagi
 
 	fmt.Println(pageNumber, common.REVIEWS_PER_PAGE)
 	return []mocks.ReviewJSON{}
-}
-
-func (s *ReviewService) GetReview(ctx context.Context, movieID, userID int) (mocks.ReviewJSON, error) {
-	return mocks.ReviewJSON{}, nil
-}
-
-func (s *ReviewService) CreateReview(ctx context.Context, newReview mocks.ReviewJSON) error {
-	return nil
-}
-func (s *ReviewService) UpdateReview(ctx context.Context, updatedReview mocks.ReviewJSON) error {
-	return nil
-}
-func (s *ReviewService) DeleteReview(ctx context.Context, reviewID int) error {
-	return nil
 }

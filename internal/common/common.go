@@ -22,3 +22,7 @@ const (
 	MB       = 1 << 20
 	LIMIT_MB = 5
 )
+
+const (
+	CSRF_TOKEN_NAME = "csrf_token"
+)

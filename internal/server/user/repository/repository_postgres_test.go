@@ -285,3 +285,144 @@ func TestUserRepository_DeleteUserPostgres(t *testing.T) {
 		assert.NoError(t, mock.ExpectationsWereMet(), "Sqlmock expectations were not met")
 	})
 }
+
+func TestUserRepository_UpdateUserPostgres(t *testing.T) {
+	ctx := setupTestContext()
+	repo, mock := setupTestRepo(t)
+	defer repo.pgdb.Close()
+
+	targetUsername := "user_to_update"
+	now := time.Now().Truncate(time.Microsecond)
+	createdAt := now.Add(-2 * time.Hour)
+
+	// Success_Update_Avatar
+	t.Run("Success_Update_Avatar", func(t *testing.T) {
+		login := targetUsername
+		userToUpdate := &models.User{
+			Avatar: "new_avatar.webp",
+		}
+		expectedUpdatedUser := &models.User{
+			Username:  targetUsername,
+			Avatar:    userToUpdate.Avatar,
+			CreatedAt: createdAt,
+			UpdatedAt: now,
+		}
+
+		expectedQuery := `UPDATE "user" SET avatar = $1, updated_at = CURRENT_TIMESTAMP WHERE login = $2 RETURNING login, avatar, created_at, updated_at`
+		mock.ExpectQuery(regexp.QuoteMeta(expectedQuery)).
+			WithArgs(userToUpdate.Avatar, login).
+			WillReturnRows(sqlmock.NewRows([]string{"login", "avatar", "created_at", "updated_at"}).
+				AddRow(expectedUpdatedUser.Username, expectedUpdatedUser.Avatar, expectedUpdatedUser.CreatedAt, expectedUpdatedUser.UpdatedAt))
+
+		updatedUser, err := repo.UpdateUserPostgres(ctx, login, userToUpdate)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, updatedUser)
+		assert.Equal(t, expectedUpdatedUser.Username, updatedUser.Username)
+		assert.Equal(t, expectedUpdatedUser.Avatar, updatedUser.Avatar)
+		assert.WithinDuration(t, expectedUpdatedUser.CreatedAt, updatedUser.CreatedAt, time.Second)
+		assert.WithinDuration(t, expectedUpdatedUser.UpdatedAt, updatedUser.UpdatedAt, time.Second)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	// No_Fields_To_Update
+	t.Run("No_Fields_To_Update", func(t *testing.T) {
+		login := targetUsername
+		userToUpdate := &models.User{}
+
+		updatedUser, err := repo.UpdateUserPostgres(ctx, login, userToUpdate)
+
+		assert.Error(t, err, "Should return error if no fields are provided for update")
+		assert.EqualError(t, err, errs.ErrIncorrectLoginOrPassword)
+		assert.Nil(t, updatedUser)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("User_Not_Found_For_Update", func(t *testing.T) {
+		login := "ghost_user"
+		nonExistentUser := &models.User{
+			Avatar: "some_avatar.png",
+		}
+
+		expectedQuery := `UPDATE "user" SET avatar = $1, updated_at = CURRENT_TIMESTAMP WHERE login = $2 RETURNING login, avatar, created_at, updated_at`
+		mock.ExpectQuery(regexp.QuoteMeta(expectedQuery)).
+			WithArgs(nonExistentUser.Avatar, login).
+			WillReturnError(sql.ErrNoRows)
+
+		updatedUser, err := repo.UpdateUserPostgres(ctx, login, nonExistentUser)
+
+		assert.Error(t, err, "Should return error when user to update is not found")
+		assert.Nil(t, updatedUser)
+		assert.ErrorIs(t, err, sql.ErrNoRows, "Error should wrap sql.ErrNoRows")
+		assert.Contains(t, err.Error(), "failed to select updated user", "Error message should indicate scan failure")
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	// SQL_Injection_Attempt_In_Updated_Field
+	t.Run("SQL_Injection_Attempt_In_Updated_Field", func(t *testing.T) {
+		injectionString := "'; DROP TABLE users; --"
+
+		login := targetUsername
+		userWithInjection := &models.User{
+			Avatar: injectionString,
+		}
+		expectedInjectedUser := &models.User{
+			Username:  targetUsername,
+			Avatar:    injectionString,
+			CreatedAt: createdAt,
+			UpdatedAt: now,
+		}
+
+		expectedQuery := `UPDATE "user" SET avatar = $1, updated_at = CURRENT_TIMESTAMP WHERE login = $2 RETURNING login, avatar, created_at, updated_at`
+		mock.ExpectQuery(regexp.QuoteMeta(expectedQuery)).
+			WithArgs(injectionString, login).
+			WillReturnRows(sqlmock.NewRows([]string{"login", "avatar", "created_at", "updated_at"}).
+				AddRow(expectedInjectedUser.Username, expectedInjectedUser.Avatar, expectedInjectedUser.CreatedAt, expectedInjectedUser.UpdatedAt))
+
+		updatedUser, err := repo.UpdateUserPostgres(ctx, login, userWithInjection)
+
+		assert.NoError(t, err, "UpdateUserPostgres should not return an error, injection should be treated as string")
+		assert.NotNil(t, updatedUser)
+		assert.Equal(t, expectedInjectedUser.Username, updatedUser.Username)
+		assert.Equal(t, injectionString, updatedUser.Avatar, "Avatar field should contain the literal injection string")
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	// SQL_Injection_Attempt_In_Where
+	t.Run("SQL_Injection_Attempt_In_Where", func(t *testing.T) {
+		injectionUsername := "' OR '1'='1"
+
+		login := injectionUsername
+		userWithInjection := &models.User{
+			Avatar: "update_attempt.jpg",
+		}
+
+		expectedQuery := `UPDATE "user" SET avatar = $1, updated_at = CURRENT_TIMESTAMP WHERE login = $2 RETURNING login, avatar, created_at, updated_at`
+		mock.ExpectQuery(regexp.QuoteMeta(expectedQuery)).
+			WithArgs(userWithInjection.Avatar, injectionUsername).
+			WillReturnError(sql.ErrNoRows)
+
+		updatedUser, err := repo.UpdateUserPostgres(ctx, login, userWithInjection)
+
+		assert.Error(t, err, "UpdateUserPostgres should return an error on SQL injection attempt in WHERE")
+		assert.Nil(t, updatedUser)
+		assert.ErrorIs(t, err, sql.ErrNoRows, "Error should wrap sql.ErrNoRows")
+		assert.Contains(t, err.Error(), "failed to select updated user", "Error message should indicate scan failure")
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	// Empty_Login_Select
+	t.Run("Empty_Login_Select", func(t *testing.T) {
+		login := ""
+		userWithNoLogin := &models.User{
+			Avatar: "update_attempt.jpg",
+		}
+
+		updatedUser, err := repo.UpdateUserPostgres(ctx, login, userWithNoLogin)
+
+		assert.Error(t, err, "UpdateUserPostgres should return an error because login is empty")
+		assert.Nil(t, updatedUser)
+		assert.Contains(t, err.Error(), errs.ErrIncorrectLogin, "Error message should indicate no login")
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
@@ -92,6 +93,7 @@ func (r *UserRepository) GetUserPostgres(ctx context.Context, login string) (*mo
 		}
 		return nil, fmt.Errorf("failed to select user: %w", err)
 	}
+	logger.Info().Msgf("successfully gotten user by login: %s", user.Username)
 	return &user, nil
 }
 
@@ -111,5 +113,60 @@ func (r *UserRepository) DeleteUserPostgres(ctx context.Context, login string) e
 		return errors.Wrap(err, errs.ErrSomethingWentWrong)
 	}
 
+	logger.Info().Msgf("successfully deleted user by login: %s", login)
 	return nil
+}
+
+func (r *UserRepository) UpdateUserPostgres(ctx context.Context, login string, user *models.User) (*models.User, error) {
+	// пишем логи БД
+	logger := log.Ctx(ctx)
+
+	if login == "" {
+		errMsg := fmt.Sprintf("login is:'%s'", user.Username)
+		logger.Error().Msg(errMsg)
+		return nil, errors.New(errs.ErrIncorrectLogin)
+	}
+
+	query := `UPDATE "user" SET `
+	updatesQueryString := make([]string, 0)
+	args := make([]interface{}, 0)
+	argIndex := 1
+
+	if user.Username != "" {
+		updatesQueryString = append(updatesQueryString, fmt.Sprintf("login = $%d, ", argIndex))
+		args = append(args, user.Username)
+		argIndex++
+	}
+	if user.HashedPassword != "" {
+		updatesQueryString = append(updatesQueryString, fmt.Sprintf("hashed_password = $%d, ", argIndex))
+		args = append(args, user.HashedPassword)
+		argIndex++
+	}
+	if user.Avatar != "" {
+		updatesQueryString = append(updatesQueryString, fmt.Sprintf("avatar = $%d", argIndex))
+		args = append(args, user.Avatar)
+		argIndex++
+	}
+	if len(updatesQueryString) == 0 {
+		return nil, errors.New(errs.ErrIncorrectLoginOrPassword)
+	}
+
+	query += fmt.Sprintf("%s, updated_at = CURRENT_TIMESTAMP WHERE login = $%d RETURNING login, avatar, created_at, updated_at",
+		strings.Join(updatesQueryString, ", "), argIndex)
+	args = append(args, login)
+
+	row := r.pgdb.QueryRowContext(ctx, query, args...)
+	var updatedUser models.User
+	err := row.Scan(
+		&updatedUser.Username,
+		&updatedUser.Avatar,
+		&updatedUser.CreatedAt,
+		&updatedUser.UpdatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to select updated user: %w", err)
+	}
+
+	logger.Info().Msgf("successfully updated user by login: %s", updatedUser.Username)
+	return &updatedUser, nil
 }

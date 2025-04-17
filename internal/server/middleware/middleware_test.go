@@ -1,12 +1,18 @@
 package middleware
 
 import (
+	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/common"
+	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
@@ -133,4 +139,176 @@ func TestPreventPanicMiddleware_NoPanic(t *testing.T) {
 	PreventPanicMiddleware(handler).ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusTeapot, rec.Code)
+}
+
+func TestMiddlewareCSRF_PostMethod(t *testing.T) {
+	viper.Set(kinolkHostEnv, "http://localhost:3000")
+	viper.Set(kinolkAllowedMethodsEnv, "GET, POST, OPTIONS")
+	viper.Set(kinolkAllowCredentialsEnv, "true")
+	viper.Set(kinolkAllowedHeadersEnv, "Content-Type")
+
+	req := httptest.NewRequest(http.MethodPost, "/movie/1/reviews", nil)
+	rec := httptest.NewRecorder()
+
+	handlerCalled := false
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+	})
+
+	CsrfTokenMiddleware(handler).ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusForbidden, rec.Code)
+	assert.False(t, handlerCalled)
+}
+
+func TestMiddlewareCSRF_GetMethod(t *testing.T) {
+	viper.Set(kinolkHostEnv, "http://localhost:3000")
+	viper.Set(kinolkAllowedMethodsEnv, "GET, POST, OPTIONS")
+	viper.Set(kinolkAllowCredentialsEnv, "true")
+	viper.Set(kinolkAllowedHeadersEnv, "Content-Type")
+
+	req := httptest.NewRequest(http.MethodGet, "/movie/1/reviews", nil)
+	rec := httptest.NewRecorder()
+
+	handlerCalled := false
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+	})
+
+	CsrfTokenMiddleware(handler).ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.True(t, handlerCalled)
+}
+
+func TestMiddlewareCSRF_PostMethod_AuthRoute(t *testing.T) {
+	viper.Set(kinolkHostEnv, "http://localhost:3000")
+	viper.Set(kinolkAllowedMethodsEnv, "GET, POST, OPTIONS")
+	viper.Set(kinolkAllowCredentialsEnv, "true")
+	viper.Set(kinolkAllowedHeadersEnv, "Content-Type")
+
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", nil)
+	rec := httptest.NewRecorder()
+
+	handlerCalled := false
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+	})
+
+	CsrfTokenMiddleware(handler).ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.True(t, handlerCalled)
+}
+
+func TestMiddlewareCSRF_PostMethod_NoCSRFHeaderOrCookie(t *testing.T) {
+	viper.Set(kinolkHostEnv, "http://localhost:3000")
+	viper.Set(kinolkAllowedMethodsEnv, "GET, POST, OPTIONS")
+	viper.Set(kinolkAllowCredentialsEnv, "true")
+	viper.Set(kinolkAllowedHeadersEnv, "Content-Type")
+
+	req := httptest.NewRequest(http.MethodPost, "/movie/1/reviews", nil)
+	rec := httptest.NewRecorder()
+
+	handlerCalled := false
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+	})
+
+	CsrfTokenMiddleware(handler).ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusForbidden, rec.Code)
+	assert.False(t, handlerCalled)
+}
+
+func TestMiddlewareCSRF_PostReview_MissingSessionCookie(t *testing.T) {
+
+	dummyCookie := &config.Cookie{
+		SessionName: common.CSRF_TOKEN_NAME,
+		HTTPOnly:    true,
+		Secure:      false,
+		SameSite:    http.SameSiteLaxMode,
+		Path:        "/",
+	}
+
+	ctx := config.WrapCookieContext(context.Background(), dummyCookie)
+
+	req := httptest.NewRequest(http.MethodPost, "/movie/1/reviews", strings.NewReader(`{}`))
+	req = req.WithContext(ctx)
+
+	rec := httptest.NewRecorder()
+
+	handlerCalled := false
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+	})
+
+	CsrfTokenMiddleware(handler).ServeHTTP(rec, req)
+
+	res := rec.Result()
+
+	var parcedResultBody jsonutil.ErrorResponse
+	json.NewDecoder(rec.Result().Body).Decode(&parcedResultBody)
+
+	assert.Equal(t, http.StatusForbidden, res.StatusCode)
+	assert.False(t, handlerCalled)
+	assert.Equal(t, errs.ErrUnauthorizedShort, parcedResultBody.Error)
+	assert.Equal(t, errs.ErrMsgBadCSRFToken, parcedResultBody.Message)
+}
+
+func TestMiddlewareCSRF_PostReview_MissingCSRFHeader(t *testing.T) {
+	viper.Set(kinolkHostEnv, "http://localhost:3000")
+	viper.Set(kinolkAllowedMethodsEnv, "GET, POST, OPTIONS")
+	viper.Set(kinolkAllowCredentialsEnv, "true")
+	viper.Set(kinolkAllowedHeadersEnv, "Content-Type")
+
+	req := httptest.NewRequest(http.MethodPost, "/movie/1/reviews", nil)
+	rec := httptest.NewRecorder()
+
+	cookie := &http.Cookie{Name: common.CSRF_TOKEN_NAME, Value: "some_value"}
+	req.AddCookie(cookie)
+
+	handlerCalled := false
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+	})
+
+	CsrfTokenMiddleware(handler).ServeHTTP(rec, req)
+
+	res := rec.Result()
+
+	var parcedResultBody jsonutil.ErrorResponse
+	json.NewDecoder(rec.Result().Body).Decode(&parcedResultBody)
+
+	assert.Equal(t, http.StatusForbidden, res.StatusCode)
+	assert.False(t, handlerCalled)
+	assert.Equal(t, errs.ErrUnauthorizedShort, parcedResultBody.Error)
+	assert.Equal(t, errs.ErrMsgBadCSRFToken, parcedResultBody.Message)
+}
+
+func TestMiddlewareCSRF_PostReview_Success(t *testing.T) {
+	viper.Set(kinolkHostEnv, "http://localhost:3000")
+	viper.Set(kinolkAllowedMethodsEnv, "GET, POST, OPTIONS")
+	viper.Set(kinolkAllowCredentialsEnv, "true")
+	viper.Set(kinolkAllowedHeadersEnv, "Content-Type, X-CSRF-Token")
+
+	req := httptest.NewRequest(http.MethodPost, "/movie/1/reviews", nil)
+	rec := httptest.NewRecorder()
+
+	cookie := &http.Cookie{Name: common.CSRF_TOKEN_NAME, Value: "some_value"}
+
+	req.AddCookie(cookie)
+	req.Header.Set("X-CSRF-TOKEN", "some_value")
+
+	handlerCalled := false
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+	})
+
+	CsrfTokenMiddleware(handler).ServeHTTP(rec, req)
+
+	res := rec.Result()
+
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.True(t, handlerCalled)
 }

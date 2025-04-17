@@ -10,7 +10,6 @@ require (
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
-	go.uber.org/mock v0.5.1
 	golang.org/x/crypto v0.21.0
 )
 

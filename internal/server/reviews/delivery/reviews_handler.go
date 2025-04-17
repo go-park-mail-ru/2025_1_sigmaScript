@@ -11,6 +11,7 @@ import (
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 	movieInterfaces "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/delivery"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/reviews/delivery/dto"
+	escapingutil "github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/escaping_util"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -132,10 +133,16 @@ func (h *ReviewHandler) CreateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	validatedReviewText, err := escapingutil.ValidateInputTextData(newReviewDataJSON.ReviewText)
+	if err != nil {
+		logger.Error().Err(err).Msg(err.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, err.Error())
+	}
+
 	newReview := mocks.ReviewJSON{
 		ID:         NEW_REVIEW_PLACEHOLDER_ID,
 		Score:      newReviewDataJSON.Score,
-		ReviewText: newReviewDataJSON.ReviewText,
+		ReviewText: validatedReviewText,
 		CreatedAt:  "",
 		User: mocks.ReviewUserDataJSON{
 			Login:  user.Username,

@@ -26,8 +26,8 @@ import (
 )
 
 const (
-	kinolkAvatarsFolder     = "KINOLK_AVATARS_FOLDER"
-	kinolkAvatarsStaticPath = "KINOLK_AVATARS_STATIC_PATH"
+	KinolkAvatarsFolder     = "KINOLK_AVATARS_FOLDER"
+	KinolkAvatarsStaticPath = "KINOLK_AVATARS_STATIC_PATH"
 )
 
 type UserHandler struct {
@@ -156,7 +156,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
-	uploadDir := viper.GetString(kinolkAvatarsFolder)
+	uploadDir := viper.GetString(KinolkAvatarsFolder)
 	logger := log.Ctx(r.Context())
 
 	sessionCookie, err := r.Cookie("session_id")
@@ -221,7 +221,7 @@ func (h *UserHandler) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
 	newUser := &models.User{
 		Username:       user.Username,
 		HashedPassword: user.HashedPassword,
-		Avatar:         viper.GetString(kinolkAvatarsStaticPath) + user.Username + header.Filename,
+		Avatar:         viper.GetString(KinolkAvatarsStaticPath) + user.Username + header.Filename,
 		CreatedAt:      user.CreatedAt,
 		UpdatedAt:      time.Now(),
 	}

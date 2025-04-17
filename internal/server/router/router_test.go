@@ -39,7 +39,7 @@ func TestSetup(t *testing.T) {
 	sessionRepo := repoAuthSessions.NewSessionRepository()
 	sessionService := serviceAuth.NewSessionService(config.WrapCookieContext(context.Background(), &cfg.Cookie), sessionRepo)
 
-	userRepo := repoUsers.NewUserRepository()
+	userRepo := repoUsers.NewUserRepository(nil)
 	userService := serviceUsers.NewUserService(userRepo)
 	userHandler := deliveryUsers.NewUserHandler(config.WrapCookieContext(context.Background(), &cfg.Cookie), userService, sessionService)
 

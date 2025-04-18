@@ -133,10 +133,14 @@ func (h *ReviewHandler) CreateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validatedReviewText, err := escapingutil.ValidateInputTextData(newReviewDataJSON.ReviewText)
-	if err != nil {
-		logger.Error().Err(err).Msg(err.Error())
-		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, err.Error())
+	validatedReviewText := ""
+	var errEscaping error
+	if len(newReviewDataJSON.ReviewText) > 0 {
+		validatedReviewText, errEscaping = escapingutil.ValidateInputTextData(newReviewDataJSON.ReviewText)
+		if errEscaping != nil {
+			logger.Error().Err(errEscaping).Msg(errEscaping.Error())
+			jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, errEscaping.Error())
+		}
 	}
 
 	newReview := mocks.ReviewJSON{

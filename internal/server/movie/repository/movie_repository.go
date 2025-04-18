@@ -62,7 +62,8 @@ func (r *MovieRepository) CreateNewMovieReviewInRepo(ctx context.Context, movieI
 			movie.Reviews[key].CreatedAt = time.Now().String()
 
 			// update movie rating
-			movie.Rating = movie.Rating + (float64(newReview.Score)-float64(oldValue))/float64(reviewsCount)
+			newRating := movie.Rating + (float64(newReview.Score)-float64(oldValue))/float64(reviewsCount)
+			movie.Rating = float64(math.Trunc((newRating)*100)) / 100
 
 			// update movie in db
 			(*r.db)[movieID] = movie
@@ -71,7 +72,7 @@ func (r *MovieRepository) CreateNewMovieReviewInRepo(ctx context.Context, movieI
 	}
 
 	// update movie rating
-	movie.Rating = math.Round((movie.Rating+(float64(newReview.Score)-movie.Rating)/float64(reviewsCount+1))*100) / 100
+	movie.Rating = float64(math.Trunc((movie.Rating+(float64(newReview.Score)-movie.Rating)/float64(reviewsCount+1))*100)) / 100
 
 	newReviewID := reviewsCount + 1
 	movie.Reviews = append(movie.Reviews, mocks.ReviewJSON{

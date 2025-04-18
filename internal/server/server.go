@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/db"
 	deliveryAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
 	repoAuthSessions "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/repository"
 	serviceAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service"
@@ -57,51 +55,51 @@ func New(cfg *config.Config) *Server {
 }
 
 func (s *Server) Run() error {
-	// TODO fix config: it`s test database test password
-	postgres := config.Postgres{
-		Host:            "127.0.0.1",
-		Port:            5433,
-		User:            "filmlk_user",
-		Password:        "filmlk_password",
-		Name:            "filmlk",
-		MaxOpenConns:    100,
-		MaxIdleConns:    30,
-		ConnMaxLifetime: 30,
-		ConnMaxIdleTime: 5,
-	}
+	// // TODO fix config: it`s test database test password
+	// postgres := config.Postgres{
+	// 	Host:            "127.0.0.1",
+	// 	Port:            5433,
+	// 	User:            "filmlk_user",
+	// 	Password:        "filmlk_password",
+	// 	Name:            "filmlk",
+	// 	MaxOpenConns:    100,
+	// 	MaxIdleConns:    30,
+	// 	ConnMaxLifetime: 30,
+	// 	ConnMaxIdleTime: 5,
+	// }
 
-	avatarLocalStorage := config.LocalAvatarsStorage{
-		UserAvatarsFullPath:     "",
-		UserAvatarsRelativePath: "",
-	}
+	// avatarLocalStorage := config.LocalAvatarsStorage{
+	// 	UserAvatarsFullPath:     "",
+	// 	UserAvatarsRelativePath: "",
+	// }
 
-	pgDatabase := config.Databases{
-		Postgres:     postgres,
-		LocalStorage: avatarLocalStorage,
-	}
+	// pgDatabase := config.Databases{
+	// 	Postgres:     postgres,
+	// 	LocalStorage: avatarLocalStorage,
+	// }
 
-	pgListener := config.Listener{
-		Port: "5433",
-	}
+	// pgListener := config.Listener{
+	// 	Port: "5433",
+	// }
 
-	cfgDB := config.ConfigPgDB{
-		Listener:  pgListener,
-		Databases: pgDatabase,
-	}
+	// cfgDB := config.ConfigPgDB{
+	// 	Listener:  pgListener,
+	// 	Databases: pgDatabase,
+	// }
 
-	ctxDb := config.WrapPgDatabaseContext(context.Background(), cfgDB)
-	ctxDb, cancel := context.WithTimeout(ctxDb, time.Second*30)
-	defer cancel()
+	// ctxDb := config.WrapPgDatabaseContext(context.Background(), cfgDB)
+	// ctxDb, cancel := context.WithTimeout(ctxDb, time.Second*30)
+	// defer cancel()
 
-	pgdb, err := db.SetupDatabase(ctxDb, cancel)
-	if err != nil {
-		return fmt.Errorf("error couldnt connect to postgres database: %w", err)
-	}
+	// pgdb, err := db.SetupDatabase(ctxDb, cancel)
+	// if err != nil {
+	// 	return fmt.Errorf("error couldnt connect to postgres database: %w", err)
+	// }
 
 	sessionRepo := repoAuthSessions.NewSessionRepository()
 	sessionService := serviceAuth.NewSessionService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionRepo)
 
-	userRepo := repoUsers.NewUserRepository(pgdb)
+	userRepo := repoUsers.NewUserRepository(nil)
 	userService := serviceUsers.NewUserService(userRepo)
 	userHandler := deliveryUsers.NewUserHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)
 

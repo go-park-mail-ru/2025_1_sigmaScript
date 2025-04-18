@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+//go:generate mockgen -source=$GOFILE -destination=mocks/mocks.go -package=service_mocks StaffPersonRepositoryInterface
 type StaffPersonRepositoryInterface interface {
 	GetPersonFromRepoByID(ctx context.Context, personID int) (*mocks.PersonJSON, error)
 }

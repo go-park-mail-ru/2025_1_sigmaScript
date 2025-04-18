@@ -4,14 +4,14 @@ import (
 	"context"
 	"testing"
 
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
+	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewUserRepository(t *testing.T) {
-	r := NewUserRepository()
+	r := NewUserRepository(nil)
 	assert.NotNil(t, r)
 }
 
@@ -54,7 +54,7 @@ func TestUserRepository_CreateUser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			r := NewUserRepository()
+			r := NewUserRepository(nil)
 			if tt.setupFunc != nil {
 				tt.setupFunc(r)
 			}
@@ -100,7 +100,7 @@ func TestUserRepository_DeleteUser(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			r := NewUserRepository()
+			r := NewUserRepository(nil)
 			if tt.setupFunc != nil {
 				tt.setupFunc(r)
 			}
@@ -155,7 +155,7 @@ func TestUserRepository_GetUser(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			r := NewUserRepository()
+			r := NewUserRepository(nil)
 			if tt.setupFunc != nil {
 				tt.setupFunc(r)
 			}

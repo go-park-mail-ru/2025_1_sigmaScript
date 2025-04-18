@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	synccredmap "github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/sync_cred_map"
 	"github.com/pkg/errors"
@@ -13,7 +12,6 @@ import (
 type SessionRepository struct {
 	// sessionID --> username
 	rdb synccredmap.SyncCredentialsMap
-	cfg *config.Cookie
 }
 
 func NewSessionRepository() *SessionRepository {

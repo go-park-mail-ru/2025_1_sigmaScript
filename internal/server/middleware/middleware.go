@@ -24,6 +24,7 @@ func MiddlewareCors(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Methods", viper.GetString(kinolkAllowedMethodsEnv))
 		w.Header().Set("Access-Control-Allow-Credentials", viper.GetString(kinolkAllowCredentialsEnv))
 		w.Header().Set("Access-Control-Allow-Headers", viper.GetString(kinolkAllowedHeadersEnv))
+		w.Header().Set("Access-Control-Expose-Headers", viper.GetString(kinolkAllowedHeadersEnv))
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)

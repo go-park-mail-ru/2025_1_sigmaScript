@@ -14,6 +14,7 @@ import (
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/validation/auth"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/cookie"
+	escapingutil "github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/escaping_util"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -77,8 +78,14 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	validatedUsername, err := escapingutil.ValidateInputTextData(reg.Username)
+	if err != nil {
+		logger.Error().Err(err).Msg(err.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, err.Error())
+	}
+
 	user := &models.User{
-		Username:       reg.Username,
+		Username:       validatedUsername,
 		HashedPassword: string(hashedPass),
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
@@ -131,8 +138,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// expires old session cookie if it exists
-
 // Session http handler method gets user data by session
 func (h *AuthHandler) Session(w http.ResponseWriter, r *http.Request) {
 	logger := log.Ctx(r.Context())
@@ -184,6 +189,15 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 			errors.Wrap(err, errs.ErrSomethingWentWrong).Error())
 		return
 	}
+
+	validatedUsername, err := escapingutil.ValidateInputTextData(login.Username)
+	if err != nil {
+		logger.Error().Err(err).Msg(err.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, err.Error())
+	}
+
+	// Escape input data
+	login.Username = validatedUsername
 
 	err = h.userService.Login(r.Context(), login)
 	if err != nil {

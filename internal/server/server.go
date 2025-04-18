@@ -28,6 +28,8 @@ import (
 	repoMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/repository"
 	serviceMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/service"
 
+	csrfDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/csrf/delivery"
+	deliveryReviews "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/reviews/delivery"
 	"github.com/rs/zerolog/log"
 )
 
@@ -53,14 +55,57 @@ func New(cfg *config.Config) *Server {
 }
 
 func (s *Server) Run() error {
+	// // TODO fix config: it`s test database test password
+	// postgres := config.Postgres{
+	// 	Host:            "127.0.0.1",
+	// 	Port:            5433,
+	// 	User:            "filmlk_user",
+	// 	Password:        "filmlk_password",
+	// 	Name:            "filmlk",
+	// 	MaxOpenConns:    100,
+	// 	MaxIdleConns:    30,
+	// 	ConnMaxLifetime: 30,
+	// 	ConnMaxIdleTime: 5,
+	// }
+
+	// avatarLocalStorage := config.LocalAvatarsStorage{
+	// 	UserAvatarsFullPath:     "",
+	// 	UserAvatarsRelativePath: "",
+	// }
+
+	// pgDatabase := config.Databases{
+	// 	Postgres:     postgres,
+	// 	LocalStorage: avatarLocalStorage,
+	// }
+
+	// pgListener := config.Listener{
+	// 	Port: "5433",
+	// }
+
+	// cfgDB := config.ConfigPgDB{
+	// 	Listener:  pgListener,
+	// 	Databases: pgDatabase,
+	// }
+
+	// ctxDb := config.WrapPgDatabaseContext(context.Background(), cfgDB)
+	// ctxDb, cancel := context.WithTimeout(ctxDb, time.Second*30)
+	// defer cancel()
+
+	// pgdb, err := db.SetupDatabase(ctxDb, cancel)
+	// if err != nil {
+	// 	return fmt.Errorf("error couldnt connect to postgres database: %w", err)
+	// }
+
 	sessionRepo := repoAuthSessions.NewSessionRepository()
 	sessionService := serviceAuth.NewSessionService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionRepo)
 
-	userRepo := repoUsers.NewUserRepository()
+	userRepo := repoUsers.NewUserRepository(nil)
 	userService := serviceUsers.NewUserService(userRepo)
 	userHandler := deliveryUsers.NewUserHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)
 
 	authHandler := deliveryAuth.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)
+
+	csrfHandler := csrfDelivery.NewCSRFHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionService)
 
 	staffPersonRepo := repoStaff.NewStaffPersonRepository(&mocks.ExistingActors)
 	staffPersonService := serviceStaff.NewStaffPersonService(staffPersonRepo)
@@ -74,16 +119,22 @@ func (s *Server) Run() error {
 	movieService := serviceMovie.NewMovieService(movieRepo)
 	movieHandler := deliveryMovie.NewMovieHandler(movieService)
 
+	movieReviewHandler := deliveryReviews.NewReviewHandler(userService, sessionService, movieService)
+
 	mx := router.NewRouter()
 
 	log.Info().Msg("Configuring routes")
 
 	router.ApplyMiddlewares(mx)
 	router.SetupAuth(mx, authHandler)
+
+	router.SetupCsrf(mx, csrfHandler)
+
 	router.SetupCollections(mx, collectionHandler)
 	router.SetupStaffPersonHandlers(mx, staffPersonHandler)
 	router.SetupUserHandlers(mx, userHandler)
 	router.SetupMovieHandlers(mx, movieHandler)
+	router.SetupReviewsHandlers(mx, movieReviewHandler)
 
 	log.Info().Msg("Routes configured successfully")
 

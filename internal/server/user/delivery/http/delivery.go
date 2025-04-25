@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/common"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/ds"
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery/interfaces"
@@ -28,6 +27,22 @@ import (
 const (
 	KinolkAvatarsFolder     = "KINOLK_AVATARS_FOLDER"
 	KinolkAvatarsStaticPath = "KINOLK_AVATARS_STATIC_PATH"
+
+	COOKIE_DAYS_LIMIT        = 3
+	COOKIE_EXPIRED_LAST_YEAR = -1
+)
+
+var ALLOWED_IMAGE_TYPES = map[string]struct{}{
+	".svg":  {},
+	".png":  {},
+	".jpg":  {},
+	".jpeg": {},
+	".webp": {},
+}
+
+const (
+	MB       = 1 << 20
+	LIMIT_MB = 5
 )
 
 type UserHandler struct {
@@ -130,7 +145,9 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	// expire old session cookie if it exists
 	errOldSession := cookie.ExpireOldSessionCookie(w, r, h.cookieData, h.sessionSvc)
 	if errOldSession != nil {
-		logger.Warn().Err(errOldSession).Msg(errOldSession.Error())
+		logger.Error().Err(errOldSession).Msg(errOldSession.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrSomethingWentWrong, errs.ErrMsgFailedToGetSession)
+		return
 	}
 
 	newSessionID, err := h.sessionSvc.CreateSession(r.Context(), newUser.Username)
@@ -174,15 +191,16 @@ func (h *UserHandler) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = r.ParseMultipartForm(common.LIMIT_MB * common.MB)
+	err = r.ParseMultipartForm(LIMIT_MB * MB)
 	if err != nil {
 		wrapped := errors.Wrap(err, "error uploading file")
 		logger.Error().Err(wrapped).Msg(wrapped.Error())
 		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+		return
 	}
 
 	// Parse the multipart form, limit upload size
-	err = r.ParseMultipartForm(common.LIMIT_MB * common.MB)
+	err = r.ParseMultipartForm(LIMIT_MB * MB)
 	if err != nil {
 		wrapped := errors.Wrap(err, "error uploading file")
 		logger.Error().Err(wrapped).Msg(wrapped.Error())
@@ -202,7 +220,7 @@ func (h *UserHandler) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
 
 	// Check file extension
 	ext := strings.ToLower(filepath.Ext(header.Filename))
-	if !common.ALLOWED_IMAGE_TYPES[ext] {
+	if _, ok := ALLOWED_IMAGE_TYPES[ext]; ok {
 		wrapped := errors.Wrap(errs.ErrInvalidFileType, errs.ErrMsgOnlyAllowedImageFormats)
 		logger.Error().Err(wrapped).Msg(wrapped.Error())
 		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())

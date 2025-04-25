@@ -8,13 +8,15 @@ import (
 )
 
 func (s *UserService) UpdateUser(ctx context.Context, login string, newUser *models.User) error {
+	logger := log.Ctx(ctx)
+
 	if err := s.DeleteUser(ctx, login); err != nil {
-		log.Error().Err(err).Msg(err.Error())
+		logger.Error().Err(err).Msg(err.Error())
 		return err
 	}
 
 	if err := s.repo.CreateUser(ctx, newUser); err != nil {
-		log.Error().Err(err).Msg(err.Error())
+		logger.Error().Err(err).Msg(err.Error())
 		return err
 	}
 

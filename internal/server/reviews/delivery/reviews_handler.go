@@ -20,6 +20,7 @@ import (
 
 const (
 	NEW_REVIEW_PLACEHOLDER_ID = -1
+	REVIEWS_PER_PAGE          = 20
 )
 
 type ReviewHandler struct {
@@ -140,6 +141,7 @@ func (h *ReviewHandler) CreateReview(w http.ResponseWriter, r *http.Request) {
 		if errEscaping != nil {
 			logger.Error().Err(errEscaping).Msg(errEscaping.Error())
 			jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, errEscaping.Error())
+			return
 		}
 	}
 

@@ -82,6 +82,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error().Err(err).Msg(err.Error())
 		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, err.Error())
+		return
 	}
 
 	user := &models.User{
@@ -113,7 +114,9 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	// expire old session cookie if it exists
 	errOldSession := cookie.ExpireOldSessionCookie(w, r, h.cookieData, h.sessionService)
 	if errOldSession != nil {
-		logger.Warn().Err(errOldSession).Msg(errOldSession.Error())
+		logger.Error().Err(errOldSession).Msg(errOldSession.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrSomethingWentWrong, errs.ErrMsgFailedToGetSession)
+		return
 	}
 
 	newSessionID, err := h.sessionService.CreateSession(r.Context(), reg.Username)
@@ -194,6 +197,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error().Err(err).Msg(err.Error())
 		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, err.Error())
+		return
 	}
 
 	// Escape input data
@@ -223,7 +227,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// expire old session cookie if it exists
 	errOldSession := cookie.ExpireOldSessionCookie(w, r, h.cookieData, h.sessionService)
 	if errOldSession != nil {
-		logger.Warn().Err(errOldSession).Msg(errOldSession.Error())
+		logger.Error().Err(errOldSession).Msg(errOldSession.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrSomethingWentWrong, errs.ErrMsgFailedToGetSession)
+		return
 	}
 
 	newSessionID, err := h.sessionService.CreateSession(r.Context(), login.Username)

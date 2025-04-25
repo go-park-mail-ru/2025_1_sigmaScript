@@ -19,13 +19,18 @@ type SessionServiceInterface interface {
 	DeleteSession(ctx context.Context, sessionID string) error
 }
 
+// this function returns result of expiring old session cookie
+// if something happend while parsing old cookie function returns error.
 func ExpireOldSessionCookie(w http.ResponseWriter, r *http.Request, cookie *config.Cookie, sessionSrv SessionServiceInterface) error {
 	logger := log.Ctx(r.Context())
 
 	oldSessionCookie, err := r.Cookie("session_id")
-	if errors.Is(err, http.ErrNoCookie) {
-		logger.Info().Msg("user dont have old cookie")
-		return nil
+	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			logger.Info().Msg("user dont have old cookie")
+			return nil
+		}
+		return err
 	}
 
 	if oldSessionCookie != nil {

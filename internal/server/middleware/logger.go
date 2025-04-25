@@ -99,6 +99,7 @@ func getBodyCopy(r *http.Request) []byte {
 	errBodyClose := r.Body.Close()
 	if errBodyClose != nil {
 		logger.Error().Err(err).Msg("Failed to close original request body")
+		return nil
 	}
 
 	// replace old read body with new bodyBytes

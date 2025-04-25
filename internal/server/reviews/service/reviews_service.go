@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/common"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/reviews/delivery"
 )
 
 type SessionRepositoryInterface interface {
@@ -28,6 +28,6 @@ func (s *ReviewService) GetReviewsOfMovie(ctx context.Context, movieID int, pagi
 		pageNumber = paginatorPageNumber[0]
 	}
 
-	fmt.Println(pageNumber, common.REVIEWS_PER_PAGE)
+	fmt.Println(pageNumber, delivery.REVIEWS_PER_PAGE)
 	return []mocks.ReviewJSON{}
 }

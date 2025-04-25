@@ -15,7 +15,7 @@ func (s *UserService) Login(ctx context.Context, loginData models.LoginData) err
 
 	user, err := s.repo.GetUser(ctx, loginData.Username)
 	if err != nil {
-		log.Error().Err(err).Msg(err.Error())
+		logger.Error().Err(err).Msg(err.Error())
 		return err
 	}
 

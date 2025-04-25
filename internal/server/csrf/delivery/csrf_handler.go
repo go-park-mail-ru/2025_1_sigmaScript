@@ -56,7 +56,7 @@ func (h *CSRFHandler) CreateCSRFTokenHandler(w http.ResponseWriter, r *http.Requ
 	token, err := csrftoken.GenerateCSRFToken()
 	if err != nil {
 		http.Error(w, "Failed to generate CSRF token", http.StatusInternalServerError)
-		log.Info().Msg("Error generating CSRF token")
+		logger.Info().Msg("Error generating CSRF token")
 		return
 	}
 

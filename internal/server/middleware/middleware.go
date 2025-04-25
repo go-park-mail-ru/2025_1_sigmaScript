@@ -46,10 +46,8 @@ func PreventPanicMiddleware(next http.Handler) http.Handler {
 			logger := log.Ctx(r.Context())
 
 			if err := recover(); err != nil {
-
 				logger.Error().Msgf("Catched by middleware: panic happend: %v", err)
-
-				http.Error(w, "Internal server error", 500)
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
 			}
 		}()
 

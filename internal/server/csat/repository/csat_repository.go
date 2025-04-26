@@ -82,7 +82,6 @@ func (r *CSATRepository) GetCSATStatistic(ctx context.Context) (*dto.CSATStatist
 
 	if len(reviews) == 0 {
 		logger.Err(errs.ErrCSATReviewsNotFound).Msg(errs.ErrCSATReviewsNotFound.Error())
-		return nil, errs.ErrCSATReviewsNotFound
 	}
 
 	statistic := dto.CSATStatisticDataJSON{

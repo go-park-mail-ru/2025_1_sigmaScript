@@ -5,6 +5,7 @@ import (
 
 	authDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
 	collectionDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/delivery"
+	csatDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/csat/delivery"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/middleware"
 	movieDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/delivery"
 	reviewsDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/reviews/delivery"
@@ -48,6 +49,11 @@ func SetupMovieHandlers(router *mux.Router, movieHandler movieDelivery.MovieHand
 func SetupUserHandlers(router *mux.Router, userHandler userDelivery.UserHandlerInterface) {
 	router.HandleFunc("/users", userHandler.UpdateUser).Methods(http.MethodPost, http.MethodOptions).Name("UpdateUserRoute")
 	router.HandleFunc("/users/avatar", userHandler.UpdateUserAvatar).Methods(http.MethodPost, http.MethodOptions).Name("UpdateUserAvatarRoute")
+}
+
+func SetupCSATReviewsHandlers(router *mux.Router, reviewsCSATHandler csatDelivery.CSATHandlerInterface) {
+	router.HandleFunc("/csat/statistic", reviewsCSATHandler.GetCSATStatistic).Methods(http.MethodGet, http.MethodOptions).Name("GetCSATStatisticRoute")
+	router.HandleFunc("/csat", reviewsCSATHandler.CreateCSATReview).Methods(http.MethodPost, http.MethodOptions).Name("CreateCSATReviewRoute")
 }
 
 func ApplyMiddlewares(router *mux.Router) {

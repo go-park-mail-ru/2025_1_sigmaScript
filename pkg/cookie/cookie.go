@@ -37,11 +37,12 @@ func ExpireOldSessionCookie(w http.ResponseWriter, r *http.Request, cookie *conf
 		http.SetCookie(w, PreparedExpiredCookie(cookie))
 		err := sessionSrv.DeleteSession(r.Context(), oldSessionCookie.Value)
 		if err != nil {
-			return err
+			logger.Error().Err(err).Msg(errors.Wrap(err, "error happend while deleting old session from repo").Error())
+			return nil
 		}
-		logger.Info().Msg("successfully expired old sesssion cookie")
 	}
 
+	logger.Info().Msg("successfully expired old sesssion cookie")
 	return nil
 }
 

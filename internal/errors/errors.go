@@ -102,4 +102,6 @@ var (
 	ErrSessionNotExists = errors.New(ErrMsgSessionNotExists)
 
 	ErrInvalidFileType = errors.New("invalid_file_type")
+
+	ErrCSATReviewsNotFound = errors.New("no CSAT reviews found")
 )

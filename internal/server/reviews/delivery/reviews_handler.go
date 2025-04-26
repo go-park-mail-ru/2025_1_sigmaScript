@@ -156,7 +156,13 @@ func (h *ReviewHandler) CreateReview(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	h.movieService.CreateNewMovieReview(r.Context(), movieID, newReview)
+	errCreate := h.movieService.CreateNewMovieReview(r.Context(), movieID, newReview)
+	if errCreate != nil {
+		wrapped := errors.Wrap(errCreate, "error creating review")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+		return
+	}
 
 	if err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: "successfully created new review"}); err != nil {
 		logger.Error().Err(err).Msg(errs.ErrSendJSON)

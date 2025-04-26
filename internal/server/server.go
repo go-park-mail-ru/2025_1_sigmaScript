@@ -28,6 +28,11 @@ import (
 	repoMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/repository"
 	serviceMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/service"
 
+	deliveryCSAT "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/csat/delivery"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/csat/delivery/dto"
+	repoCSAT "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/csat/repository"
+	serviceCSAT "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/csat/service"
+
 	csrfDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/csrf/delivery"
 	deliveryReviews "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/reviews/delivery"
 	"github.com/rs/zerolog/log"
@@ -121,8 +126,14 @@ func (s *Server) Run() error {
 
 	movieReviewHandler := deliveryReviews.NewReviewHandler(userService, sessionService, movieService)
 
-	mx := router.NewRouter()
+	csatRepo := repoCSAT.NewCSATRepository(&mocks.CSATRepo{
+		Rating:  0,
+		Reviews: make(map[int]*dto.CSATReviewDataJSON),
+	})
+	csatService := serviceCSAT.NewCSATService(csatRepo)
+	csatHandler := deliveryCSAT.NewCSATHandler(userService, sessionService, csatService)
 
+	mx := router.NewRouter()
 	log.Info().Msg("Configuring routes")
 
 	router.ApplyMiddlewares(mx)
@@ -135,6 +146,8 @@ func (s *Server) Run() error {
 	router.SetupUserHandlers(mx, userHandler)
 	router.SetupMovieHandlers(mx, movieHandler)
 	router.SetupReviewsHandlers(mx, movieReviewHandler)
+
+	router.SetupCSATReviewsHandlers(mx, csatHandler)
 
 	log.Info().Msg("Routes configured successfully")
 

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
+	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -37,8 +38,8 @@ func ExpireOldSessionCookie(w http.ResponseWriter, r *http.Request, cookie *conf
 		http.SetCookie(w, PreparedExpiredCookie(cookie))
 		err := sessionSrv.DeleteSession(r.Context(), oldSessionCookie.Value)
 		if err != nil {
-			logger.Warn().Err(err).Msg(errors.Wrap(err, "error happend while deleting old session from repo").Error())
-			return nil
+			logger.Error().Err(err).Msg(errors.Wrap(err, "error happend while deleting old session from repo").Error())
+			return errs.ErrSessionNotExists
 		}
 	}
 

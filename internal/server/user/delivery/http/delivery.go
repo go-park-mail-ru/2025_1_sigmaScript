@@ -271,7 +271,7 @@ func (h *UserHandler) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(user.Avatar) > 0 && !strings.Contains(user.Avatar, "avatars/avatar_default_picture.svg") && !strings.Contains(user.Avatar, "img/avatar_placeholder.png") {
+	if len(user.Avatar) > 0 && !strings.Contains(user.Avatar, "avatars/avatar_default_picture.svg") && !strings.Contains(user.Avatar, "img/avatar_placeholder.webp") {
 		err = os.Remove(uploadDir + getFilenameInUserAvatarField(user.Avatar))
 		if err != nil {
 			wrapped := errors.Wrap(err, "error updating avatar")

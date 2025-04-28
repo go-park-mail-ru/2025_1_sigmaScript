@@ -44,7 +44,7 @@ var MainPageCollections = Collections{
 }
 
 var Promo = Collection{
-	0: {ID: 21, Title: "Пророк. История Александра Пушкина", PreviewURL: "/img/promo_prorok.jpeg", Duration: "1ч 53м"},
-	1: {ID: 22, Title: "Финист. первый Богатырь", PreviewURL: "/img/promo_bogatyr.jpeg", Duration: "1ч 52м"},
-	2: {ID: 23, Title: "Батя", PreviewURL: "/img/promo_batya.jpeg", Duration: "1ч 16м"},
+	0: {ID: 21, Title: "Пророк. История Александра Пушкина", PreviewURL: "/img/promo_prorok.webp", Duration: "1ч 53м"},
+	1: {ID: 22, Title: "Батя", PreviewURL: "/img/promo_batya.webp", Duration: "1ч 16м"},
+	2: {ID: 23, Title: "Финист. первый Богатырь", PreviewURL: "/img/promo_bogatyr.webp", Duration: "1ч 52м"},
 }

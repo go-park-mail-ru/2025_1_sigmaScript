@@ -65,17 +65,20 @@ func connectToPostgresDB(cfg *config.ConfigPgDB) (*sql.DB, error) {
 	DB.SetConnMaxIdleTime(time.Duration(cfg.Databases.Postgres.ConnMaxIdleTime) * time.Minute)
 
 	log.Info().Msg("Postgres database connection opened successfully")
-	time.Sleep(5 * time.Second)
+	time.Sleep(3 * time.Second)
 
 	for i := range DB_MAX_PINGS {
 		err = DB.Ping()
-		if err != nil {
-			errMsg := fmt.Errorf("ping №%d:error while pinging DB: %w", i, err)
-			log.Error().Err(errMsg).Msg("ping_db_error")
-			if i == DB_MAX_PINGS {
-				return nil, errMsg
-			}
+		if err == nil {
+			break
 		}
+
+		errMsg := fmt.Errorf("ping №%d:error while pinging DB: %w", i, err)
+		log.Error().Err(errMsg).Msg("ping_db_error")
+		if i == DB_MAX_PINGS {
+			return nil, errMsg
+		}
+
 		time.Sleep(2 * time.Second)
 	}
 

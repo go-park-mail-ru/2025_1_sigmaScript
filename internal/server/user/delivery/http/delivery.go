@@ -33,16 +33,16 @@ const (
 )
 
 var ALLOWED_IMAGE_TYPES = map[string]struct{}{
-	".svg":  {},
-	".png":  {},
-	".jpg":  {},
-	".jpeg": {},
-	".webp": {},
+	"image/png":     {},
+	"image/jpeg":    {},
+	"image/jpg":     {},
+	"image/svg+xml": {},
+	"image/webp":    {},
 }
 
 const (
 	MB       = 1 << 20
-	LIMIT_MB = 5
+	LIMIT_MB = 1
 )
 
 type UserHandler struct {
@@ -219,8 +219,8 @@ func (h *UserHandler) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	// Check file extension
-	ext := strings.ToLower(filepath.Ext(header.Filename))
-	if _, ok := ALLOWED_IMAGE_TYPES[ext]; ok {
+	ext := header.Header.Get("Content-Type")
+	if _, ok := ALLOWED_IMAGE_TYPES[ext]; !ok {
 		wrapped := errors.Wrap(errs.ErrInvalidFileType, errs.ErrMsgOnlyAllowedImageFormats)
 		logger.Error().Err(wrapped).Msg(wrapped.Error())
 		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
@@ -271,7 +271,7 @@ func (h *UserHandler) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(user.Avatar) > 0 && !strings.Contains(user.Avatar, "avatars/avatar_default_picture.svg") && !strings.Contains(user.Avatar, "img/avatar_placeholder.webp") {
+	if len(user.Avatar) > 0 && !strings.Contains(user.Avatar, "avatars/avatar_default_picture.svg") && !strings.Contains(user.Avatar, "img/avatar_placeholder.png") {
 		err = os.Remove(uploadDir + getFilenameInUserAvatarField(user.Avatar))
 		if err != nil {
 			wrapped := errors.Wrap(err, "error updating avatar")

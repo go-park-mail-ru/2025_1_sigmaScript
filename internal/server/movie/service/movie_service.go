@@ -41,7 +41,7 @@ func (s *MovieService) GetAllReviewsOfMovieByID(ctx context.Context, movieID int
 
 	movieReviews, err := s.movieRepo.GetAllReviewsOfMovieFromRepoByID(ctx, movieID)
 	if err != nil {
-		logger.Error().Err(err).Msg(err.Error())
+		logger.Error().Err(err).Msgf("error happened while getting reviews of movie by id %d : %v", movieID, err.Error())
 		return nil, err
 	}
 

@@ -8,9 +8,9 @@ import (
 
 //go:generate mockgen -source=service.go -destination=mocks/mock.go
 type UserRepositoryInterface interface {
-	GetUser(ctx context.Context, login string) (*models.User, error)
-	CreateUser(ctx context.Context, user *models.User) error
-	DeleteUser(ctx context.Context, login string) error
+	GetUserPostgres(ctx context.Context, login string) (*models.User, error)
+	CreateUserPostgres(ctx context.Context, user *models.User) error
+	DeleteUserPostgres(ctx context.Context, login string) error
 }
 
 type UserService struct {

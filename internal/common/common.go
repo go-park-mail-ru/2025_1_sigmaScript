@@ -7,5 +7,6 @@ const (
 )
 
 const (
-	CSRF_TOKEN_NAME = "csrf_token"
+	CSRF_TOKEN_NAME   = "csrf_token"
+	CSRF_TOKEN_LENGTH = 64
 )

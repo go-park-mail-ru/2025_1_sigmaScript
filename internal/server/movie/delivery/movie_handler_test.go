@@ -78,7 +78,8 @@ func TestMovieHandler_GetMovie(t *testing.T) {
 				tt.mockSetup()
 			}
 
-			req, _ := http.NewRequest("GET", "/movie/"+tt.movieID, nil)
+			req, errRequest := http.NewRequest("GET", "/movie/"+tt.movieID, nil)
+			assert.NoError(t, errRequest)
 			req = mux.SetURLVars(req, map[string]string{"movie_id": tt.movieID})
 
 			rr := httptest.NewRecorder()

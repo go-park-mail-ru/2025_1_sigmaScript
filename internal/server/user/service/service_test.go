@@ -38,7 +38,7 @@ func TestUserService_CreateUser(t *testing.T) {
 				Avatar:         "test/url.png",
 			},
 			mockSetupFunc: func(t *testing.T, r *mockRepo.MockUserRepositoryInterface) {
-				r.EXPECT().CreateUser(gomock.Any(), &models.User{
+				r.EXPECT().CreateUserPostgres(gomock.Any(), &models.User{
 					Username:       "test",
 					HashedPassword: "test",
 					Avatar:         "test/url.png",
@@ -55,7 +55,7 @@ func TestUserService_CreateUser(t *testing.T) {
 				Avatar:         "test/url.png",
 			},
 			mockSetupFunc: func(t *testing.T, r *mockRepo.MockUserRepositoryInterface) {
-				r.EXPECT().CreateUser(gomock.Any(), &models.User{
+				r.EXPECT().CreateUserPostgres(gomock.Any(), &models.User{
 					Username:       "test",
 					HashedPassword: "test",
 					Avatar:         "test/url.png",
@@ -101,7 +101,7 @@ func TestUserService_DeleteUser(t *testing.T) {
 			name:     "valid user",
 			username: "test",
 			mockSetupFunc: func(t *testing.T, r *mockRepo.MockUserRepositoryInterface) {
-				r.EXPECT().DeleteUser(gomock.Any(), "test").
+				r.EXPECT().DeleteUserPostgres(gomock.Any(), "test").
 					Return(nil).Times(1)
 			},
 			expectedError: nil,
@@ -110,7 +110,7 @@ func TestUserService_DeleteUser(t *testing.T) {
 			name:     "not exist user",
 			username: "test",
 			mockSetupFunc: func(t *testing.T, r *mockRepo.MockUserRepositoryInterface) {
-				r.EXPECT().DeleteUser(gomock.Any(), "test").
+				r.EXPECT().DeleteUserPostgres(gomock.Any(), "test").
 					Return(errors.New(errs.ErrIncorrectLogin)).Times(1)
 			},
 			expectedError: errors.New(errs.ErrIncorrectLogin),
@@ -153,7 +153,7 @@ func TestUserService_GetUser(t *testing.T) {
 			name:     "valid user",
 			username: "valid user",
 			mockSetupFunc: func(t *testing.T, r *mockRepo.MockUserRepositoryInterface) {
-				r.EXPECT().GetUser(gomock.Any(), "valid user").
+				r.EXPECT().GetUserPostgres(gomock.Any(), "valid user").
 					Return(&models.User{
 						Username:       "test",
 						HashedPassword: "test",
@@ -171,7 +171,7 @@ func TestUserService_GetUser(t *testing.T) {
 			name:     "invalid user",
 			username: "invalid user",
 			mockSetupFunc: func(t *testing.T, r *mockRepo.MockUserRepositoryInterface) {
-				r.EXPECT().GetUser(gomock.Any(), "invalid user").
+				r.EXPECT().GetUserPostgres(gomock.Any(), "invalid user").
 					Return(nil, errors.New(errs.ErrIncorrectLogin)).Times(1)
 			},
 			expectedError: errors.New(errs.ErrIncorrectLogin),
@@ -221,7 +221,7 @@ func TestUserService_Login(t *testing.T) {
 			mockSetupFunc: func(t *testing.T, r *mockRepo.MockUserRepositoryInterface) {
 				hashedPass, err := bcrypt.GenerateFromPassword([]byte("test password"), bcrypt.DefaultCost)
 				assert.NoError(t, err)
-				r.EXPECT().GetUser(gomock.Any(), "valid user").
+				r.EXPECT().GetUserPostgres(gomock.Any(), "valid user").
 					Return(&models.User{
 						Username:       "valid user",
 						HashedPassword: string(hashedPass),
@@ -237,7 +237,7 @@ func TestUserService_Login(t *testing.T) {
 				Password: "test password",
 			},
 			mockSetupFunc: func(t *testing.T, r *mockRepo.MockUserRepositoryInterface) {
-				r.EXPECT().GetUser(gomock.Any(), "invalid user").
+				r.EXPECT().GetUserPostgres(gomock.Any(), "invalid user").
 					Return(nil, errors.New(errs.ErrIncorrectLogin)).Times(1)
 			},
 			expectedError: errors.New(errs.ErrIncorrectLogin),
@@ -249,7 +249,7 @@ func TestUserService_Login(t *testing.T) {
 				Password: "incorrect password",
 			},
 			mockSetupFunc: func(t *testing.T, r *mockRepo.MockUserRepositoryInterface) {
-				r.EXPECT().GetUser(gomock.Any(), "invalid user").
+				r.EXPECT().GetUserPostgres(gomock.Any(), "invalid user").
 					Return(&models.User{
 						Username:       "invalid user",
 						HashedPassword: "correct password",
@@ -301,9 +301,9 @@ func TestUserService_UpdateUser(t *testing.T) {
 				Avatar:         "test/url.png",
 			},
 			mockSetupFunc: func(t *testing.T, r *mockRepo.MockUserRepositoryInterface) {
-				r.EXPECT().DeleteUser(gomock.Any(), "valid user").
+				r.EXPECT().DeleteUserPostgres(gomock.Any(), "valid user").
 					Return(nil).Times(1)
-				r.EXPECT().CreateUser(gomock.Any(), &models.User{
+				r.EXPECT().CreateUserPostgres(gomock.Any(), &models.User{
 					Username:       "valid user",
 					HashedPassword: "test password",
 					Avatar:         "test/url.png",
@@ -321,7 +321,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 				Avatar:         "test/url.png",
 			},
 			mockSetupFunc: func(t *testing.T, r *mockRepo.MockUserRepositoryInterface) {
-				r.EXPECT().DeleteUser(gomock.Any(), "incorrect user").
+				r.EXPECT().DeleteUserPostgres(gomock.Any(), "incorrect user").
 					Return(errors.New(errs.ErrIncorrectLogin)).Times(1)
 			},
 			expectedError: errors.New(errs.ErrIncorrectLogin),
@@ -335,9 +335,9 @@ func TestUserService_UpdateUser(t *testing.T) {
 				Avatar:         "test/url.png",
 			},
 			mockSetupFunc: func(t *testing.T, r *mockRepo.MockUserRepositoryInterface) {
-				r.EXPECT().DeleteUser(gomock.Any(), "correct login").
+				r.EXPECT().DeleteUserPostgres(gomock.Any(), "correct login").
 					Return(nil).Times(1)
-				r.EXPECT().CreateUser(gomock.Any(), &models.User{
+				r.EXPECT().CreateUserPostgres(gomock.Any(), &models.User{
 					Username:       "correct login",
 					HashedPassword: "test password",
 					Avatar:         "test/url.png",

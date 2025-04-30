@@ -12,6 +12,7 @@ import (
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/common"
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
+	csrftoken "github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/csrf_token"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -35,7 +36,7 @@ func TestRequestWithLoggerMiddleware_AssignsRequestID(t *testing.T) {
 
 	assert.True(t, handlerCalled)
 	assert.Equal(t, http.StatusTeapot, rec.Code)
-	assert.NotEmpty(t, rec.Header().Get("Request-ID"))
+	assert.NotEmpty(t, rec.Header().Get("X-Request-ID"))
 }
 
 func TestRequestWithLoggerMiddleware_UsesRequestIDHeader(t *testing.T) {
@@ -48,12 +49,12 @@ func TestRequestWithLoggerMiddleware_UsesRequestIDHeader(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	req.Header.Set("Request-ID", customID)
+	req.Header.Set("X-Request-ID", customID)
 	rec := httptest.NewRecorder()
 
 	RequestWithLoggerMiddleware(handler).ServeHTTP(rec, req)
 
-	assert.Equal(t, customID, rec.Header().Get("Request-ID"))
+	assert.Equal(t, customID, rec.Header().Get("X-Request-ID"))
 }
 
 func TestRequestWithLoggerMiddleware_ReadsBody(t *testing.T) {
@@ -295,10 +296,9 @@ func TestMiddlewareCSRF_PostReview_Success(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/movie/1/reviews", nil)
 	rec := httptest.NewRecorder()
 
-	cookie := &http.Cookie{Name: common.CSRF_TOKEN_NAME, Value: "some_value"}
-
-	req.AddCookie(cookie)
-	req.Header.Set("X-CSRF-TOKEN", "some_value")
+	newCSRFToken, errCSRF := csrftoken.GenerateCSRFToken()
+	assert.NoError(t, errCSRF)
+	req.Header.Set("X-CSRF-TOKEN", newCSRFToken)
 
 	handlerCalled := false
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

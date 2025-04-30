@@ -34,10 +34,26 @@ func setupTestContext() context.Context {
 	return disabledLogger.WithContext(context.Background())
 }
 
+// Структура ошибки для имитации SQLSTATE
+type SqlStateError struct {
+	code    string
+	message string
+}
+
+// Изменение приёма аргумента с переменной на указатель
+func (se SqlStateError) Error() string {
+	return se.message
+}
+
+// Дополнительно реализуем получение кода ошибки через метод Code
+func (se SqlStateError) Code() string {
+	return se.code
+}
+
 func TestUserRepository_CreateUserPostgres(t *testing.T) {
 	ctx := setupTestContext()
 	repo, mock := setupTestRepo(t)
-	defer repo.pgdb.Close()
+
 	now := time.Now().Truncate(time.Microsecond)
 	userToCreate := &models.User{
 		Username:       "testuser",
@@ -48,7 +64,6 @@ func TestUserRepository_CreateUserPostgres(t *testing.T) {
 	expectedUser := models.User{
 		Username:  userToCreate.Username,
 		CreatedAt: now,
-		UpdatedAt: now,
 	}
 
 	insertQueryRegex := regexp.QuoteMeta(insertUserQuery)
@@ -57,8 +72,8 @@ func TestUserRepository_CreateUserPostgres(t *testing.T) {
 		prep := mock.ExpectPrepare(insertQueryRegex)
 		prep.ExpectQuery().
 			WithArgs(userToCreate.Username, userToCreate.HashedPassword, userToCreate.Avatar).
-			WillReturnRows(sqlmock.NewRows([]string{"login", "created_at", "updated_at"}).
-				AddRow(expectedUser.Username, expectedUser.CreatedAt, expectedUser.UpdatedAt))
+			WillReturnRows(sqlmock.NewRows([]string{"login", "created_at"}).
+				AddRow(expectedUser.Username, expectedUser.CreatedAt))
 
 		err := repo.CreateUserPostgres(ctx, userToCreate)
 
@@ -78,7 +93,11 @@ func TestUserRepository_CreateUserPostgres(t *testing.T) {
 	})
 
 	t.Run("Exec_Failure_AlreadyExists", func(t *testing.T) {
-		execErr := errors.New("unique constraint violation")
+		// execErr := errors.New("unique constraint violation")
+		execErr := SqlStateError{
+			message: "unique constraint violation",
+			code:    uniqueViolationCode,
+		}
 		prep := mock.ExpectPrepare(insertQueryRegex)
 		prep.ExpectQuery().
 			WithArgs(userToCreate.Username, userToCreate.HashedPassword, userToCreate.Avatar).
@@ -102,15 +121,14 @@ func TestUserRepository_CreateUserPostgres(t *testing.T) {
 		expectedReturnedUser := models.User{
 			Username:  injectionUsername,
 			CreatedAt: now,
-			UpdatedAt: now,
 		}
 
 		prep := mock.ExpectPrepare(insertQueryRegex)
 
 		prep.ExpectQuery().
 			WithArgs(userWithInjection.Username, userWithInjection.HashedPassword, userWithInjection.Avatar).
-			WillReturnRows(sqlmock.NewRows([]string{"login", "created_at", "updated_at"}).
-				AddRow(expectedReturnedUser.Username, expectedReturnedUser.CreatedAt, expectedReturnedUser.UpdatedAt))
+			WillReturnRows(sqlmock.NewRows([]string{"login", "created_at"}).
+				AddRow(expectedReturnedUser.Username, expectedReturnedUser.CreatedAt))
 
 		err := repo.CreateUserPostgres(ctx, userWithInjection)
 
@@ -200,7 +218,7 @@ func TestUserRepository_GetUserPostgres(t *testing.T) {
 		assert.Error(t, err, "GetUserPostgres should return an error on scan failure")
 		assert.Nil(t, user, "User should be nil on scan failure")
 
-		assert.Contains(t, err.Error(), "failed to select user", "Error message should indicate select failure")
+		assert.Contains(t, err.Error(), "failed to get user", "Error message should indicate select failure")
 		assert.ErrorIs(t, err, scanErr, "Original scan error should be wrapped")
 		assert.NoError(t, mock.ExpectationsWereMet(), "Sqlmock expectations were not met")
 	})
@@ -333,7 +351,7 @@ func TestUserRepository_UpdateUserPostgres(t *testing.T) {
 		updatedUser, err := repo.UpdateUserPostgres(ctx, login, userToUpdate)
 
 		assert.Error(t, err, "Should return error if no fields are provided for update")
-		assert.EqualError(t, err, errs.ErrIncorrectLoginOrPassword)
+		assert.EqualError(t, err, errs.ErrEmptyLogin)
 		assert.Nil(t, updatedUser)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})

@@ -10,11 +10,11 @@ import (
 )
 
 const (
-	CSRF_TOKEN_LENGTH = 32
+	csrf_token_primary_length = 32
 )
 
 func GenerateCSRFToken() (string, error) {
-	tokenCSRF := make([]byte, CSRF_TOKEN_LENGTH)
+	tokenCSRF := make([]byte, csrf_token_primary_length)
 	if _, err := rand.Read(tokenCSRF); err != nil {
 		return "", errors.Wrap(err, errs.ErrMsgGenerateCSRFToken)
 	}

@@ -15,7 +15,7 @@ func (s *UserService) UpdateUser(ctx context.Context, login string, newUser *mod
 		return err
 	}
 
-	if err := s.repo.CreateUser(ctx, newUser); err != nil {
+	if err := s.repo.CreateUserPostgres(ctx, newUser); err != nil {
 		logger.Error().Err(err).Msg(err.Error())
 		return err
 	}

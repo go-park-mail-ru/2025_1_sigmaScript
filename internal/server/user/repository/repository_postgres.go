@@ -8,6 +8,7 @@ import (
 
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
+	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -16,7 +17,7 @@ const (
 	insertUserQuery = `
 		INSERT INTO "user" (login, hashed_password, avatar)
 		VALUES ($1, $2, $3, $4)
-		RETURNING login, created_at, updated_at;
+		RETURNING login, created_at;
 	`
 
 	getUserByUsernameQuery = `
@@ -30,6 +31,8 @@ const (
 	WHERE login = $1
 	RETURNING id;
 `
+
+	uniqueViolationCode = "23505"
 )
 
 func (r *UserRepository) CreateUserPostgres(ctx context.Context, user *models.User) error {
@@ -51,12 +54,19 @@ func (r *UserRepository) CreateUserPostgres(ctx context.Context, user *models.Us
 	err = execRow.QueryRowContext(
 		ctx,
 		user.Username, user.HashedPassword, user.Avatar,
-	).Scan(&newUser.Username, &newUser.CreatedAt, &newUser.UpdatedAt)
+	).Scan(&newUser.Username, &newUser.CreatedAt)
 
 	if err != nil {
 		errPg := fmt.Errorf("postgres: error while creating user - %w", err)
 		logger.Error().Err(errPg).Msg(errs.ErrSomethingWentWrong)
-		return errors.New(errs.ErrAlreadyExists)
+
+		sqlErr, ok := err.(interface {
+			Code() string
+		})
+		if ok && sqlErr.Code() == uniqueViolationCode {
+			return errors.New(errs.ErrAlreadyExists)
+		}
+		return errors.New(errs.ErrSomethingWentWrong)
 	}
 
 	logger.Info().Msgf("successfully created new user: %s", newUser.Username)
@@ -91,9 +101,9 @@ func (r *UserRepository) GetUserPostgres(ctx context.Context, login string) (*mo
 		if err == sql.ErrNoRows {
 			return nil, errors.New(errs.ErrIncorrectLogin)
 		}
-		return nil, fmt.Errorf("failed to select user: %w", err)
+		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
-	logger.Info().Msgf("successfully gotten user by login: %s", user.Username)
+	logger.Info().Msgf("successfully got user")
 	return &user, nil
 }
 
@@ -113,7 +123,7 @@ func (r *UserRepository) DeleteUserPostgres(ctx context.Context, login string) e
 		return errors.Wrap(err, errs.ErrSomethingWentWrong)
 	}
 
-	logger.Info().Msgf("successfully deleted user by login: %s", login)
+	logger.Info().Msgf("successfully deleted user")
 	return nil
 }
 
@@ -122,7 +132,7 @@ func (r *UserRepository) UpdateUserPostgres(ctx context.Context, login string, u
 	logger := log.Ctx(ctx)
 
 	if login == "" {
-		errMsg := fmt.Sprintf("login is:'%s'", user.Username)
+		errMsg := "login is empty"
 		logger.Error().Msg(errMsg)
 		return nil, errors.New(errs.ErrIncorrectLogin)
 	}
@@ -148,7 +158,7 @@ func (r *UserRepository) UpdateUserPostgres(ctx context.Context, login string, u
 		argIndex++
 	}
 	if len(updatesQueryString) == 0 {
-		return nil, errors.New(errs.ErrIncorrectLoginOrPassword)
+		return nil, errors.New(errs.ErrEmptyLogin)
 	}
 
 	query += fmt.Sprintf("%s, updated_at = CURRENT_TIMESTAMP WHERE login = $%d RETURNING login, avatar, created_at, updated_at",
@@ -167,6 +177,6 @@ func (r *UserRepository) UpdateUserPostgres(ctx context.Context, login string, u
 		return nil, fmt.Errorf("failed to select updated user: %w", err)
 	}
 
-	logger.Info().Msgf("successfully updated user by login: %s", updatedUser.Username)
+	logger.Info().Msgf("successfully updated user")
 	return &updatedUser, nil
 }

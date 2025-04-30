@@ -34,8 +34,11 @@ func NewMovieHandler(movieService MovieServiceInterface) *MovieHandler {
 func (h *MovieHandler) GetMovie(w http.ResponseWriter, r *http.Request) {
 	logger := log.Ctx(r.Context())
 
-	vars := mux.Vars(r)
-	movieIDStr := vars["movie_id"]
+	movieIDStr, ok := mux.Vars(r)["movie_id"]
+	if !ok {
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, "Missing movie_id parameter")
+		return
+	}
 
 	movieID, err := strconv.Atoi(movieIDStr)
 	if err != nil {

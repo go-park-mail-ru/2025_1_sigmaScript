@@ -51,7 +51,8 @@ func TestCollectionHandler_GetMainPageCollections(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
 
-			req, _ := http.NewRequest("GET", "/collections/main", nil)
+			req, errRequser := http.NewRequest("GET", "/collections/main", nil)
+			assert.NoError(t, errRequser)
 			rr := httptest.NewRecorder()
 
 			handler.GetMainPageCollections(rr, req)

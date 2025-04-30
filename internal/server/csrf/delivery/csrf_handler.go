@@ -10,12 +10,15 @@ import (
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/messages"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery/interfaces"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/cookie"
 	csrftoken "github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/csrf_token"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
 	"github.com/pkg/errors"
 
 	"github.com/rs/zerolog/log"
+)
+
+const (
+	HeaderCSRFToken = "X-CSRF-Token"
 )
 
 type CSRFHandler struct {
@@ -62,10 +65,7 @@ func (h *CSRFHandler) CreateCSRFTokenHandler(w http.ResponseWriter, r *http.Requ
 
 	logger.Info().Msg("Successfully created CSRF token")
 	// пишем хедер с токеном
-	w.Header().Set("X-CSRF-Token", token)
-
-	// пишем токен в куки
-	http.SetCookie(w, cookie.PreparedNewCookie(h.cookieData, token))
+	w.Header().Set(HeaderCSRFToken, token)
 
 	if err := jsonutil.SendJSON(r.Context(), w, ds.Response{Message: messages.SuccessfulNewCSRFToken}); err != nil {
 		logger.Error().Err(errors.Wrap(err, errs.ErrSendJSON)).Msg(errors.Wrap(err, errs.ErrSomethingWentWrong).Error())

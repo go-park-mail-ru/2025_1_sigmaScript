@@ -16,7 +16,6 @@ import (
 	repoStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/repository"
 	serviceStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/service"
 	deliveryUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/delivery/http"
-	repoUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/repository"
 	serviceUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/service"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
@@ -39,8 +38,8 @@ func TestSetup(t *testing.T) {
 	sessionRepo := repoAuthSessions.NewSessionRepository()
 	sessionService := serviceAuth.NewSessionService(config.WrapCookieContext(context.Background(), &cfg.Cookie), sessionRepo)
 
-	userRepo := repoUsers.NewUserRepository(nil)
-	userService := serviceUsers.NewUserService(userRepo)
+	// userRepo := repoUsers.NewUserRepository(nil)
+	userService := serviceUsers.NewUserService(nil)
 	userHandler := deliveryUsers.NewUserHandler(config.WrapCookieContext(context.Background(), &cfg.Cookie), userService, sessionService)
 
 	authHandler := deliveryAuth.NewAuthHandler(config.WrapCookieContext(context.Background(), &cfg.Cookie), userService, sessionService)

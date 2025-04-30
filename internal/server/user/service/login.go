@@ -13,7 +13,7 @@ import (
 func (s *UserService) Login(ctx context.Context, loginData models.LoginData) error {
 	logger := log.Ctx(ctx)
 
-	user, err := s.repo.GetUser(ctx, loginData.Username)
+	user, err := s.repo.GetUserPostgres(ctx, loginData.Username)
 	if err != nil {
 		logger.Error().Err(err).Msg(err.Error())
 		return err

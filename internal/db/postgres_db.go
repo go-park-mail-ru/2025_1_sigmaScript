@@ -19,6 +19,7 @@ const (
 func SetupDatabase(ctx context.Context, cancel context.CancelFunc) (*sql.DB, error) {
 	ctxVals := config.FromPgDatabaseContext(ctx)
 	defer cancel()
+	log.Info().Msg("Trying to connect to Postgres database")
 
 	for {
 		select {
@@ -27,11 +28,12 @@ func SetupDatabase(ctx context.Context, cancel context.CancelFunc) (*sql.DB, err
 		default:
 			DB, err := connectToPostgresDB(ctxVals)
 			if err == nil {
+				log.Info().Msg("Postgres database connection opened successfully")
 				return DB, nil
 			}
 
 			log.Error().Err(fmt.Errorf("failed to connect to database. Error: %v Retrying", err)).Msg("setup_db_error")
-			time.Sleep(5 * time.Second)
+			time.Sleep(3 * time.Second)
 		}
 	}
 }
@@ -64,8 +66,7 @@ func connectToPostgresDB(cfg *config.ConfigPgDB) (*sql.DB, error) {
 	DB.SetConnMaxLifetime(time.Duration(cfg.Databases.Postgres.ConnMaxLifetime) * time.Minute)
 	DB.SetConnMaxIdleTime(time.Duration(cfg.Databases.Postgres.ConnMaxIdleTime) * time.Minute)
 
-	log.Info().Msg("Postgres database connection opened successfully")
-	time.Sleep(3 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	for i := range DB_MAX_PINGS {
 		err = DB.Ping()
@@ -73,9 +74,9 @@ func connectToPostgresDB(cfg *config.ConfigPgDB) (*sql.DB, error) {
 			break
 		}
 
-		errMsg := fmt.Errorf("ping №%d:error while pinging DB: %w", i, err)
+		errMsg := fmt.Errorf("ping №%d:error while pinging DB: %w", i+1, err)
 		log.Error().Err(errMsg).Msg("ping_db_error")
-		if i == DB_MAX_PINGS {
+		if i == DB_MAX_PINGS-1 {
 			return nil, errMsg
 		}
 

@@ -108,17 +108,17 @@ func (mr *MockUserServiceInterfaceMockRecorder) UpdateUser(ctx, login, newUser i
 }
 
 // UpdateUserAvatar mocks base method.
-func (m *MockUserServiceInterface) UpdateUserAvatar(ctx context.Context, uploadDir string, handler *multipart.FileHeader, avatarFile multipart.File, user models.User) error {
+func (m *MockUserServiceInterface) UpdateUserAvatar(ctx context.Context, uploadDir, hashedAvatarName string, avatarFile multipart.File, user models.User) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUserAvatar", ctx, uploadDir, handler, avatarFile, user)
+	ret := m.ctrl.Call(m, "UpdateUserAvatar", ctx, uploadDir, hashedAvatarName, avatarFile, user)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateUserAvatar indicates an expected call of UpdateUserAvatar.
-func (mr *MockUserServiceInterfaceMockRecorder) UpdateUserAvatar(ctx, uploadDir, handler, avatarFile, user interface{}) *gomock.Call {
+func (mr *MockUserServiceInterfaceMockRecorder) UpdateUserAvatar(ctx, uploadDir, hashedAvatarName, avatarFile, user interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserAvatar", reflect.TypeOf((*MockUserServiceInterface)(nil).UpdateUserAvatar), ctx, uploadDir, handler, avatarFile, user)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserAvatar", reflect.TypeOf((*MockUserServiceInterface)(nil).UpdateUserAvatar), ctx, uploadDir, hashedAvatarName, avatarFile, user)
 }
 
 // MockSessionServiceInterface is a mock of SessionServiceInterface interface.

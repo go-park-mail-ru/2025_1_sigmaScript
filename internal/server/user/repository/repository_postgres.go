@@ -16,7 +16,7 @@ import (
 const (
 	insertUserQuery = `
 		INSERT INTO "user" (login, hashed_password, avatar)
-		VALUES ($1, $2, $3, $4)
+		VALUES ($1, $2, $3)
 		RETURNING login, created_at;
 	`
 
@@ -42,6 +42,7 @@ func (r *UserRepository) CreateUserPostgres(ctx context.Context, user *models.Us
 	newUser := models.User{}
 	execRow, err := r.pgdb.Prepare(insertUserQuery)
 	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrapf(err, "prepare statement in CreateUserPostgres").Error())
 		return errors.Wrapf(err, "prepare statement in CreateUserPostgres")
 	}
 
@@ -58,7 +59,7 @@ func (r *UserRepository) CreateUserPostgres(ctx context.Context, user *models.Us
 
 	if err != nil {
 		errPg := fmt.Errorf("postgres: error while creating user - %w", err)
-		logger.Error().Err(errPg).Msg(errs.ErrSomethingWentWrong)
+		logger.Error().Err(errPg).Msg(errors.Wrap(errPg, errs.ErrSomethingWentWrong).Error())
 
 		sqlErr, ok := err.(interface {
 			Code() string
@@ -81,6 +82,7 @@ func (r *UserRepository) GetUserPostgres(ctx context.Context, login string) (*mo
 
 	execRow, err := r.pgdb.Prepare(getUserByUsernameQuery)
 	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrapf(err, "prepare statement in GetUserPostgres").Error())
 		return nil, errors.Wrapf(err, "prepare statement in GetUserPostgres")
 	}
 

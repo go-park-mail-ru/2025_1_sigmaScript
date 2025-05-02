@@ -14,7 +14,7 @@ type UserServiceInterface interface {
 	Login(ctx context.Context, loginData models.LoginData) error
 	DeleteUser(ctx context.Context, login string) error
 	UpdateUser(ctx context.Context, login string, newUser *models.User) error
-	UpdateUserAvatar(ctx context.Context, uploadDir string, handler *multipart.FileHeader, avatarFile multipart.File, user models.User) error
+	UpdateUserAvatar(ctx context.Context, uploadDir string, hashedAvatarName string, avatarFile multipart.File, user models.User) error
 }
 
 //go:generate mockgen -source=auth_interfaces.go -destination=../mocks/mock.go

@@ -3,6 +3,8 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"runtime"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -47,6 +49,13 @@ func PreventPanicMiddleware(next http.Handler) http.Handler {
 
 			if err := recover(); err != nil {
 				logger.Error().Msgf("Catched by middleware: panic happend: %v", err)
+
+				stackTrace := make([]byte, 4<<10)
+				n := runtime.Stack(stackTrace, true)
+				stackTrace = stackTrace[:n]
+
+				logger.Error().Msg(fmt.Sprintf("Panic stack trace: %s ", strings.TrimSpace(string(stackTrace))))
+
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
 			}
 		}()

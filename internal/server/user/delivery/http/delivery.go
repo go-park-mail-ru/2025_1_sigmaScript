@@ -233,22 +233,25 @@ func (h *UserHandler) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	hashedAvatarName := hashsaltfilename.HashSaltFilename(header.Filename)
+	logger.Info().Msgf("hashedAvatarName: !!!!  : %s", hashedAvatarName)
+
 	newUser := &models.User{
 		Username:       user.Username,
 		HashedPassword: user.HashedPassword,
-		Avatar:         viper.GetString(KinolkAvatarsStaticPath) + hashsaltfilename.HashSaltFilename(header.Filename),
+		Avatar:         viper.GetString(KinolkAvatarsStaticPath) + hashedAvatarName,
 		CreatedAt:      user.CreatedAt,
 		UpdatedAt:      time.Now(),
 	}
 
-	if err = h.userSvc.UpdateUser(r.Context(), username, user); err != nil {
+	if err = h.userSvc.UpdateUser(r.Context(), username, newUser); err != nil {
 		wrapped := errors.Wrap(err, "error updating user")
 		logger.Error().Err(wrapped).Msg(wrapped.Error())
 		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
 		return
 	}
 
-	errSrv := h.userSvc.UpdateUserAvatar(r.Context(), uploadDir, header, file, *newUser)
+	errSrv := h.userSvc.UpdateUserAvatar(r.Context(), uploadDir, hashedAvatarName, file, *user)
 	if errSrv != nil {
 		wrapped := errors.Wrap(err, "error updating user avatar")
 		logger.Error().Err(wrapped).Msg(wrapped.Error())

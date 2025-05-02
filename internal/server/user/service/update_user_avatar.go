@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
-	hashsaltfilename "github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/hash_salt_filename"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -17,7 +16,7 @@ import (
 func (s *UserService) UpdateUserAvatar(
 	ctx context.Context,
 	uploadDir string,
-	handler *multipart.FileHeader,
+	hashedAvatarName string,
 	avatarFile multipart.File,
 	user models.User,
 ) error {
@@ -25,7 +24,11 @@ func (s *UserService) UpdateUserAvatar(
 	logger.Info().Msg("creating user avatar file")
 
 	// Create the destination file
-	filePath := filepath.Join(uploadDir, hashsaltfilename.HashSaltFilename(handler.Filename))
+	filePath := filepath.Join(uploadDir, hashedAvatarName)
+
+	logger.Info().Msgf("!!!!!!!!!!!!!!!! filepath %s", filePath)
+	logger.Info().Msgf("!!!!!!!!!!!!!!!! user avatar %s", user.Avatar)
+
 	dst, err := os.Create(filePath)
 	if err != nil {
 		wrapped := errors.Wrap(err, "error creating avatar file")
@@ -57,6 +60,7 @@ func (s *UserService) UpdateUserAvatar(
 			return wrapped
 		}
 	}
+	logger.Info().Msg("successfully created user avatar file")
 
 	return nil
 }

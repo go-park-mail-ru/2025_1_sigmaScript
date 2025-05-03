@@ -109,7 +109,8 @@ func (s *Server) Run() error {
 
 	csrfHandler := csrfDelivery.NewCSRFHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionService)
 
-	staffPersonRepo := repoStaff.NewStaffPersonRepository(&mocks.ExistingActors)
+	// staffPersonRepo := repoStaff.NewStaffPersonRepository(&mocks.ExistingActors)
+	staffPersonRepo := repoStaff.NewStaffPersonPostgresRepository(pgdb)
 	staffPersonService := serviceStaff.NewStaffPersonService(staffPersonRepo)
 	staffPersonHandler := deliveryStaff.NewStaffPersonHandler(staffPersonService)
 

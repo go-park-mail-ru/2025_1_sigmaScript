@@ -13,7 +13,7 @@ import (
 
 const (
 	getActorInfoByIDQuery = `
-select
+SELECT
 	p.full_name,
 	p.en_full_name,
 	p.photo,
@@ -24,13 +24,28 @@ select
 	p.death,
 	string_agg(DISTINCT CAST(c.career AS TEXT), ', ' ORDER BY CAST(c.career AS TEXT)) AS career,
 	string_agg(DISTINCT g.name, ', ' ORDER BY g.name) AS genres
-FROM career_person cp
-JOIN person p ON cp.person_id = p.id
-JOIN career c ON cp.career_id = c.id
-JOIN person_genre pg ON pg.person_id = p.id
-JOIN genre g ON pg.genre_id = g.id
-where p.id = $1
-GROUP BY p.id, p.full_name, p.en_full_name, p.photo, p.about, p.sex, p.growth, p.birthday, p.death;
+FROM
+	person p
+LEFT JOIN
+	career_person cp ON cp.person_id = p.id
+LEFT JOIN
+	career c ON cp.career_id = c.id
+LEFT JOIN
+	person_genre pg ON pg.person_id = p.id
+LEFT JOIN
+	genre g ON pg.genre_id = g.id
+WHERE
+	p.id = $1
+GROUP BY
+	p.id,
+	p.full_name,
+	p.en_full_name,
+	p.photo,
+	p.about,
+	p.sex,
+	p.growth,
+	p.birthday,
+	p.death;
 `
 
 	getTotalActorMoviesQuery = `
@@ -63,17 +78,18 @@ func (r *StaffPersonPostgresRepository) GetPersonFromRepoByID(ctx context.Contex
 	logger.Info().Msgf("Get Person by id %d from postgres repo", personID)
 
 	var resPerson mocks.PersonJSON
-	var personFullName sql.NullString
-	var personEnFullName sql.NullString
-	var personPhoto sql.NullString
-	var personAbout sql.NullString
-	var personSex sql.NullString
-	var personGrowth sql.NullString
-	var personBirthday sql.NullString
-	var personDeath sql.NullString
-	var personCareer sql.NullString
-	var personGenres sql.NullString
-	var personTotalFilms sql.NullString
+	var personFullName string
+	var personPhoto string
+
+	personEnFullName := sql.NullString{}
+	personAbout := sql.NullString{}
+	personSex := sql.NullString{}
+	personGrowth := sql.NullString{}
+	personBirthday := sql.NullString{}
+	personDeath := sql.NullString{}
+	personCareer := sql.NullString{}
+	personGenres := sql.NullString{}
+	personTotalFilms := sql.NullString{}
 
 	personMovieCollection := mocks.Collection{}
 
@@ -91,10 +107,6 @@ func (r *StaffPersonPostgresRepository) GetPersonFromRepoByID(ctx context.Contex
 	}()
 
 	for execRowPerson.Next() {
-		// null the repeating values
-		personCareer = sql.NullString{}
-		personGenres = sql.NullString{}
-
 		if err := execRowPerson.Scan(
 			&personFullName,
 			&personEnFullName,
@@ -166,9 +178,9 @@ func (r *StaffPersonPostgresRepository) GetPersonFromRepoByID(ctx context.Contex
 
 	resPerson = mocks.PersonJSON{
 		ID:              personID,
-		FullName:        personFullName.String,
+		FullName:        personFullName,
 		EnFullName:      personEnFullName.String,
-		Photo:           personPhoto.String,
+		Photo:           personPhoto,
 		About:           personAbout.String,
 		Sex:             personSex.String,
 		Growth:          personGrowth.String,

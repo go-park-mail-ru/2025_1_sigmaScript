@@ -10,10 +10,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const (
-	DEFAULT_MOVIE_SCORE = 5
-)
-
 type MovieRepository struct {
 	db *mocks.Movies
 }

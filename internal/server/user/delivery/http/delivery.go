@@ -199,8 +199,6 @@ func (h *UserHandler) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Info().Msgf("!!!!!!!!!!! %d", contentLength)
-
 	sessionCookie, err := r.Cookie("session_id")
 	if err != nil {
 		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())

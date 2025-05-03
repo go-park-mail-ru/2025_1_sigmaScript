@@ -87,7 +87,6 @@ func TestStaffPersonRepository_GetPersonFromRepoByID(t *testing.T) {
 // 	assert.NoError(t, err)
 
 // 	staffRepo := NewStaffPersonPostgresRepository(pgdb)
-// 	log.Println(staffRepo)
 
 // 	resCollections, err := staffRepo.GetPersonFromRepoByID(t.Context(), 1)
 // 	assert.NoError(t, err)

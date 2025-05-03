@@ -14,15 +14,15 @@ import (
 const (
 	getMainPageCollectionsQuery = `
 SELECT
-	cm.collection_id as collection_id,
+	c.id as collection_id,
 	c.name AS collection_name,
 	m.id as id,
 	m.name as title,
 	m.poster as preview_url,
 	m.duration as duration
-FROM collection_movie cm
-JOIN movie m ON cm.movie_id = m.id
-JOIN collection c ON cm.collection_id = c.id
+FROM collection c
+LEFT JOIN collection_movie cm ON cm.collection_id = c.id
+LEFT JOIN movie m ON cm.movie_id = m.id
 where c.is_main_collection = TRUE;
 `
 )

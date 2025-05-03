@@ -120,7 +120,7 @@ func (h *ReviewHandler) CreateReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if newReviewDataJSON.Score < 1 || newReviewDataJSON.Score > 10 {
-		logger.Error().Err(errors.New(errs.ErrBadPayload)).Msg(fmt.Sprintf("bad score of new review: %d", newReviewDataJSON.Score))
+		logger.Error().Err(errors.New(errs.ErrBadPayload)).Msg(fmt.Sprintf("bad score of new review: %f", newReviewDataJSON.Score))
 		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload,
 			errs.ErrBadPayload)
 		return

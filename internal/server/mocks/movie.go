@@ -75,15 +75,6 @@ var ExistingMovies = Movies{
 		},
 		Staff: []PersonJSON{
 			{ID: 7, FullName: "Брэд Питт", Photo: "/static/img/brad_pitt.webp"},
-			// {ID: 12, FullName: "Эдвард Нортон"},
-			// {ID: 13, FullName: "Хелена Бонем Картер"},
-			// {ID: 14, FullName: "Марвин Ли Эдей"},
-			// {ID: 15, FullName: "Джаред Лето"},
-			// {ID: 16, FullName: "Зэк Гренье"},
-			// {ID: 17, FullName: "Холт Маккэллани"},
-			// {ID: 18, FullName: "Эйон Бэйли"},
-			// {ID: 19, FullName: "Ричмонд Аркетт"},
-			// {ID: 20, FullName: "Дэвид Эндрюс"},
 		},
 		Reviews: []ReviewJSON{
 			{

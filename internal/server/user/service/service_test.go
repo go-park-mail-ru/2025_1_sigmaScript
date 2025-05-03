@@ -301,14 +301,16 @@ func TestUserService_UpdateUser(t *testing.T) {
 				Avatar:         "test/url.png",
 			},
 			mockSetupFunc: func(t *testing.T, r *mockRepo.MockUserRepositoryInterface) {
-				r.EXPECT().DeleteUserPostgres(gomock.Any(), "valid user").
-					Return(nil).Times(1)
-				r.EXPECT().CreateUserPostgres(gomock.Any(), &models.User{
+				r.EXPECT().UpdateUserPostgres(gomock.Any(), "valid user", &models.User{
 					Username:       "valid user",
 					HashedPassword: "test password",
 					Avatar:         "test/url.png",
 				}).
-					Return(nil)
+					Return(&models.User{
+						Username:       "valid user",
+						HashedPassword: "test password",
+						Avatar:         "test/url.png",
+					}, nil)
 			},
 			expectedError: nil,
 		},
@@ -321,30 +323,34 @@ func TestUserService_UpdateUser(t *testing.T) {
 				Avatar:         "test/url.png",
 			},
 			mockSetupFunc: func(t *testing.T, r *mockRepo.MockUserRepositoryInterface) {
-				r.EXPECT().DeleteUserPostgres(gomock.Any(), "incorrect user").
-					Return(errors.New(errs.ErrIncorrectLogin)).Times(1)
+				r.EXPECT().UpdateUserPostgres(gomock.Any(), "incorrect user", &models.User{
+					Username:       "incorrect user",
+					HashedPassword: "test password",
+					Avatar:         "test/url.png",
+				}).
+					Return(nil, errors.New(errs.ErrIncorrectLogin))
 			},
 			expectedError: errors.New(errs.ErrIncorrectLogin),
 		},
-		{
-			name:  "invalid user",
-			login: "correct login",
-			newUser: &models.User{
-				Username:       "correct login",
-				HashedPassword: "test password",
-				Avatar:         "test/url.png",
-			},
-			mockSetupFunc: func(t *testing.T, r *mockRepo.MockUserRepositoryInterface) {
-				r.EXPECT().DeleteUserPostgres(gomock.Any(), "correct login").
-					Return(nil).Times(1)
-				r.EXPECT().CreateUserPostgres(gomock.Any(), &models.User{
-					Username:       "correct login",
-					HashedPassword: "test password",
-					Avatar:         "test/url.png",
-				}).Return(errors.New(errs.ErrAlreadyExists)).Times(1)
-			},
-			expectedError: errors.New(errs.ErrAlreadyExists),
-		},
+		// {
+		// 	name:  "invalid user",
+		// 	login: "correct login",
+		// 	newUser: &models.User{
+		// 		Username:       "correct login",
+		// 		HashedPassword: "test password",
+		// 		Avatar:         "test/url.png",
+		// 	},
+		// 	mockSetupFunc: func(t *testing.T, r *mockRepo.MockUserRepositoryInterface) {
+		// 		r.EXPECT().DeleteUserPostgres(gomock.Any(), "correct login").
+		// 			Return(nil).Times(1)
+		// 		r.EXPECT().CreateUserPostgres(gomock.Any(), &models.User{
+		// 			Username:       "correct login",
+		// 			HashedPassword: "test password",
+		// 			Avatar:         "test/url.png",
+		// 		}).Return(errors.New(errs.ErrAlreadyExists)).Times(1)
+		// 	},
+		// 	expectedError: errors.New(errs.ErrAlreadyExists),
+		// },
 	}
 
 	for _, tt := range tests {

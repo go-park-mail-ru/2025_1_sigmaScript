@@ -11,6 +11,7 @@ type UserRepositoryInterface interface {
 	GetUserPostgres(ctx context.Context, login string) (*models.User, error)
 	CreateUserPostgres(ctx context.Context, user *models.User) error
 	DeleteUserPostgres(ctx context.Context, login string) error
+	UpdateUserPostgres(ctx context.Context, login string, user *models.User) (*models.User, error)
 }
 
 type UserService struct {

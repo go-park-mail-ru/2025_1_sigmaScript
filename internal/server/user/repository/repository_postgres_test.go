@@ -326,11 +326,11 @@ func TestUserRepository_UpdateUserPostgres(t *testing.T) {
 			UpdatedAt: now,
 		}
 
-		expectedQuery := `UPDATE "user" SET avatar = $1, updated_at = CURRENT_TIMESTAMP WHERE login = $2 RETURNING login, avatar, created_at, updated_at`
+		expectedQuery := `UPDATE "user" SET avatar = $1, updated_at = CURRENT_TIMESTAMP WHERE login = $2 RETURNING login, avatar, created_at`
 		mock.ExpectQuery(regexp.QuoteMeta(expectedQuery)).
 			WithArgs(userToUpdate.Avatar, login).
-			WillReturnRows(sqlmock.NewRows([]string{"login", "avatar", "created_at", "updated_at"}).
-				AddRow(expectedUpdatedUser.Username, expectedUpdatedUser.Avatar, expectedUpdatedUser.CreatedAt, expectedUpdatedUser.UpdatedAt))
+			WillReturnRows(sqlmock.NewRows([]string{"login", "avatar", "created_at"}).
+				AddRow(expectedUpdatedUser.Username, expectedUpdatedUser.Avatar, expectedUpdatedUser.CreatedAt))
 
 		updatedUser, err := repo.UpdateUserPostgres(ctx, login, userToUpdate)
 
@@ -339,7 +339,6 @@ func TestUserRepository_UpdateUserPostgres(t *testing.T) {
 		assert.Equal(t, expectedUpdatedUser.Username, updatedUser.Username)
 		assert.Equal(t, expectedUpdatedUser.Avatar, updatedUser.Avatar)
 		assert.WithinDuration(t, expectedUpdatedUser.CreatedAt, updatedUser.CreatedAt, time.Second)
-		assert.WithinDuration(t, expectedUpdatedUser.UpdatedAt, updatedUser.UpdatedAt, time.Second)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
@@ -362,7 +361,7 @@ func TestUserRepository_UpdateUserPostgres(t *testing.T) {
 			Avatar: "some_avatar.png",
 		}
 
-		expectedQuery := `UPDATE "user" SET avatar = $1, updated_at = CURRENT_TIMESTAMP WHERE login = $2 RETURNING login, avatar, created_at, updated_at`
+		expectedQuery := `UPDATE "user" SET avatar = $1, updated_at = CURRENT_TIMESTAMP WHERE login = $2 RETURNING login, avatar, created_at`
 		mock.ExpectQuery(regexp.QuoteMeta(expectedQuery)).
 			WithArgs(nonExistentUser.Avatar, login).
 			WillReturnError(sql.ErrNoRows)
@@ -391,11 +390,11 @@ func TestUserRepository_UpdateUserPostgres(t *testing.T) {
 			UpdatedAt: now,
 		}
 
-		expectedQuery := `UPDATE "user" SET avatar = $1, updated_at = CURRENT_TIMESTAMP WHERE login = $2 RETURNING login, avatar, created_at, updated_at`
+		expectedQuery := `UPDATE "user" SET avatar = $1, updated_at = CURRENT_TIMESTAMP WHERE login = $2 RETURNING login, avatar, created_at`
 		mock.ExpectQuery(regexp.QuoteMeta(expectedQuery)).
 			WithArgs(injectionString, login).
-			WillReturnRows(sqlmock.NewRows([]string{"login", "avatar", "created_at", "updated_at"}).
-				AddRow(expectedInjectedUser.Username, expectedInjectedUser.Avatar, expectedInjectedUser.CreatedAt, expectedInjectedUser.UpdatedAt))
+			WillReturnRows(sqlmock.NewRows([]string{"login", "avatar", "created_at"}).
+				AddRow(expectedInjectedUser.Username, expectedInjectedUser.Avatar, expectedInjectedUser.CreatedAt))
 
 		updatedUser, err := repo.UpdateUserPostgres(ctx, login, userWithInjection)
 
@@ -415,7 +414,7 @@ func TestUserRepository_UpdateUserPostgres(t *testing.T) {
 			Avatar: "update_attempt.jpg",
 		}
 
-		expectedQuery := `UPDATE "user" SET avatar = $1, updated_at = CURRENT_TIMESTAMP WHERE login = $2 RETURNING login, avatar, created_at, updated_at`
+		expectedQuery := `UPDATE "user" SET avatar = $1, updated_at = CURRENT_TIMESTAMP WHERE login = $2 RETURNING login, avatar, created_at`
 		mock.ExpectQuery(regexp.QuoteMeta(expectedQuery)).
 			WithArgs(userWithInjection.Avatar, injectionUsername).
 			WillReturnError(sql.ErrNoRows)

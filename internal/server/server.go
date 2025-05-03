@@ -113,7 +113,8 @@ func (s *Server) Run() error {
 	staffPersonService := serviceStaff.NewStaffPersonService(staffPersonRepo)
 	staffPersonHandler := deliveryStaff.NewStaffPersonHandler(staffPersonService)
 
-	collectionRepo := repoCollection.NewCollectionRepository(&mocks.MainPageCollections)
+	// collectionRepo := repoCollection.NewCollectionRepository(&mocks.MainPageCollections)
+	collectionRepo := repoCollection.NewCollectionPostgresRepository(pgdb)
 	collectionService := serviceCollection.NewCollectionService(collectionRepo)
 	collectionHandler := deliveryCollection.NewCollectionHandler(collectionService)
 

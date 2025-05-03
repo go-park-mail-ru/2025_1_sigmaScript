@@ -77,3 +77,18 @@ func (mr *MockUserRepositoryInterfaceMockRecorder) GetUserPostgres(ctx, login in
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserPostgres", reflect.TypeOf((*MockUserRepositoryInterface)(nil).GetUserPostgres), ctx, login)
 }
+
+// UpdateUserPostgres mocks base method.
+func (m *MockUserRepositoryInterface) UpdateUserPostgres(ctx context.Context, login string, user *models.User) (*models.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUserPostgres", ctx, login, user)
+	ret0, _ := ret[0].(*models.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateUserPostgres indicates an expected call of UpdateUserPostgres.
+func (mr *MockUserRepositoryInterfaceMockRecorder) UpdateUserPostgres(ctx, login, user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPostgres", reflect.TypeOf((*MockUserRepositoryInterface)(nil).UpdateUserPostgres), ctx, login, user)
+}

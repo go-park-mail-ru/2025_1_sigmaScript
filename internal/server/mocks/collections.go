@@ -1,13 +1,13 @@
 package mocks
 
-type Film struct {
+type Movie struct {
 	ID         int    `json:"id"`
 	Title      string `json:"title"`
 	PreviewURL string `json:"preview_url"`
 	Duration   string `json:"duration,omitempty"`
 }
 
-type Collection map[int]Film
+type Collection map[int]Movie
 
 type Collections map[string]Collection
 

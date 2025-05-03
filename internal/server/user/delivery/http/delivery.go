@@ -2,7 +2,9 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
@@ -173,9 +175,35 @@ func (h *UserHandler) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
 	uploadDir := viper.GetString(KinolkAvatarsFolder)
 	logger := log.Ctx(r.Context())
 
+	// check if file too large
+	contentLengthStr := r.Header.Get("Content-Length")
+	if contentLengthStr == "" {
+		errMsg := errors.New("Request file is empty")
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrParseJSONShort,
+			errMsg.Error())
+		return
+	}
+	contentLength, err := strconv.ParseInt(contentLengthStr, 10, 64)
+	if err != nil {
+		wrapped := errors.Wrap(err, "error updating user avatar")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrSomethingWentWrong, wrapped.Error())
+		return
+	}
+	if contentLength > LIMIT_MB*MB {
+		errMsg := errors.New(fmt.Sprintf("Request is too large. Maximum size is %d MB", LIMIT_MB))
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrParseJSONShort,
+			errMsg.Error())
+		return
+	}
+
+	logger.Info().Msgf("!!!!!!!!!!! %d", contentLength)
+
 	sessionCookie, err := r.Cookie("session_id")
 	if err != nil {
-		logger.Warn().Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
 		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrUnauthorizedShort,
 			errs.ErrUnauthorized)
 		return
@@ -185,14 +213,6 @@ func (h *UserHandler) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
 	if errSession != nil {
 		logger.Error().Err(errors.Wrap(errSession, errs.ErrMsgSessionNotExists)).Msg(errs.ErrMsgFailedToGetSession)
 		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrMsgSessionNotExists, errs.ErrMsgFailedToGetSession)
-		return
-	}
-
-	err = r.ParseMultipartForm(LIMIT_MB * MB)
-	if err != nil {
-		wrapped := errors.Wrap(err, "error uploading file")
-		logger.Error().Err(wrapped).Msg(wrapped.Error())
-		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
 		return
 	}
 
@@ -234,7 +254,6 @@ func (h *UserHandler) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	hashedAvatarName := hashsaltfilename.HashSaltFilename(header.Filename)
-	logger.Info().Msgf("hashedAvatarName: !!!!  : %s", hashedAvatarName)
 
 	newUser := &models.User{
 		Username:       user.Username,

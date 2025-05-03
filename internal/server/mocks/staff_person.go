@@ -2,19 +2,19 @@ package mocks
 
 // PersonJSON delivery layer staff person info
 type PersonJSON struct {
-	ID         int    `json:"id"`
-	FullName   string `json:"full_name"`
-	EnFullName string `json:"en_full_name,omitempty"`
-	Photo      string `json:"photo"`
-	About      string `json:"about"`
-	Sex        string `json:"sex,omitempty"`
-	Growth     string `json:"growth,omitempty"`
-	Birthday   string `json:"birthday,omitempty"`
-	Death      string `json:"death,omitempty"`
-
-	Career     string `json:"career,omitempty"`
-	Genres     string `json:"genres,omitempty"`
-	TotalFilms string `json:"total_films,omitempty"`
+	ID              int        `json:"id"`
+	FullName        string     `json:"full_name"`
+	EnFullName      string     `json:"en_full_name,omitempty"`
+	Photo           string     `json:"photo"`
+	About           string     `json:"about"`
+	Sex             string     `json:"sex,omitempty"`
+	Growth          string     `json:"growth,omitempty"`
+	Birthday        string     `json:"birthday,omitempty"`
+	Death           string     `json:"death,omitempty"`
+	Career          string     `json:"career,omitempty"`
+	Genres          string     `json:"genres,omitempty"`
+	TotalFilms      string     `json:"total_films,omitempty"`
+	MovieCollection Collection `json:"movie_collection,omitempty"`
 }
 
 type Persons map[int]PersonJSON

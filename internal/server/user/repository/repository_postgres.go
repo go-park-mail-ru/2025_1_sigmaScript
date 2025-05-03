@@ -145,12 +145,12 @@ func (r *UserRepository) UpdateUserPostgres(ctx context.Context, login string, u
 	argIndex := 1
 
 	if user.Username != "" {
-		updatesQueryString = append(updatesQueryString, fmt.Sprintf("login = $%d, ", argIndex))
+		updatesQueryString = append(updatesQueryString, fmt.Sprintf("login = $%d", argIndex))
 		args = append(args, user.Username)
 		argIndex++
 	}
 	if user.HashedPassword != "" {
-		updatesQueryString = append(updatesQueryString, fmt.Sprintf("hashed_password = $%d, ", argIndex))
+		updatesQueryString = append(updatesQueryString, fmt.Sprintf("hashed_password = $%d", argIndex))
 		args = append(args, user.HashedPassword)
 		argIndex++
 	}
@@ -163,17 +163,16 @@ func (r *UserRepository) UpdateUserPostgres(ctx context.Context, login string, u
 		return nil, errors.New(errs.ErrEmptyLogin)
 	}
 
-	query += fmt.Sprintf("%s, updated_at = CURRENT_TIMESTAMP WHERE login = $%d RETURNING login, avatar, created_at, updated_at",
+	query += fmt.Sprintf("%s, updated_at = CURRENT_TIMESTAMP WHERE login = $%d RETURNING login, avatar, created_at",
 		strings.Join(updatesQueryString, ", "), argIndex)
 	args = append(args, login)
 
-	row := r.pgdb.QueryRowContext(ctx, query, args...)
+	row := r.pgdb.QueryRow(query, args...)
 	var updatedUser models.User
 	err := row.Scan(
 		&updatedUser.Username,
 		&updatedUser.Avatar,
 		&updatedUser.CreatedAt,
-		&updatedUser.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to select updated user: %w", err)

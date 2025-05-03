@@ -26,9 +26,6 @@ func (s *UserService) UpdateUserAvatar(
 	// Create the destination file
 	filePath := filepath.Join(uploadDir, hashedAvatarName)
 
-	logger.Info().Msgf("!!!!!!!!!!!!!!!! filepath %s", filePath)
-	logger.Info().Msgf("!!!!!!!!!!!!!!!! user avatar %s", user.Avatar)
-
 	dst, err := os.Create(filePath)
 	if err != nil {
 		wrapped := errors.Wrap(err, "error creating avatar file")

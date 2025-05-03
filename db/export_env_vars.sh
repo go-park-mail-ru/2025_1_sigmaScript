@@ -1,6 +1,6 @@
 # #!/bin/bash
 
-postgres_prefixes=("POSTGRES_USER" "POSTGRES_PASSWORD" "POSTGRES_DB" "POSTGRES_PORT")
+postgres_prefixes=("POSTGRES_USER" "DB_PASSWORD" "POSTGRES_DB" "POSTGRES_PORT" "REDIS_PORT")
 
 if [ -z "$1" ]; then
   echo "Usage: $0 <env_file>"

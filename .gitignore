@@ -15,3 +15,6 @@
 go.work
 
 .idea/
+
+db_data/
+redis_data/

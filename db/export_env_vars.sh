@@ -19,7 +19,7 @@ is_postgres_var() {
   local var_name="$1"
   local prefix
   for prefix in "${postgres_prefixes[@]}"; do
-    if [[ "${var_name^^}" == "${prefix^^}"* ]]; then
+    if [[ "${var_name}" == "${prefix}"* ]]; then
       return 0
     fi
   done

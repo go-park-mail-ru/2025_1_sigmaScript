@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"math"
+	"strconv"
 	"time"
 
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
@@ -55,8 +56,10 @@ func (r *MovieRepository) GetAllReviewsOfMovieFromRepoByID(ctx context.Context, 
 	return &movie.Reviews, nil
 }
 
-func (r *MovieRepository) CreateNewMovieReviewInRepo(ctx context.Context, movieID int, newReview mocks.ReviewJSON) error {
+func (r *MovieRepository) CreateNewMovieReviewInRepo(ctx context.Context, movieIDstr string, newReview mocks.ReviewJSON) error {
 	logger := log.Ctx(ctx)
+
+	movieID, _ := strconv.Atoi(movieIDstr)
 
 	movie, exists := (*r.db)[movieID]
 	if !exists {
@@ -94,5 +97,13 @@ func (r *MovieRepository) CreateNewMovieReviewInRepo(ctx context.Context, movieI
 	})
 
 	(*r.db)[movieID] = movie
+	return nil
+}
+
+func (r *MovieRepository) UpdateMovieReviewInRepo(
+	ctx context.Context,
+	userID string,
+	movieID string,
+	newReview mocks.NewReviewDataJSON) error {
 	return nil
 }

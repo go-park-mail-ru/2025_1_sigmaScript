@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"strconv"
 	"testing"
 	"time"
 
@@ -127,7 +128,7 @@ func TestMovieRepository_CreateNewMovieReviewInRepo(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := repo.CreateNewMovieReviewInRepo(context.Background(), tt.movieID, tt.review)
+			err := repo.CreateNewMovieReviewInRepo(context.Background(), strconv.Itoa(tt.movieID), tt.review)
 
 			assert.ErrorIs(t, err, tt.expectedErr)
 

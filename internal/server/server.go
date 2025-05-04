@@ -56,39 +56,7 @@ func New(cfg *config.Config) *Server {
 }
 
 func (s *Server) Run() error {
-	// TODO fix config: it`s test database test password
-	postgres := config.Postgres{
-		Host:            "127.0.0.1",
-		Port:            5433,
-		User:            "filmlk_user",
-		Password:        "filmlk_password",
-		Name:            "filmlk",
-		MaxOpenConns:    100,
-		MaxIdleConns:    30,
-		ConnMaxLifetime: 30,
-		ConnMaxIdleTime: 5,
-	}
-
-	avatarLocalStorage := config.LocalAvatarsStorage{
-		UserAvatarsFullPath:     "",
-		UserAvatarsRelativePath: "",
-	}
-
-	pgDatabase := config.Databases{
-		Postgres:     postgres,
-		LocalStorage: avatarLocalStorage,
-	}
-
-	pgListener := config.Listener{
-		Port: "5433",
-	}
-
-	cfgDB := config.ConfigPgDB{
-		Listener:  pgListener,
-		Databases: pgDatabase,
-	}
-
-	ctxDb := config.WrapPgDatabaseContext(context.Background(), cfgDB)
+	ctxDb := config.WrapPgDatabaseContext(context.Background(), s.Config.PostgresConfig)
 	ctxDb, cancel := context.WithTimeout(ctxDb, time.Second*30)
 	defer cancel()
 
@@ -108,17 +76,14 @@ func (s *Server) Run() error {
 
 	csrfHandler := csrfDelivery.NewCSRFHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionService)
 
-	// staffPersonRepo := repoStaff.NewStaffPersonRepository(&mocks.ExistingActors)
 	staffPersonRepo := repoStaff.NewStaffPersonPostgresRepository(pgdb)
 	staffPersonService := serviceStaff.NewStaffPersonService(staffPersonRepo)
 	staffPersonHandler := deliveryStaff.NewStaffPersonHandler(staffPersonService)
 
-	// collectionRepo := repoCollection.NewCollectionRepository(&mocks.MainPageCollections)
 	collectionRepo := repoCollection.NewCollectionPostgresRepository(pgdb)
 	collectionService := serviceCollection.NewCollectionService(collectionRepo)
 	collectionHandler := deliveryCollection.NewCollectionHandler(collectionService)
 
-	// movieRepo := repoMovie.NewMovieRepository(&mocks.ExistingMovies)
 	movieRepo := repoMovie.NewMoviePostgresRepository(pgdb)
 	movieService := serviceMovie.NewMovieService(movieRepo)
 	movieHandler := deliveryMovie.NewMovieHandler(movieService)

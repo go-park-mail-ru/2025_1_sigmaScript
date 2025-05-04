@@ -13,6 +13,11 @@ type ReviewJSON struct {
 	User       ReviewUserDataJSON `json:"user"`
 }
 
+type NewReviewDataJSON struct {
+	ReviewText string  `json:"review_text,omitempty"`
+	Score      float64 `json:"score"`
+}
+
 type GenreJSON struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`

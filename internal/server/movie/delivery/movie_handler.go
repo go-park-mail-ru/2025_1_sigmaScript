@@ -18,7 +18,11 @@ import (
 type MovieServiceInterface interface {
 	GetMovieByID(ctx context.Context, movieID int) (*mocks.MovieJSON, error)
 	GetAllReviewsOfMovieByID(ctx context.Context, movieID int) (*[]mocks.ReviewJSON, error)
-	CreateNewMovieReview(ctx context.Context, movieID int, newReview mocks.ReviewJSON) error
+	CreateNewMovieReview(ctx context.Context,
+		userID string,
+		movieID string,
+		newReview mocks.NewReviewDataJSON) error
+	UpdateMovieReview(ctx context.Context, userID string, movieID string, newReview mocks.NewReviewDataJSON) error
 }
 
 type MovieHandler struct {

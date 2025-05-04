@@ -36,17 +36,17 @@ func (m *MockMovieServiceInterface) EXPECT() *MockMovieServiceInterfaceMockRecor
 }
 
 // CreateNewMovieReview mocks base method.
-func (m *MockMovieServiceInterface) CreateNewMovieReview(ctx context.Context, movieID int, newReview mocks.ReviewJSON) error {
+func (m *MockMovieServiceInterface) CreateNewMovieReview(ctx context.Context, userID, movieID string, newReview mocks.NewReviewDataJSON) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateNewMovieReview", ctx, movieID, newReview)
+	ret := m.ctrl.Call(m, "CreateNewMovieReview", ctx, userID, movieID, newReview)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateNewMovieReview indicates an expected call of CreateNewMovieReview.
-func (mr *MockMovieServiceInterfaceMockRecorder) CreateNewMovieReview(ctx, movieID, newReview interface{}) *gomock.Call {
+func (mr *MockMovieServiceInterfaceMockRecorder) CreateNewMovieReview(ctx, userID, movieID, newReview interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNewMovieReview", reflect.TypeOf((*MockMovieServiceInterface)(nil).CreateNewMovieReview), ctx, movieID, newReview)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNewMovieReview", reflect.TypeOf((*MockMovieServiceInterface)(nil).CreateNewMovieReview), ctx, userID, movieID, newReview)
 }
 
 // GetAllReviewsOfMovieByID mocks base method.
@@ -77,4 +77,18 @@ func (m *MockMovieServiceInterface) GetMovieByID(ctx context.Context, movieID in
 func (mr *MockMovieServiceInterfaceMockRecorder) GetMovieByID(ctx, movieID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMovieByID", reflect.TypeOf((*MockMovieServiceInterface)(nil).GetMovieByID), ctx, movieID)
+}
+
+// UpdateMovieReview mocks base method.
+func (m *MockMovieServiceInterface) UpdateMovieReview(ctx context.Context, userID, movieID string, newReview mocks.NewReviewDataJSON) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateMovieReview", ctx, userID, movieID, newReview)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateMovieReview indicates an expected call of UpdateMovieReview.
+func (mr *MockMovieServiceInterfaceMockRecorder) UpdateMovieReview(ctx, userID, movieID, newReview interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMovieReview", reflect.TypeOf((*MockMovieServiceInterface)(nil).UpdateMovieReview), ctx, userID, movieID, newReview)
 }

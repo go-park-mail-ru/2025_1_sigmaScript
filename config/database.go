@@ -39,8 +39,8 @@ type Postgres struct {
 
 // LocalAvatarsStorage contains local avatar storage paths
 type LocalAvatarsStorage struct {
-	UserAvatarsFullPath     string `yaml:"userAvatarsFullPath"`
-	UserAvatarsRelativePath string `yaml:"userAvatarsRelativePath"`
+	UserAvatarsFullPath   string `yaml:"userAvatarsFullPath"`
+	UserAvatarsStaticPath string `yaml:"userAvatarsRelativePath"`
 }
 
 func FromPgDatabaseContext(ctx context.Context) *ConfigPgDB {

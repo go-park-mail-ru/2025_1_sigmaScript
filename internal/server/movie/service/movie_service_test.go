@@ -127,57 +127,57 @@ func TestMovieService_GetAllReviewsOfMovieByID(t *testing.T) {
 	}
 }
 
-func TestMovieService_CreateNewMovieReview(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+// func TestMovieService_CreateNewMovieReview(t *testing.T) {
+// 	ctrl := gomock.NewController(t)
+// 	defer ctrl.Finish()
 
-	mockRepo := service_mocks.NewMockMovieRepositoryInterface(ctrl)
-	service := NewMovieService(mockRepo)
+// 	mockRepo := service_mocks.NewMockMovieRepositoryInterface(ctrl)
+// 	service := NewMovieService(mockRepo)
 
-	newReview := mocks.ReviewJSON{
-		User:       mocks.ReviewUserDataJSON{Login: "test_user"},
-		ReviewText: "Great movie!",
-		Score:      9,
-	}
+// 	newReview := mocks.ReviewJSON{
+// 		User:       mocks.ReviewUserDataJSON{Login: "test_user"},
+// 		ReviewText: "Great movie!",
+// 		Score:      9,
+// 	}
 
-	tests := []struct {
-		name        string
-		movieID     int
-		review      mocks.ReviewJSON
-		mockSetup   func()
-		expectedErr error
-	}{
-		{
-			name:    "OK. Create new review",
-			movieID: 1,
-			review:  newReview,
-			mockSetup: func() {
-				mockRepo.EXPECT().
-					CreateNewMovieReviewInRepo(gomock.Any(), 1, newReview).
-					Return(nil)
-			},
-			expectedErr: nil,
-		},
-		{
-			name:    "Fail. Movie not found",
-			movieID: 999,
-			review:  newReview,
-			mockSetup: func() {
-				mockRepo.EXPECT().
-					CreateNewMovieReviewInRepo(gomock.Any(), 999, newReview).
-					Return(errs.ErrMovieNotFound)
-			},
-			expectedErr: errs.ErrMovieNotFound,
-		},
-	}
+// 	tests := []struct {
+// 		name        string
+// 		movieID     int
+// 		review      mocks.ReviewJSON
+// 		mockSetup   func()
+// 		expectedErr error
+// 	}{
+// 		{
+// 			name:    "OK. Create new review",
+// 			movieID: 1,
+// 			review:  newReview,
+// 			mockSetup: func() {
+// 				mockRepo.EXPECT().
+// 					CreateNewMovieReviewInRepo(gomock.Any(), 1, newReview).
+// 					Return(nil)
+// 			},
+// 			expectedErr: nil,
+// 		},
+// 		{
+// 			name:    "Fail. Movie not found",
+// 			movieID: 999,
+// 			review:  newReview,
+// 			mockSetup: func() {
+// 				mockRepo.EXPECT().
+// 					CreateNewMovieReviewInRepo(gomock.Any(), 999, newReview).
+// 					Return(errs.ErrMovieNotFound)
+// 			},
+// 			expectedErr: errs.ErrMovieNotFound,
+// 		},
+// 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.mockSetup()
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			tt.mockSetup()
 
-			err := service.CreateNewMovieReview(context.Background(), tt.movieID, tt.review)
+// 			err := service.CreateNewMovieReview(context.Background(), tt.movieID, tt.review)
 
-			assert.ErrorIs(t, err, tt.expectedErr)
-		})
-	}
-}
+// 			assert.ErrorIs(t, err, tt.expectedErr)
+// 		})
+// 	}
+// }

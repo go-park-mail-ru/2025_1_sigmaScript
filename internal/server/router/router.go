@@ -38,7 +38,7 @@ func SetupStaffPersonHandlers(router *mux.Router, staffPersonHandler staffDelive
 
 func SetupReviewsHandlers(router *mux.Router, reviewsHandler reviewsDelivery.ReviewHandlerInterface) {
 	router.HandleFunc("/movie/{movie_id}/reviews", reviewsHandler.GetAllReviewsOfMovie).Methods(http.MethodGet, http.MethodOptions).Name("GetReviewsOfMovieRoute")
-	router.HandleFunc("/movie/{movie_id}/reviews", reviewsHandler.CreateReview).Methods(http.MethodPost, http.MethodOptions).Name("CreateReviewOfMovieRoute")
+	router.HandleFunc("/movie/{movie_id}/reviews", reviewsHandler.UpdateReview).Methods(http.MethodPost, http.MethodOptions).Name("UpdateReviewOfMovieRoute")
 }
 
 func SetupMovieHandlers(router *mux.Router, movieHandler movieDelivery.MovieHandlerInterface) {

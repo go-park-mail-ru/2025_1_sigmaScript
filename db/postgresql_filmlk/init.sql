@@ -1,4 +1,6 @@
 DROP TABLE IF EXISTS "review" CASCADE;
+DROP TABLE IF EXISTS "user_person_favorite" CASCADE;
+DROP TABLE IF EXISTS "user_movie_favorite" CASCADE;
 DROP TABLE IF EXISTS "career_person" CASCADE;
 DROP TABLE IF EXISTS "person_genre" CASCADE;
 DROP TABLE IF EXISTS "movie_genre" CASCADE;
@@ -81,6 +83,7 @@ CREATE TABLE "movie" (
     original_name TEXT CONSTRAINT movie_orig_namechk CHECK (char_length(original_name) <= 255) DEFAULT NULL,
     about TEXT DEFAULT 'Информация по этому фильму не указана',
     poster TEXT DEFAULT '/static/movies/poster_default_picture.webp',
+    promo_poster TEXT DEFAULT '/static/movies/poster_default_picture.webp',
     release_year DATE DEFAULT NULL,
     country INTEGER REFERENCES country(id) DEFAULT NULL,
     slogan TEXT DEFAULT NULL,
@@ -128,7 +131,6 @@ CREATE TABLE "person_genre" (
     PRIMARY KEY (genre_id, person_id)
 );
 
-
 CREATE TABLE "review" (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id INTEGER REFERENCES "user"(id) ON DELETE CASCADE,
@@ -139,6 +141,19 @@ CREATE TABLE "review" (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT unique_user_movie_id UNIQUE (user_id, movie_id)
 );
+
+CREATE TABLE "user_person_favorite" (
+    person_id INTEGER REFERENCES person(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES "user"(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, person_id)
+);
+
+CREATE TABLE "user_movie_favorite" (
+    movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES "user"(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, movie_id)
+);
+
 
 -- add update triggers to tables
 CREATE OR REPLACE FUNCTION update_updated_at()
@@ -192,6 +207,7 @@ EXECUTE FUNCTION update_updated_at();
 
 
 -- some default data
+
 INSERT INTO movie (name, poster) VALUES
 ('Бойцовский клуб', '/img/0.webp'),
 ('Матрица', '/img/7.webp'),
@@ -356,6 +372,7 @@ INSERT INTO review (user_id, movie_id, review_text, score) VALUES
 (1, 2, 'Отличный фильм!', 8.0),
 (1, 3, 'Отличный фильм!', 10.0);
 
-
-
+-- add favorites to test user
+insert into user_person_favorite (person_id, user_id) values (1, 1), (2, 1);
+insert into user_movie_favorite  (movie_id, user_id) values (4, 1), (3, 1);
 

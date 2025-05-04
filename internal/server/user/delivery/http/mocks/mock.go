@@ -34,6 +34,42 @@ func (m *MockUserHandlerInterface) EXPECT() *MockUserHandlerInterfaceMockRecorde
 	return m.recorder
 }
 
+// AddFavoriteActor mocks base method.
+func (m *MockUserHandlerInterface) AddFavoriteActor(w http.ResponseWriter, r *http.Request) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "AddFavoriteActor", w, r)
+}
+
+// AddFavoriteActor indicates an expected call of AddFavoriteActor.
+func (mr *MockUserHandlerInterfaceMockRecorder) AddFavoriteActor(w, r interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFavoriteActor", reflect.TypeOf((*MockUserHandlerInterface)(nil).AddFavoriteActor), w, r)
+}
+
+// AddFavoriteMovie mocks base method.
+func (m *MockUserHandlerInterface) AddFavoriteMovie(w http.ResponseWriter, r *http.Request) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "AddFavoriteMovie", w, r)
+}
+
+// AddFavoriteMovie indicates an expected call of AddFavoriteMovie.
+func (mr *MockUserHandlerInterfaceMockRecorder) AddFavoriteMovie(w, r interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFavoriteMovie", reflect.TypeOf((*MockUserHandlerInterface)(nil).AddFavoriteMovie), w, r)
+}
+
+// GetProfile mocks base method.
+func (m *MockUserHandlerInterface) GetProfile(w http.ResponseWriter, r *http.Request) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "GetProfile", w, r)
+}
+
+// GetProfile indicates an expected call of GetProfile.
+func (mr *MockUserHandlerInterfaceMockRecorder) GetProfile(w, r interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProfile", reflect.TypeOf((*MockUserHandlerInterface)(nil).GetProfile), w, r)
+}
+
 // UpdateUser mocks base method.
 func (m *MockUserHandlerInterface) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	m.ctrl.T.Helper()

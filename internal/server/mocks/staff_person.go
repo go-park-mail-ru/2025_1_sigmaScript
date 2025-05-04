@@ -6,7 +6,7 @@ type PersonJSON struct {
 	FullName        string     `json:"full_name"`
 	EnFullName      string     `json:"en_full_name,omitempty"`
 	Photo           string     `json:"photo"`
-	About           string     `json:"about"`
+	About           string     `json:"about,omitempty"`
 	Sex             string     `json:"sex,omitempty"`
 	Growth          string     `json:"growth,omitempty"`
 	Birthday        string     `json:"birthday,omitempty"`

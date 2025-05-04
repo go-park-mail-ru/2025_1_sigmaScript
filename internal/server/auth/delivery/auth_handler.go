@@ -85,11 +85,19 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// expire old session cookie if it exists
+	errOldSession := cookie.ExpireOldSessionCookie(w, r, h.cookieData, h.sessionService)
+	if errOldSession != nil {
+		logger.Error().Err(errOldSession).Msg(errOldSession.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrSomethingWentWrong, errs.ErrMsgFailedToGetSession)
+		return
+	}
+
 	user := &models.User{
 		Username:       validatedUsername,
 		HashedPassword: string(hashedPass),
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
+		CreatedAt:      time.Now().String(),
+		UpdatedAt:      time.Now().String(),
 	}
 	err = h.userService.CreateUser(r.Context(), user)
 	if err != nil {
@@ -110,14 +118,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	logger.Info().Msg("User registered successfully")
-
-	// expire old session cookie if it exists
-	errOldSession := cookie.ExpireOldSessionCookie(w, r, h.cookieData, h.sessionService)
-	if errOldSession != nil {
-		logger.Error().Err(errOldSession).Msg(errOldSession.Error())
-		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrSomethingWentWrong, errs.ErrMsgFailedToGetSession)
-		return
-	}
 
 	newSessionID, err := h.sessionService.CreateSession(r.Context(), reg.Username)
 	if err != nil {

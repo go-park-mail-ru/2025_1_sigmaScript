@@ -35,6 +35,34 @@ func (m *MockUserRepositoryInterface) EXPECT() *MockUserRepositoryInterfaceMockR
 	return m.recorder
 }
 
+// AddFavoriteActor mocks base method.
+func (m *MockUserRepositoryInterface) AddFavoriteActor(ctx context.Context, userID, actorID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddFavoriteActor", ctx, userID, actorID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddFavoriteActor indicates an expected call of AddFavoriteActor.
+func (mr *MockUserRepositoryInterfaceMockRecorder) AddFavoriteActor(ctx, userID, actorID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFavoriteActor", reflect.TypeOf((*MockUserRepositoryInterface)(nil).AddFavoriteActor), ctx, userID, actorID)
+}
+
+// AddFavoriteMovie mocks base method.
+func (m *MockUserRepositoryInterface) AddFavoriteMovie(ctx context.Context, userID, movieID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddFavoriteMovie", ctx, userID, movieID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddFavoriteMovie indicates an expected call of AddFavoriteMovie.
+func (mr *MockUserRepositoryInterfaceMockRecorder) AddFavoriteMovie(ctx, userID, movieID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFavoriteMovie", reflect.TypeOf((*MockUserRepositoryInterface)(nil).AddFavoriteMovie), ctx, userID, movieID)
+}
+
 // CreateUserPostgres mocks base method.
 func (m *MockUserRepositoryInterface) CreateUserPostgres(ctx context.Context, user *models.User) error {
 	m.ctrl.T.Helper()
@@ -76,6 +104,21 @@ func (m *MockUserRepositoryInterface) GetUserPostgres(ctx context.Context, login
 func (mr *MockUserRepositoryInterfaceMockRecorder) GetUserPostgres(ctx, login interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserPostgres", reflect.TypeOf((*MockUserRepositoryInterface)(nil).GetUserPostgres), ctx, login)
+}
+
+// GetUserProfilePostgres mocks base method.
+func (m *MockUserRepositoryInterface) GetUserProfilePostgres(ctx context.Context, login string) (*models.Profile, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserProfilePostgres", ctx, login)
+	ret0, _ := ret[0].(*models.Profile)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserProfilePostgres indicates an expected call of GetUserProfilePostgres.
+func (mr *MockUserRepositoryInterfaceMockRecorder) GetUserProfilePostgres(ctx, login interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserProfilePostgres", reflect.TypeOf((*MockUserRepositoryInterface)(nil).GetUserProfilePostgres), ctx, login)
 }
 
 // UpdateUserPostgres mocks base method.

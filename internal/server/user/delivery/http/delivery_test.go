@@ -67,7 +67,7 @@ func TestUserHandler_UpdateUser_Success(t *testing.T) {
 		Username:       "oldusername",
 		HashedPassword: string(hashedOld),
 		Avatar:         "oldavatar.png",
-		CreatedAt:      time.Now().Add(-time.Hour),
+		CreatedAt:      time.Now().Add(-time.Hour).String(),
 	}
 	mockUserSvc.
 		EXPECT().

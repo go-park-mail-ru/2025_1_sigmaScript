@@ -3,14 +3,16 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"regexp"
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
+	"github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -54,7 +56,7 @@ func TestUserRepository_CreateUserPostgres(t *testing.T) {
 	ctx := setupTestContext()
 	repo, mock := setupTestRepo(t)
 
-	now := time.Now().Truncate(time.Microsecond)
+	now := time.Now().Truncate(time.Microsecond).String()
 	userToCreate := &models.User{
 		Username:       "testuser",
 		HashedPassword: "hashedpassword",
@@ -94,14 +96,15 @@ func TestUserRepository_CreateUserPostgres(t *testing.T) {
 
 	t.Run("Exec_Failure_AlreadyExists", func(t *testing.T) {
 		// execErr := errors.New("unique constraint violation")
-		execErr := SqlStateError{
-			message: "unique constraint violation",
-			code:    uniqueViolationCode,
+		pqErr := pq.Error{
+			Code:    uniqueViolationCode,
+			Message: "this row already exists",
 		}
+
 		prep := mock.ExpectPrepare(insertQueryRegex)
 		prep.ExpectQuery().
 			WithArgs(userToCreate.Username, userToCreate.HashedPassword, userToCreate.Avatar).
-			WillReturnError(execErr)
+			WillReturnError(&pqErr)
 
 		err := repo.CreateUserPostgres(ctx, userToCreate)
 
@@ -148,8 +151,8 @@ func TestUserRepository_GetUserPostgres(t *testing.T) {
 		Username:       login,
 		HashedPassword: "existingpassword",
 		Avatar:         "existing_avatar.jpg",
-		CreatedAt:      now.Add(-time.Hour),
-		UpdatedAt:      now,
+		CreatedAt:      now.Add(-time.Hour).String(),
+		UpdatedAt:      now.String(),
 	}
 
 	getUserQueryRegex := regexp.QuoteMeta(getUserByUsernameQuery)
@@ -158,8 +161,8 @@ func TestUserRepository_GetUserPostgres(t *testing.T) {
 		prep := mock.ExpectPrepare(getUserQueryRegex)
 		prep.ExpectQuery().
 			WithArgs(login).
-			WillReturnRows(sqlmock.NewRows([]string{"login", "hashed_password", "avatar", "created_at", "updated_at"}).
-				AddRow(expectedUser.Username, expectedUser.HashedPassword, expectedUser.Avatar, expectedUser.CreatedAt, expectedUser.UpdatedAt))
+			WillReturnRows(sqlmock.NewRows([]string{"id", "login", "hashed_password", "avatar", "created_at", "updated_at"}).
+				AddRow(expectedUser.ID, expectedUser.Username, expectedUser.HashedPassword, expectedUser.Avatar, expectedUser.CreatedAt, expectedUser.UpdatedAt))
 
 		user, err := repo.GetUserPostgres(ctx, login)
 
@@ -169,8 +172,8 @@ func TestUserRepository_GetUserPostgres(t *testing.T) {
 		assert.Equal(t, expectedUser.Username, user.Username)
 		assert.Equal(t, expectedUser.HashedPassword, user.HashedPassword)
 		assert.Equal(t, expectedUser.Avatar, user.Avatar)
-		assert.WithinDuration(t, expectedUser.CreatedAt, user.CreatedAt, time.Second, "CreatedAt should match")
-		assert.WithinDuration(t, expectedUser.UpdatedAt, user.UpdatedAt, time.Second, "UpdatedAt should match")
+		assert.Equal(t, expectedUser.CreatedAt, user.CreatedAt, "CreatedAt should match")
+		assert.Equal(t, expectedUser.UpdatedAt, user.UpdatedAt, "UpdatedAt should match")
 		assert.NoError(t, mock.ExpectationsWereMet(), "Sqlmock expectations were not met")
 	})
 
@@ -322,8 +325,8 @@ func TestUserRepository_UpdateUserPostgres(t *testing.T) {
 		expectedUpdatedUser := &models.User{
 			Username:  targetUsername,
 			Avatar:    userToUpdate.Avatar,
-			CreatedAt: createdAt,
-			UpdatedAt: now,
+			CreatedAt: createdAt.String(),
+			UpdatedAt: now.String(),
 		}
 
 		expectedQuery := `UPDATE "user" SET avatar = $1, updated_at = CURRENT_TIMESTAMP WHERE login = $2 RETURNING login, avatar, created_at`
@@ -338,7 +341,7 @@ func TestUserRepository_UpdateUserPostgres(t *testing.T) {
 		assert.NotNil(t, updatedUser)
 		assert.Equal(t, expectedUpdatedUser.Username, updatedUser.Username)
 		assert.Equal(t, expectedUpdatedUser.Avatar, updatedUser.Avatar)
-		assert.WithinDuration(t, expectedUpdatedUser.CreatedAt, updatedUser.CreatedAt, time.Second)
+		assert.Equal(t, expectedUpdatedUser.CreatedAt, updatedUser.CreatedAt)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
@@ -386,8 +389,8 @@ func TestUserRepository_UpdateUserPostgres(t *testing.T) {
 		expectedInjectedUser := &models.User{
 			Username:  targetUsername,
 			Avatar:    injectionString,
-			CreatedAt: createdAt,
-			UpdatedAt: now,
+			CreatedAt: createdAt.String(),
+			UpdatedAt: now.String(),
 		}
 
 		expectedQuery := `UPDATE "user" SET avatar = $1, updated_at = CURRENT_TIMESTAMP WHERE login = $2 RETURNING login, avatar, created_at`
@@ -443,3 +446,151 @@ func TestUserRepository_UpdateUserPostgres(t *testing.T) {
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }
+
+// func TestGetCollectionFromPostgres(t *testing.T) {
+// 	// TODO fix config: it`s test database test password
+// 	postgres := config.Postgres{
+// 		Host:            "127.0.0.1",
+// 		Port:            5433,
+// 		User:            "filmlk_user",
+// 		Password:        "filmlk_password",
+// 		Name:            "filmlk",
+// 		MaxOpenConns:    100,
+// 		MaxIdleConns:    30,
+// 		ConnMaxLifetime: 30,
+// 		ConnMaxIdleTime: 5,
+// 	}
+
+// 	avatarLocalStorage := config.LocalAvatarsStorage{
+// 		UserAvatarsFullPath:     "",
+// 		UserAvatarsRelativePath: "",
+// 	}
+
+// 	pgDatabase := config.Databases{
+// 		Postgres:     postgres,
+// 		LocalStorage: avatarLocalStorage,
+// 	}
+
+// 	pgListener := config.Listener{
+// 		Port: "5433",
+// 	}
+
+// 	cfgDB := config.ConfigPgDB{
+// 		Listener:  pgListener,
+// 		Databases: pgDatabase,
+// 	}
+
+// 	ctxDb := config.WrapPgDatabaseContext(context.Background(), cfgDB)
+// 	ctxDb, cancel := context.WithTimeout(ctxDb, time.Second*30)
+// 	defer cancel()
+
+// 	pgdb, err := db.SetupDatabase(ctxDb, cancel)
+// 	assert.NoError(t, err)
+
+// 	staffRepo := NewUserRepository(pgdb)
+
+// 	resCollections, err := staffRepo.GetUserProfilePostgres(t.Context(), "KinoLooker")
+// 	assert.NoError(t, err)
+
+// 	resByteData, err := json.Marshal(resCollections)
+// 	assert.NoError(t, err)
+
+// 	assert.NoError(t, err)
+// 	assert.NotEqual(t, nil, string(resByteData), "result Collections must be not nil")
+// }
+
+// func TestAddActorToFavoritesPostgres(t *testing.T) {
+// 	// TODO fix config: it`s test database test password
+// 	postgres := config.Postgres{
+// 		Host:            "127.0.0.1",
+// 		Port:            5433,
+// 		User:            "filmlk_user",
+// 		Password:        "filmlk_password",
+// 		Name:            "filmlk",
+// 		MaxOpenConns:    100,
+// 		MaxIdleConns:    30,
+// 		ConnMaxLifetime: 30,
+// 		ConnMaxIdleTime: 5,
+// 	}
+
+// 	avatarLocalStorage := config.LocalAvatarsStorage{
+// 		UserAvatarsFullPath:     "",
+// 		UserAvatarsRelativePath: "",
+// 	}
+
+// 	pgDatabase := config.Databases{
+// 		Postgres:     postgres,
+// 		LocalStorage: avatarLocalStorage,
+// 	}
+
+// 	pgListener := config.Listener{
+// 		Port: "5433",
+// 	}
+
+// 	cfgDB := config.ConfigPgDB{
+// 		Listener:  pgListener,
+// 		Databases: pgDatabase,
+// 	}
+
+// 	ctxDb := config.WrapPgDatabaseContext(context.Background(), cfgDB)
+// 	ctxDb, cancel := context.WithTimeout(ctxDb, time.Second*30)
+// 	defer cancel()
+
+// 	pgdb, err := db.SetupDatabase(ctxDb, cancel)
+// 	assert.NoError(t, err)
+
+// 	staffRepo := NewUserRepository(pgdb)
+
+// 	err = staffRepo.AddFavoriteActor(t.Context(), "propolisss1", "7")
+
+// 	assert.NoError(t, err)
+
+// }
+
+// func TestAddMovieToFavoritesPostgres(t *testing.T) {
+// 	// TODO fix config: it`s test database test password
+// 	postgres := config.Postgres{
+// 		Host:            "127.0.0.1",
+// 		Port:            5433,
+// 		User:            "filmlk_user",
+// 		Password:        "filmlk_password",
+// 		Name:            "filmlk",
+// 		MaxOpenConns:    100,
+// 		MaxIdleConns:    30,
+// 		ConnMaxLifetime: 30,
+// 		ConnMaxIdleTime: 5,
+// 	}
+
+// 	avatarLocalStorage := config.LocalAvatarsStorage{
+// 		UserAvatarsFullPath:     "",
+// 		UserAvatarsRelativePath: "",
+// 	}
+
+// 	pgDatabase := config.Databases{
+// 		Postgres:     postgres,
+// 		LocalStorage: avatarLocalStorage,
+// 	}
+
+// 	pgListener := config.Listener{
+// 		Port: "5433",
+// 	}
+
+// 	cfgDB := config.ConfigPgDB{
+// 		Listener:  pgListener,
+// 		Databases: pgDatabase,
+// 	}
+
+// 	ctxDb := config.WrapPgDatabaseContext(context.Background(), cfgDB)
+// 	ctxDb, cancel := context.WithTimeout(ctxDb, time.Second*30)
+// 	defer cancel()
+
+// 	pgdb, err := db.SetupDatabase(ctxDb, cancel)
+// 	assert.NoError(t, err)
+
+// 	staffRepo := NewUserRepository(pgdb)
+
+// 	err = staffRepo.AddFavoriteMovie(t.Context(), "propolisss1", "7")
+
+// 	assert.NoError(t, err)
+
+// }

@@ -36,6 +36,34 @@ func (m *MockUserServiceInterface) EXPECT() *MockUserServiceInterfaceMockRecorde
 	return m.recorder
 }
 
+// AddFavoriteActor mocks base method.
+func (m *MockUserServiceInterface) AddFavoriteActor(ctx context.Context, userID, actorID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddFavoriteActor", ctx, userID, actorID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddFavoriteActor indicates an expected call of AddFavoriteActor.
+func (mr *MockUserServiceInterfaceMockRecorder) AddFavoriteActor(ctx, userID, actorID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFavoriteActor", reflect.TypeOf((*MockUserServiceInterface)(nil).AddFavoriteActor), ctx, userID, actorID)
+}
+
+// AddFavoriteMovie mocks base method.
+func (m *MockUserServiceInterface) AddFavoriteMovie(ctx context.Context, userID, movieID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddFavoriteMovie", ctx, userID, movieID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddFavoriteMovie indicates an expected call of AddFavoriteMovie.
+func (mr *MockUserServiceInterfaceMockRecorder) AddFavoriteMovie(ctx, userID, movieID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFavoriteMovie", reflect.TypeOf((*MockUserServiceInterface)(nil).AddFavoriteMovie), ctx, userID, movieID)
+}
+
 // CreateUser mocks base method.
 func (m *MockUserServiceInterface) CreateUser(ctx context.Context, user *models.User) error {
 	m.ctrl.T.Helper()
@@ -62,6 +90,21 @@ func (m *MockUserServiceInterface) DeleteUser(ctx context.Context, login string)
 func (mr *MockUserServiceInterfaceMockRecorder) DeleteUser(ctx, login interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockUserServiceInterface)(nil).DeleteUser), ctx, login)
+}
+
+// GetProfile mocks base method.
+func (m *MockUserServiceInterface) GetProfile(ctx context.Context, login string) (*models.Profile, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProfile", ctx, login)
+	ret0, _ := ret[0].(*models.Profile)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProfile indicates an expected call of GetProfile.
+func (mr *MockUserServiceInterfaceMockRecorder) GetProfile(ctx, login interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProfile", reflect.TypeOf((*MockUserServiceInterface)(nil).GetProfile), ctx, login)
 }
 
 // GetUser mocks base method.

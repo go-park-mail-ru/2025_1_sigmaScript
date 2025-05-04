@@ -7,21 +7,24 @@ import (
 	"strings"
 
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
 
 const (
+	uniqueViolationCode = "23505"
+
 	insertUserQuery = `
-		INSERT INTO "user" (login, hashed_password, avatar)
-		VALUES ($1, $2, $3)
-		RETURNING login, created_at;
-	`
+	INSERT INTO "user" (login, hashed_password, avatar)
+	VALUES ($1, $2, $3)
+	RETURNING login, created_at;
+`
 
 	getUserByUsernameQuery = `
-	SELECT login, hashed_password, avatar, created_at, updated_at
+	SELECT id, login, hashed_password, avatar, created_at, updated_at
 	FROM "user"
 	WHERE login = $1;
 `
@@ -31,8 +34,49 @@ const (
 	WHERE login = $1
 	RETURNING id;
 `
+	getFavoriteUserActorsQuery = `
+	SELECT
+		u.id as user_id,
+		p.id as id,
+		p.full_name,
+		p.photo
+	FROM "user" u
+	LEFT JOIN user_person_favorite upf ON u.id = upf.user_id
+	LEFT JOIN person p ON p.id = upf.person_id
+	WHERE u.id = $1;
+`
 
-	uniqueViolationCode = "23505"
+	getFavoriteUserMoviesQuery = `
+	SELECT
+		u.id as user_id,
+		m.id as id,
+		m.name as title,
+		m.poster as preview_url
+	FROM "user" u
+	LEFT JOIN user_movie_favorite umf ON u.id = umf.user_id
+	LEFT JOIN movie m ON m.id = umf.movie_id
+	WHERE u.id = $1;
+`
+
+	addFavoriteActorQuery = `
+	WITH user_id_res AS (
+		SELECT id
+		FROM public."user"
+		WHERE login = $1
+	)
+	insert into user_person_favorite (user_id, person_id)
+	SELECT (SELECT id FROM user_id_res), $2;
+`
+
+	addFavoriteMovieQuery = `
+	WITH user_id_res AS (
+		SELECT id
+		FROM public."user"
+		WHERE login = $1
+	)
+	insert into user_movie_favorite (user_id, movie_id)
+	SELECT (SELECT id FROM user_id_res), $2;
+`
 )
 
 func (r *UserRepository) CreateUserPostgres(ctx context.Context, user *models.User) error {
@@ -61,13 +105,11 @@ func (r *UserRepository) CreateUserPostgres(ctx context.Context, user *models.Us
 		errPg := fmt.Errorf("postgres: error while creating user - %w", err)
 		logger.Error().Err(errPg).Msg(errors.Wrap(errPg, errs.ErrSomethingWentWrong).Error())
 
-		sqlErr, ok := err.(interface {
-			Code() string
-		})
-		if ok && sqlErr.Code() == uniqueViolationCode {
+		sqlErr, ok := err.(*pq.Error)
+		if ok && sqlErr.Code == uniqueViolationCode {
 			return errors.New(errs.ErrAlreadyExists)
 		}
-		return errors.New(errs.ErrSomethingWentWrong)
+		return errors.Wrap(err, errs.ErrSomethingWentWrong)
 	}
 
 	logger.Info().Msgf("successfully created new user: %s", newUser.Username)
@@ -93,6 +135,7 @@ func (r *UserRepository) GetUserPostgres(ctx context.Context, login string) (*mo
 	}()
 
 	err = execRow.QueryRowContext(ctx, login).Scan(
+		&user.ID,
 		&user.Username,
 		&user.HashedPassword,
 		&user.Avatar,
@@ -180,4 +223,193 @@ func (r *UserRepository) UpdateUserPostgres(ctx context.Context, login string, u
 
 	logger.Info().Msgf("successfully updated user")
 	return &updatedUser, nil
+}
+
+func (r *UserRepository) GetUserProfilePostgres(ctx context.Context, login string) (*models.Profile, error) {
+	logger := log.Ctx(ctx)
+
+	user, err := r.GetUserPostgres(ctx, login)
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrapf(err, "prepare statement in GetUserPostgres").Error())
+		return nil, errors.Wrapf(err, "prepare statement in GetUserPostgres")
+	}
+
+	// get staff
+	resStaff := []mocks.PersonJSON{}
+	execRowStaff, err := r.pgdb.Query(getFavoriteUserActorsQuery, user.ID)
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrapf(err, "error in query statement in GetMovieFromRepoByID").Error())
+		return nil, errors.Wrap(err, "error in prepare query statement in GetMovieFromRepoByID")
+	}
+	defer func() {
+		if closeErr := execRowStaff.Close(); closeErr != nil {
+			logger.Error().Err(closeErr).Msg("failed_to_close_statement")
+			return
+		}
+	}()
+
+	for execRowStaff.Next() {
+		var userID string
+
+		var personID sql.NullInt64
+		var personFullName sql.NullString
+		var personPhoto sql.NullString
+
+		if err := execRowStaff.Scan(
+			&userID,
+			&personID,
+			&personFullName,
+			&personPhoto,
+		); err != nil {
+			errMsg := errors.Wrap(err, "error in query scan in GetMovieFromRepoByID")
+			logger.Error().Err(errMsg).Msg(errMsg.Error())
+			return nil, errMsg
+		}
+
+		// skip if not found
+		if !personID.Valid {
+			continue
+		}
+
+		person := mocks.PersonJSON{
+			ID:       int(personID.Int64),
+			FullName: personFullName.String,
+			Photo:    personPhoto.String,
+		}
+
+		resStaff = append(resStaff, person)
+	}
+	if execErr := execRowStaff.Err(); execErr != nil {
+		errMsg := errors.Wrap(execErr, "error in query next in GetMovieFromRepoByID")
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		return nil, errMsg
+	}
+
+	// get favorite movies
+	resMovies := []mocks.Movie{}
+	execRowMovie, err := r.pgdb.Query(getFavoriteUserMoviesQuery, user.ID)
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrapf(err, "error in query statement in GetMovieFromRepoByID").Error())
+		return nil, errors.Wrap(err, "error in prepare query statement in GetMovieFromRepoByID")
+	}
+	defer func() {
+		if closeErr := execRowMovie.Close(); closeErr != nil {
+			logger.Error().Err(closeErr).Msg("failed_to_close_statement")
+			return
+		}
+	}()
+
+	for execRowMovie.Next() {
+		var userID string
+
+		var movieID sql.NullInt64
+		var movieTitle sql.NullString
+		var moViePreviewURL sql.NullString
+
+		if err := execRowMovie.Scan(
+			&userID,
+			&movieID,
+			&movieTitle,
+			&moViePreviewURL,
+		); err != nil {
+			errMsg := errors.Wrap(err, "error in query scan in GetMovieFromRepoByID")
+			logger.Error().Err(errMsg).Msg(errMsg.Error())
+			return nil, errMsg
+		}
+
+		// skip if not found
+		if !movieID.Valid {
+			continue
+		}
+
+		movie := mocks.Movie{
+			ID:         int(movieID.Int64),
+			Title:      movieTitle.String,
+			PreviewURL: moViePreviewURL.String,
+		}
+
+		resMovies = append(resMovies, movie)
+	}
+	if execErr := execRowMovie.Err(); execErr != nil {
+		errMsg := errors.Wrap(execErr, "error in query next in GetMovieFromRepoByID")
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		return nil, errMsg
+	}
+
+	result := models.Profile{
+		Username:        user.Username,
+		Avatar:          user.Avatar,
+		CreatedAt:       user.CreatedAt,
+		MovieCollection: resMovies,
+		Actors:          resStaff,
+	}
+	return &result, nil
+}
+
+func (r *UserRepository) AddFavoriteMovie(ctx context.Context, login string, movieID string) error {
+	logger := log.Ctx(ctx)
+
+	execRow, err := r.pgdb.Prepare(addFavoriteMovieQuery)
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrapf(err, "prepare statement in AddFavoriteMovie").Error())
+		return errors.Wrapf(err, "prepare statement in AddFavoriteMovie")
+	}
+
+	defer func() {
+		if clErr := execRow.Close(); clErr != nil {
+			logger.Error().Err(clErr).Msg("failed_to_close_statement")
+		}
+	}()
+
+	_, err = execRow.Exec(
+		login,
+		movieID,
+	)
+	if err != nil {
+		errPg := fmt.Errorf("postgres: error while adding favorite movie - %w", err)
+		logger.Error().Err(errPg).Msg(errors.Wrap(errPg, errs.ErrSomethingWentWrong).Error())
+
+		sqlErr, ok := err.(*pq.Error)
+		if ok && sqlErr.Code == uniqueViolationCode {
+			return errors.New(errs.ErrAlreadyExists)
+		}
+		return errors.Wrap(err, errs.ErrSomethingWentWrong)
+	}
+
+	logger.Info().Msgf("successfully added movie to favorites by id: %s", movieID)
+	return nil
+}
+
+func (r *UserRepository) AddFavoriteActor(ctx context.Context, login string, actorID string) error {
+	logger := log.Ctx(ctx)
+
+	execRow, err := r.pgdb.Prepare(addFavoriteActorQuery)
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrapf(err, "prepare statement in AddFavoriteActor").Error())
+		return errors.Wrapf(err, "prepare statement in AddFavoriteActor")
+	}
+
+	defer func() {
+		if clErr := execRow.Close(); clErr != nil {
+			logger.Error().Err(clErr).Msg("failed_to_close_statement")
+		}
+	}()
+
+	_, err = execRow.Exec(
+		login,
+		actorID,
+	)
+	if err != nil {
+		errPg := fmt.Errorf("postgres: error while adding favorite person - %w", err)
+		logger.Error().Err(errPg).Msg(errors.Wrap(errPg, errs.ErrSomethingWentWrong).Error())
+
+		sqlErr, ok := err.(*pq.Error)
+		if ok && sqlErr.Code == uniqueViolationCode {
+			return errors.New(errs.ErrAlreadyExists)
+		}
+		return errors.Wrap(err, errs.ErrSomethingWentWrong)
+	}
+
+	logger.Info().Msgf("successfully added person to favorites by id: %s", actorID)
+	return nil
 }

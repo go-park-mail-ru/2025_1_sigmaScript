@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"math"
 	"time"
 
@@ -9,6 +10,18 @@ import (
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 	"github.com/rs/zerolog/log"
 )
+
+const (
+	DEFAULT_MOVIE_SCORE = 5
+)
+
+type MoviePostgresRepository struct {
+	pgdb *sql.DB
+}
+
+func NewMoviePostgresRepository(movieDB *sql.DB) *MoviePostgresRepository {
+	return &MoviePostgresRepository{pgdb: movieDB}
+}
 
 type MovieRepository struct {
 	db *mocks.Movies
@@ -41,6 +54,7 @@ func (r *MovieRepository) GetAllReviewsOfMovieFromRepoByID(ctx context.Context, 
 
 	return &movie.Reviews, nil
 }
+
 func (r *MovieRepository) CreateNewMovieReviewInRepo(ctx context.Context, movieID int, newReview mocks.ReviewJSON) error {
 	logger := log.Ctx(ctx)
 

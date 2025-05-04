@@ -17,6 +17,7 @@ import (
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/cookie"
 	hashsaltfilename "github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/hash_salt_filename"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -111,6 +112,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get user from repo
 	user, err := h.userSvc.GetUser(r.Context(), username)
 	if err != nil {
 		wrapped := errors.Wrap(err, "error getting user")
@@ -131,21 +133,21 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		HashedPassword: string(hashedPass),
 		Avatar:         userReq.Avatar,
 		CreatedAt:      user.CreatedAt,
-		UpdatedAt:      time.Now(),
+		UpdatedAt:      time.Now().String(),
+	}
+
+	// expire old session cookie
+	errOldSession := cookie.ExpireOldSessionCookie(w, r, h.cookieData, h.sessionSvc)
+	if errOldSession != nil {
+		logger.Error().Err(errOldSession).Msg(errOldSession.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrSomethingWentWrong, errs.ErrMsgFailedToGetSession)
+		return
 	}
 
 	if err = h.userSvc.UpdateUser(r.Context(), username, newUser); err != nil {
 		wrapped := errors.Wrap(err, "error updating user")
 		logger.Error().Err(wrapped).Msg(wrapped.Error())
 		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
-		return
-	}
-
-	// expire old session cookie if it exists
-	errOldSession := cookie.ExpireOldSessionCookie(w, r, h.cookieData, h.sessionSvc)
-	if errOldSession != nil {
-		logger.Error().Err(errOldSession).Msg(errOldSession.Error())
-		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrSomethingWentWrong, errs.ErrMsgFailedToGetSession)
 		return
 	}
 
@@ -258,7 +260,7 @@ func (h *UserHandler) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
 		HashedPassword: user.HashedPassword,
 		Avatar:         viper.GetString(KinolkAvatarsStaticPath) + hashedAvatarName,
 		CreatedAt:      user.CreatedAt,
-		UpdatedAt:      time.Now(),
+		UpdatedAt:      time.Now().String(),
 	}
 
 	if err = h.userSvc.UpdateUser(r.Context(), username, newUser); err != nil {
@@ -277,6 +279,123 @@ func (h *UserHandler) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: "successfully updated user avatar"}); err != nil {
+		logger.Error().Err(err).Msg(errs.ErrSendJSON)
+		return
+	}
+}
+
+func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
+	logger := log.Ctx(r.Context())
+
+	sessionCookie, err := r.Cookie("session_id")
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrUnauthorizedShort,
+			errs.ErrUnauthorized)
+		return
+	}
+
+	username, errSession := h.sessionSvc.GetSession(r.Context(), sessionCookie.Value)
+	if errSession != nil {
+		logger.Error().Err(errors.Wrap(errSession, errs.ErrMsgSessionNotExists)).Msg(errs.ErrMsgFailedToGetSession)
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrMsgSessionNotExists, errs.ErrMsgFailedToGetSession)
+		return
+	}
+
+	result, err := h.userSvc.GetProfile(r.Context(), username)
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrUnauthorizedShort,
+			errs.ErrUnauthorized)
+		return
+	}
+
+	// result
+	if err = jsonutil.SendJSON(r.Context(), w, result); err != nil {
+		logger.Error().Err(err).Msg(errs.ErrSendJSON)
+		return
+	}
+}
+
+func (h *UserHandler) AddFavoriteMovie(w http.ResponseWriter, r *http.Request) {
+	logger := log.Ctx(r.Context())
+
+	vars := mux.Vars(r)
+	movieIDStr, ok := vars["movie_id"]
+	if !ok {
+		errMsg := errors.New("movie_id not found in path variables")
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, "Missing movie_id parameter")
+		return
+	}
+
+	sessionCookie, err := r.Cookie("session_id")
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrUnauthorizedShort,
+			errs.ErrUnauthorized)
+		return
+	}
+
+	username, errSession := h.sessionSvc.GetSession(r.Context(), sessionCookie.Value)
+	if errSession != nil {
+		logger.Error().Err(errors.Wrap(errSession, errs.ErrMsgSessionNotExists)).Msg(errs.ErrMsgFailedToGetSession)
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrMsgSessionNotExists, errs.ErrMsgFailedToGetSession)
+		return
+	}
+
+	err = h.userSvc.AddFavoriteMovie(r.Context(), username, movieIDStr)
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrAlreadyExistsShort,
+			errs.ErrAlreadyExists)
+		return
+	}
+
+	// result
+	if err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: "successfully added movie to favorites"}); err != nil {
+		logger.Error().Err(err).Msg(errs.ErrSendJSON)
+		return
+	}
+}
+
+func (h *UserHandler) AddFavoriteActor(w http.ResponseWriter, r *http.Request) {
+	logger := log.Ctx(r.Context())
+
+	vars := mux.Vars(r)
+	actorIDStr, ok := vars["person_id"]
+	if !ok {
+		errMsg := errors.New("person_id not found in path variables")
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, "Missing person_id parameter")
+		return
+	}
+
+	sessionCookie, err := r.Cookie("session_id")
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrUnauthorizedShort,
+			errs.ErrUnauthorized)
+		return
+	}
+
+	username, errSession := h.sessionSvc.GetSession(r.Context(), sessionCookie.Value)
+	if errSession != nil {
+		logger.Error().Err(errors.Wrap(errSession, errs.ErrMsgSessionNotExists)).Msg(errs.ErrMsgFailedToGetSession)
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrMsgSessionNotExists, errs.ErrMsgFailedToGetSession)
+		return
+	}
+
+	err = h.userSvc.AddFavoriteActor(r.Context(), username, actorIDStr)
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrAlreadyExistsShort,
+			errs.ErrAlreadyExists)
+		return
+	}
+
+	// result
+	if err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: "successfully added person to favorites"}); err != nil {
 		logger.Error().Err(err).Msg(errs.ErrSendJSON)
 		return
 	}

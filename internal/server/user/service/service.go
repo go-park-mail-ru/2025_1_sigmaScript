@@ -12,6 +12,9 @@ type UserRepositoryInterface interface {
 	CreateUserPostgres(ctx context.Context, user *models.User) error
 	DeleteUserPostgres(ctx context.Context, login string) error
 	UpdateUserPostgres(ctx context.Context, login string, user *models.User) (*models.User, error)
+	GetUserProfilePostgres(ctx context.Context, login string) (*models.Profile, error)
+	AddFavoriteMovie(ctx context.Context, login string, movieID string) error
+	AddFavoriteActor(ctx context.Context, login string, actorID string) error
 }
 
 type UserService struct {

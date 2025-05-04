@@ -19,7 +19,6 @@ import (
 	deliveryCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/delivery"
 	repoCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/repository"
 	serviceCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/service"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/router"
 
 	deliveryStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/delivery"
@@ -119,7 +118,8 @@ func (s *Server) Run() error {
 	collectionService := serviceCollection.NewCollectionService(collectionRepo)
 	collectionHandler := deliveryCollection.NewCollectionHandler(collectionService)
 
-	movieRepo := repoMovie.NewMovieRepository(&mocks.ExistingMovies)
+	// movieRepo := repoMovie.NewMovieRepository(&mocks.ExistingMovies)
+	movieRepo := repoMovie.NewMoviePostgresRepository(pgdb)
 	movieService := serviceMovie.NewMovieService(movieRepo)
 	movieHandler := deliveryMovie.NewMovieHandler(movieService)
 

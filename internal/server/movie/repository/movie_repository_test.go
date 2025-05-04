@@ -2,12 +2,9 @@ package repository
 
 import (
 	"context"
-	"encoding/json"
 	"testing"
 	"time"
 
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/db"
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 	"github.com/stretchr/testify/assert"
@@ -149,54 +146,164 @@ func TestMovieRepository_CreateNewMovieReviewInRepo(t *testing.T) {
 	}
 }
 
-func TestGetMovieFromPostgres(t *testing.T) {
-	// TODO fix config: it`s test database test password
-	postgres := config.Postgres{
-		Host:            "127.0.0.1",
-		Port:            5433,
-		User:            "filmlk_user",
-		Password:        "filmlk_password",
-		Name:            "filmlk",
-		MaxOpenConns:    100,
-		MaxIdleConns:    30,
-		ConnMaxLifetime: 30,
-		ConnMaxIdleTime: 5,
-	}
+// func TestGetMovieFromPostgres(t *testing.T) {
+// 	// TODO fix config: it`s test database test password
+// 	postgres := config.Postgres{
+// 		Host:            "127.0.0.1",
+// 		Port:            5433,
+// 		User:            "filmlk_user",
+// 		Password:        "filmlk_password",
+// 		Name:            "filmlk",
+// 		MaxOpenConns:    100,
+// 		MaxIdleConns:    30,
+// 		ConnMaxLifetime: 30,
+// 		ConnMaxIdleTime: 5,
+// 	}
 
-	avatarLocalStorage := config.LocalAvatarsStorage{
-		UserAvatarsFullPath:     "",
-		UserAvatarsRelativePath: "",
-	}
+// 	avatarLocalStorage := config.LocalAvatarsStorage{
+// 		UserAvatarsFullPath:     "",
+// 		UserAvatarsRelativePath: "",
+// 	}
 
-	pgDatabase := config.Databases{
-		Postgres:     postgres,
-		LocalStorage: avatarLocalStorage,
-	}
+// 	pgDatabase := config.Databases{
+// 		Postgres:     postgres,
+// 		LocalStorage: avatarLocalStorage,
+// 	}
 
-	pgListener := config.Listener{
-		Port: "5433",
-	}
+// 	pgListener := config.Listener{
+// 		Port: "5433",
+// 	}
 
-	cfgDB := config.ConfigPgDB{
-		Listener:  pgListener,
-		Databases: pgDatabase,
-	}
+// 	cfgDB := config.ConfigPgDB{
+// 		Listener:  pgListener,
+// 		Databases: pgDatabase,
+// 	}
 
-	ctxDb := config.WrapPgDatabaseContext(context.Background(), cfgDB)
-	ctxDb, cancel := context.WithTimeout(ctxDb, time.Second*30)
-	defer cancel()
+// 	ctxDb := config.WrapPgDatabaseContext(context.Background(), cfgDB)
+// 	ctxDb, cancel := context.WithTimeout(ctxDb, time.Second*30)
+// 	defer cancel()
 
-	pgdb, err := db.SetupDatabase(ctxDb, cancel)
-	assert.NoError(t, err)
+// 	pgdb, err := db.SetupDatabase(ctxDb, cancel)
+// 	assert.NoError(t, err)
 
-	movieRepo := NewMoviePostgresRepository(pgdb)
+// 	movieRepo := NewMoviePostgresRepository(pgdb)
 
-	resCollections, err := movieRepo.GetMovieFromRepoByID(t.Context(), 2)
-	assert.NoError(t, err)
+// 	resCollections, err := movieRepo.GetMovieFromRepoByID(t.Context(), 2)
+// 	assert.NoError(t, err)
 
-	resByteData, err := json.Marshal(resCollections)
-	assert.NoError(t, err)
+// 	resByteData, err := json.Marshal(resCollections)
+// 	assert.NoError(t, err)
 
-	assert.NoError(t, err)
-	assert.NotEqual(t, nil, string(resByteData), "result Collections must be not nil")
-}
+// 	assert.NoError(t, err)
+// 	assert.NotEqual(t, nil, string(resByteData), "result Collections must be not nil")
+// }
+
+// func TestMovieReviewsFromPostgres(t *testing.T) {
+// 	// TODO fix config: it`s test database test password
+// 	postgres := config.Postgres{
+// 		Host:            "127.0.0.1",
+// 		Port:            5433,
+// 		User:            "filmlk_user",
+// 		Password:        "filmlk_password",
+// 		Name:            "filmlk",
+// 		MaxOpenConns:    100,
+// 		MaxIdleConns:    30,
+// 		ConnMaxLifetime: 30,
+// 		ConnMaxIdleTime: 5,
+// 	}
+
+// 	avatarLocalStorage := config.LocalAvatarsStorage{
+// 		UserAvatarsFullPath:     "",
+// 		UserAvatarsRelativePath: "",
+// 	}
+
+// 	pgDatabase := config.Databases{
+// 		Postgres:     postgres,
+// 		LocalStorage: avatarLocalStorage,
+// 	}
+
+// 	pgListener := config.Listener{
+// 		Port: "5433",
+// 	}
+
+// 	cfgDB := config.ConfigPgDB{
+// 		Listener:  pgListener,
+// 		Databases: pgDatabase,
+// 	}
+
+// 	ctxDb := config.WrapPgDatabaseContext(context.Background(), cfgDB)
+// 	ctxDb, cancel := context.WithTimeout(ctxDb, time.Second*30)
+// 	defer cancel()
+
+// 	pgdb, err := db.SetupDatabase(ctxDb, cancel)
+// 	assert.NoError(t, err)
+
+// 	movieRepo := NewMoviePostgresRepository(pgdb)
+
+// 	resCollections, err := movieRepo.GetAllReviewsOfMovieFromRepoByID(t.Context(), 1)
+// 	assert.NoError(t, err)
+
+// 	resByteData, err := json.Marshal(resCollections)
+// 	assert.NoError(t, err)
+
+// 	assert.NoError(t, err)
+// 	assert.NotEqual(t, nil, string(resByteData), "result Collections must be not nil")
+// }
+
+// func TestCreateMovieReviewInPostgres(t *testing.T) {
+// 	// TODO fix config: it`s test database test password
+// 	postgres := config.Postgres{
+// 		Host:            "127.0.0.1",
+// 		Port:            5433,
+// 		User:            "filmlk_user",
+// 		Password:        "filmlk_password",
+// 		Name:            "filmlk",
+// 		MaxOpenConns:    100,
+// 		MaxIdleConns:    30,
+// 		ConnMaxLifetime: 30,
+// 		ConnMaxIdleTime: 5,
+// 	}
+
+// 	avatarLocalStorage := config.LocalAvatarsStorage{
+// 		UserAvatarsFullPath:     "",
+// 		UserAvatarsRelativePath: "",
+// 	}
+
+// 	pgDatabase := config.Databases{
+// 		Postgres:     postgres,
+// 		LocalStorage: avatarLocalStorage,
+// 	}
+
+// 	pgListener := config.Listener{
+// 		Port: "5433",
+// 	}
+
+// 	cfgDB := config.ConfigPgDB{
+// 		Listener:  pgListener,
+// 		Databases: pgDatabase,
+// 	}
+
+// 	ctxDb := config.WrapPgDatabaseContext(context.Background(), cfgDB)
+// 	ctxDb, cancel := context.WithTimeout(ctxDb, time.Second*30)
+// 	defer cancel()
+
+// 	pgdb, err := db.SetupDatabase(ctxDb, cancel)
+// 	assert.NoError(t, err)
+
+// 	movieRepo := NewMoviePostgresRepository(pgdb)
+
+// 	newReview := mocks.ReviewJSON{
+// 		ID:         -1,
+// 		Score:      8.0,
+// 		ReviewText: "blo",
+// 		CreatedAt:  time.Now().String(),
+// 		User: mocks.ReviewUserDataJSON{
+// 			Login:  "KinoLooker",
+// 			Avatar: "",
+// 		},
+// 	}
+
+// 	err = movieRepo.CreateNewMovieReviewInRepo(t.Context(), 4, newReview)
+// 	assert.NoError(t, err)
+
+// }

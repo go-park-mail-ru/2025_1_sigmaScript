@@ -87,41 +87,6 @@ WHERE m.id = $1;
 `
 )
 
-type MovieJSON struct {
-	ID              int                `json:"id"`
-	Name            string             `json:"name"`
-	OriginalName    string             `json:"original_name,omitempty"`
-	About           string             `json:"about,omitempty"`
-	Poster          string             `json:"poster,omitempty"`
-	ReleaseYear     int                `json:"release_year,omitempty"`
-	Country         string             `json:"country,omitempty"`
-	Slogan          string             `json:"slogan,omitempty"`
-	Director        string             `json:"director,omitempty"`
-	Budget          int64              `json:"budget,omitempty"`
-	BoxOfficeUS     int64              `json:"box_office_us,omitempty"`
-	BoxOfficeGlobal int64              `json:"box_office_global,omitempty"`
-	BoxOfficeRussia int64              `json:"box_office_russia,omitempty"`
-	PremierRussia   string             `json:"premier_russia,omitempty"`
-	PremierGlobal   string             `json:"premier_global,omitempty"`
-	Rating          float64            `json:"rating,omitempty"`
-	Duration        string             `json:"duration,omitempty"`
-	Genres          string             `json:"genres,omitempty"`
-	Staff           []mocks.PersonJSON `json:"staff,omitempty"`
-	Reviews         []mocks.ReviewJSON `json:"reviews,omitempty"`
-}
-
-const (
-	DEFAULT_MOVIE_SCORE = 5
-)
-
-type MoviePostgresRepository struct {
-	pgdb *sql.DB
-}
-
-func NewMoviePostgresRepository(movieDB *sql.DB) *MoviePostgresRepository {
-	return &MoviePostgresRepository{pgdb: movieDB}
-}
-
 func (r *MoviePostgresRepository) GetMovieFromRepoByID(ctx context.Context, movieID int) (*mocks.MovieJSON, error) {
 	logger := log.Ctx(ctx)
 	logger.Info().Msgf("Get Movie data from postgres repo by id %d ", movieID)
@@ -228,6 +193,11 @@ func (r *MoviePostgresRepository) GetMovieFromRepoByID(ctx context.Context, movi
 			return nil, errMsg
 		}
 
+		// skip if not found
+		if !personID.Valid {
+			continue
+		}
+
 		person := mocks.PersonJSON{
 			ID:       int(personID.Int64),
 			FullName: personFullName.String,
@@ -259,12 +229,12 @@ func (r *MoviePostgresRepository) GetMovieFromRepoByID(ctx context.Context, movi
 	for execRowReviews.Next() {
 		var movieName string
 
-		var reviewID int
+		var reviewID sql.NullInt64
 		var reviewScore sql.NullString
 		var reviewText sql.NullString
 		var reviewCreatedAt sql.NullString
 
-		var userLogin string
+		var userLogin sql.NullString
 		var userAvatar sql.NullString
 
 		if err := execRowReviews.Scan(
@@ -281,8 +251,12 @@ func (r *MoviePostgresRepository) GetMovieFromRepoByID(ctx context.Context, movi
 			return nil, errMsg
 		}
 
+		// skip if bad user
+		if !userLogin.Valid {
+			continue
+		}
 		reviewUser := mocks.ReviewUserDataJSON{
-			Login:  userLogin,
+			Login:  userLogin.String,
 			Avatar: userAvatar.String,
 		}
 
@@ -295,7 +269,7 @@ func (r *MoviePostgresRepository) GetMovieFromRepoByID(ctx context.Context, movi
 		}
 
 		review := mocks.ReviewJSON{
-			ID:         reviewID,
+			ID:         int(reviewID.Int64),
 			Score:      reviewScoreFloat,
 			ReviewText: reviewText.String,
 			CreatedAt:  reviewCreatedAt.String,

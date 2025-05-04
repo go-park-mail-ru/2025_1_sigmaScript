@@ -1,4 +1,4 @@
-# #!/bin/bash
+# #!/bin/sh
 
 postgres_prefixes=("POSTGRES_USER" "DB_PASSWORD" "POSTGRES_DB" "POSTGRES_PORT" "REDIS_PORT")
 

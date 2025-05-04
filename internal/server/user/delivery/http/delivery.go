@@ -59,7 +59,7 @@ func NewUserHandler(ctx context.Context, userSvc interfaces.UserServiceInterface
 	}
 }
 
-func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) UpdateUserPassword(w http.ResponseWriter, r *http.Request) {
 	logger := log.Ctx(r.Context())
 
 	sessionCookie, err := r.Cookie("session_id")
@@ -172,6 +172,8 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (h *UserHandler) UpdateUserLogin(w http.ResponseWriter, r *http.Request) {}
 
 func (h *UserHandler) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
 	uploadDir := viper.GetString(KinolkAvatarsFolder)

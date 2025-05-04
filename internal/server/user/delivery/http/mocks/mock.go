@@ -94,18 +94,6 @@ func (mr *MockUserHandlerInterfaceMockRecorder) RemoveFavoriteMovie(w, r interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFavoriteMovie", reflect.TypeOf((*MockUserHandlerInterface)(nil).RemoveFavoriteMovie), w, r)
 }
 
-// UpdateUser mocks base method.
-func (m *MockUserHandlerInterface) UpdateUser(w http.ResponseWriter, r *http.Request) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "UpdateUser", w, r)
-}
-
-// UpdateUser indicates an expected call of UpdateUser.
-func (mr *MockUserHandlerInterfaceMockRecorder) UpdateUser(w, r interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockUserHandlerInterface)(nil).UpdateUser), w, r)
-}
-
 // UpdateUserAvatar mocks base method.
 func (m *MockUserHandlerInterface) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
 	m.ctrl.T.Helper()
@@ -116,4 +104,28 @@ func (m *MockUserHandlerInterface) UpdateUserAvatar(w http.ResponseWriter, r *ht
 func (mr *MockUserHandlerInterfaceMockRecorder) UpdateUserAvatar(w, r interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserAvatar", reflect.TypeOf((*MockUserHandlerInterface)(nil).UpdateUserAvatar), w, r)
+}
+
+// UpdateUserLogin mocks base method.
+func (m *MockUserHandlerInterface) UpdateUserLogin(w http.ResponseWriter, r *http.Request) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "UpdateUserLogin", w, r)
+}
+
+// UpdateUserLogin indicates an expected call of UpdateUserLogin.
+func (mr *MockUserHandlerInterfaceMockRecorder) UpdateUserLogin(w, r interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserLogin", reflect.TypeOf((*MockUserHandlerInterface)(nil).UpdateUserLogin), w, r)
+}
+
+// UpdateUserPassword mocks base method.
+func (m *MockUserHandlerInterface) UpdateUserPassword(w http.ResponseWriter, r *http.Request) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "UpdateUserPassword", w, r)
+}
+
+// UpdateUserPassword indicates an expected call of UpdateUserPassword.
+func (mr *MockUserHandlerInterfaceMockRecorder) UpdateUserPassword(w, r interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPassword", reflect.TypeOf((*MockUserHandlerInterface)(nil).UpdateUserPassword), w, r)
 }

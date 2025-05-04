@@ -46,7 +46,11 @@ func SetupMovieHandlers(router *mux.Router, movieHandler movieDelivery.MovieHand
 }
 
 func SetupUserHandlers(router *mux.Router, userHandler userDelivery.UserHandlerInterface) {
-	router.HandleFunc("/users", userHandler.UpdateUser).Methods(http.MethodPost, http.MethodOptions).Name("UpdateUserRoute")
+	router.HandleFunc("/users/login", userHandler.UpdateUserLogin).Methods(http.MethodPost, http.MethodOptions).Name("UpdateUserLoginRoute")
+	router.HandleFunc("/users/password", userHandler.UpdateUserPassword).Methods(http.MethodPost, http.MethodOptions).Name("UpdateUserPasswordRoute")
+
+	router.HandleFunc("/users", userHandler.UpdateUserPassword).Methods(http.MethodPost, http.MethodOptions).Name("UpdateUserRoute")
+
 	router.HandleFunc("/users/avatar", userHandler.UpdateUserAvatar).Methods(http.MethodPost, http.MethodOptions).Name("UpdateUserAvatarRoute")
 	router.HandleFunc("/profile", userHandler.GetProfile).Methods(http.MethodGet, http.MethodOptions).Name("GetProfileRoute")
 

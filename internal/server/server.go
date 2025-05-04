@@ -56,11 +56,11 @@ func New(cfg *config.Config) *Server {
 }
 
 func (s *Server) Run() error {
-	ctxDb := config.WrapPgDatabaseContext(context.Background(), s.Config.PostgresConfig)
-	ctxDb, cancel := context.WithTimeout(ctxDb, time.Second*30)
-	defer cancel()
+	ctxPgDb := config.WrapPgDatabaseContext(context.Background(), s.Config.PostgresConfig)
+	ctxPgDb, cancelPgDb := context.WithTimeout(ctxPgDb, time.Second*30)
+	defer cancelPgDb()
 
-	pgdb, err := db.SetupDatabase(ctxDb, cancel)
+	pgdb, err := db.SetupDatabase(ctxPgDb, cancelPgDb)
 	if err != nil {
 		return fmt.Errorf("error couldnt connect to postgres database: %w", err)
 	}

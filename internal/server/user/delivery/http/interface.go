@@ -4,7 +4,8 @@ import "net/http"
 
 //go:generate mockgen -source=interface.go -destination=mocks/mock.go
 type UserHandlerInterface interface {
-	UpdateUser(w http.ResponseWriter, r *http.Request)
+	UpdateUserLogin(w http.ResponseWriter, r *http.Request)
+	UpdateUserPassword(w http.ResponseWriter, r *http.Request)
 	UpdateUserAvatar(w http.ResponseWriter, r *http.Request)
 	GetProfile(w http.ResponseWriter, r *http.Request)
 	AddFavoriteMovie(w http.ResponseWriter, r *http.Request)

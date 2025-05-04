@@ -94,7 +94,7 @@ func TestUserHandler_UpdateUser_Success(t *testing.T) {
 		Times(1)
 
 	handler := NewUserHandler(ctx, mockUserSvc, mockSessionSvc)
-	handler.UpdateUser(rec, req)
+	handler.UpdateUserPassword(rec, req)
 
 	res := rec.Result()
 	assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -136,7 +136,7 @@ func TestUserHandler_UpdateUser_MissingSessionCookie(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	handler := NewUserHandler(ctx, mockUserSvc, mockSessionSvc)
-	handler.UpdateUser(rec, req)
+	handler.UpdateUserPassword(rec, req)
 
 	res := rec.Result()
 	assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
@@ -290,7 +290,7 @@ func TestUserHandler_UpdateUser_ErrorPaths(t *testing.T) {
 			rec := httptest.NewRecorder()
 
 			handler := NewUserHandler(ctx, mockUserSvc, mockSessionSvc)
-			handler.UpdateUser(rec, req)
+			handler.UpdateUserPassword(rec, req)
 
 			res := rec.Result()
 			assert.Equal(t, tt.expectedStatus, res.StatusCode)

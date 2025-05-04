@@ -400,3 +400,87 @@ func (h *UserHandler) AddFavoriteActor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (h *UserHandler) RemoveFavoriteMovie(w http.ResponseWriter, r *http.Request) {
+	logger := log.Ctx(r.Context())
+
+	vars := mux.Vars(r)
+	movieIDStr, ok := vars["movie_id"]
+	if !ok {
+		errMsg := errors.New("movie_id not found in path variables")
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, "Missing movie_id parameter")
+		return
+	}
+
+	sessionCookie, err := r.Cookie("session_id")
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrUnauthorizedShort,
+			errs.ErrUnauthorized)
+		return
+	}
+
+	username, errSession := h.sessionSvc.GetSession(r.Context(), sessionCookie.Value)
+	if errSession != nil {
+		logger.Error().Err(errors.Wrap(errSession, errs.ErrMsgSessionNotExists)).Msg(errs.ErrMsgFailedToGetSession)
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrMsgSessionNotExists, errs.ErrMsgFailedToGetSession)
+		return
+	}
+
+	err = h.userSvc.RemoveFavoriteMovie(r.Context(), username, movieIDStr)
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrNotFoundShort,
+			errs.ErrNotFoundShort)
+		return
+	}
+
+	// result
+	if err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: "successfully removed movie from favorites"}); err != nil {
+		logger.Error().Err(err).Msg(errs.ErrSendJSON)
+		return
+	}
+}
+
+func (h *UserHandler) RemoveFavoriteActor(w http.ResponseWriter, r *http.Request) {
+	logger := log.Ctx(r.Context())
+
+	vars := mux.Vars(r)
+	actorIDStr, ok := vars["person_id"]
+	if !ok {
+		errMsg := errors.New("person_id not found in path variables")
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, "Missing person_id parameter")
+		return
+	}
+
+	sessionCookie, err := r.Cookie("session_id")
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrUnauthorizedShort,
+			errs.ErrUnauthorized)
+		return
+	}
+
+	username, errSession := h.sessionSvc.GetSession(r.Context(), sessionCookie.Value)
+	if errSession != nil {
+		logger.Error().Err(errors.Wrap(errSession, errs.ErrMsgSessionNotExists)).Msg(errs.ErrMsgFailedToGetSession)
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrMsgSessionNotExists, errs.ErrMsgFailedToGetSession)
+		return
+	}
+
+	err = h.userSvc.RemoveFavoriteActor(r.Context(), username, actorIDStr)
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrNotFoundShort,
+			errs.ErrNotFoundShort)
+		return
+	}
+
+	// result
+	if err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: "successfully removed person from favorites"}); err != nil {
+		logger.Error().Err(err).Msg(errs.ErrSendJSON)
+		return
+	}
+}

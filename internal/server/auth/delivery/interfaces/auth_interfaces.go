@@ -18,6 +18,8 @@ type UserServiceInterface interface {
 	GetProfile(ctx context.Context, login string) (*models.Profile, error)
 	AddFavoriteMovie(ctx context.Context, login string, movieID string) error
 	AddFavoriteActor(ctx context.Context, login string, actorID string) error
+	RemoveFavoriteMovie(ctx context.Context, login string, movieID string) error
+	RemoveFavoriteActor(ctx context.Context, login string, actorID string) error
 }
 
 //go:generate mockgen -source=auth_interfaces.go -destination=../mocks/mock.go

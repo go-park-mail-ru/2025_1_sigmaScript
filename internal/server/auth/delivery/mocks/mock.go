@@ -37,31 +37,31 @@ func (m *MockUserServiceInterface) EXPECT() *MockUserServiceInterfaceMockRecorde
 }
 
 // AddFavoriteActor mocks base method.
-func (m *MockUserServiceInterface) AddFavoriteActor(ctx context.Context, userID, actorID string) error {
+func (m *MockUserServiceInterface) AddFavoriteActor(ctx context.Context, login, actorID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddFavoriteActor", ctx, userID, actorID)
+	ret := m.ctrl.Call(m, "AddFavoriteActor", ctx, login, actorID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddFavoriteActor indicates an expected call of AddFavoriteActor.
-func (mr *MockUserServiceInterfaceMockRecorder) AddFavoriteActor(ctx, userID, actorID interface{}) *gomock.Call {
+func (mr *MockUserServiceInterfaceMockRecorder) AddFavoriteActor(ctx, login, actorID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFavoriteActor", reflect.TypeOf((*MockUserServiceInterface)(nil).AddFavoriteActor), ctx, userID, actorID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFavoriteActor", reflect.TypeOf((*MockUserServiceInterface)(nil).AddFavoriteActor), ctx, login, actorID)
 }
 
 // AddFavoriteMovie mocks base method.
-func (m *MockUserServiceInterface) AddFavoriteMovie(ctx context.Context, userID, movieID string) error {
+func (m *MockUserServiceInterface) AddFavoriteMovie(ctx context.Context, login, movieID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddFavoriteMovie", ctx, userID, movieID)
+	ret := m.ctrl.Call(m, "AddFavoriteMovie", ctx, login, movieID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddFavoriteMovie indicates an expected call of AddFavoriteMovie.
-func (mr *MockUserServiceInterfaceMockRecorder) AddFavoriteMovie(ctx, userID, movieID interface{}) *gomock.Call {
+func (mr *MockUserServiceInterfaceMockRecorder) AddFavoriteMovie(ctx, login, movieID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFavoriteMovie", reflect.TypeOf((*MockUserServiceInterface)(nil).AddFavoriteMovie), ctx, userID, movieID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFavoriteMovie", reflect.TypeOf((*MockUserServiceInterface)(nil).AddFavoriteMovie), ctx, login, movieID)
 }
 
 // CreateUser mocks base method.
@@ -134,6 +134,34 @@ func (m *MockUserServiceInterface) Login(ctx context.Context, loginData models.L
 func (mr *MockUserServiceInterfaceMockRecorder) Login(ctx, loginData interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockUserServiceInterface)(nil).Login), ctx, loginData)
+}
+
+// RemoveFavoriteActor mocks base method.
+func (m *MockUserServiceInterface) RemoveFavoriteActor(ctx context.Context, login, actorID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveFavoriteActor", ctx, login, actorID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveFavoriteActor indicates an expected call of RemoveFavoriteActor.
+func (mr *MockUserServiceInterfaceMockRecorder) RemoveFavoriteActor(ctx, login, actorID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFavoriteActor", reflect.TypeOf((*MockUserServiceInterface)(nil).RemoveFavoriteActor), ctx, login, actorID)
+}
+
+// RemoveFavoriteMovie mocks base method.
+func (m *MockUserServiceInterface) RemoveFavoriteMovie(ctx context.Context, login, movieID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveFavoriteMovie", ctx, login, movieID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveFavoriteMovie indicates an expected call of RemoveFavoriteMovie.
+func (mr *MockUserServiceInterfaceMockRecorder) RemoveFavoriteMovie(ctx, login, movieID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFavoriteMovie", reflect.TypeOf((*MockUserServiceInterface)(nil).RemoveFavoriteMovie), ctx, login, movieID)
 }
 
 // UpdateUser mocks base method.

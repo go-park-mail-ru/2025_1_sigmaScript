@@ -70,6 +70,30 @@ func (mr *MockUserHandlerInterfaceMockRecorder) GetProfile(w, r interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProfile", reflect.TypeOf((*MockUserHandlerInterface)(nil).GetProfile), w, r)
 }
 
+// RemoveFavoriteActor mocks base method.
+func (m *MockUserHandlerInterface) RemoveFavoriteActor(w http.ResponseWriter, r *http.Request) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RemoveFavoriteActor", w, r)
+}
+
+// RemoveFavoriteActor indicates an expected call of RemoveFavoriteActor.
+func (mr *MockUserHandlerInterfaceMockRecorder) RemoveFavoriteActor(w, r interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFavoriteActor", reflect.TypeOf((*MockUserHandlerInterface)(nil).RemoveFavoriteActor), w, r)
+}
+
+// RemoveFavoriteMovie mocks base method.
+func (m *MockUserHandlerInterface) RemoveFavoriteMovie(w http.ResponseWriter, r *http.Request) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RemoveFavoriteMovie", w, r)
+}
+
+// RemoveFavoriteMovie indicates an expected call of RemoveFavoriteMovie.
+func (mr *MockUserHandlerInterfaceMockRecorder) RemoveFavoriteMovie(w, r interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFavoriteMovie", reflect.TypeOf((*MockUserHandlerInterface)(nil).RemoveFavoriteMovie), w, r)
+}
+
 // UpdateUser mocks base method.
 func (m *MockUserHandlerInterface) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	m.ctrl.T.Helper()

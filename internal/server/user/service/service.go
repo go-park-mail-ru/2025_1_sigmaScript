@@ -15,6 +15,8 @@ type UserRepositoryInterface interface {
 	GetUserProfilePostgres(ctx context.Context, login string) (*models.Profile, error)
 	AddFavoriteMovie(ctx context.Context, login string, movieID string) error
 	AddFavoriteActor(ctx context.Context, login string, actorID string) error
+	RemoveFavoriteMovie(ctx context.Context, login string, movieID string) error
+	RemoveFavoriteActor(ctx context.Context, login string, actorID string) error
 }
 
 type UserService struct {

@@ -36,31 +36,31 @@ func (m *MockUserRepositoryInterface) EXPECT() *MockUserRepositoryInterfaceMockR
 }
 
 // AddFavoriteActor mocks base method.
-func (m *MockUserRepositoryInterface) AddFavoriteActor(ctx context.Context, userID, actorID string) error {
+func (m *MockUserRepositoryInterface) AddFavoriteActor(ctx context.Context, login, actorID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddFavoriteActor", ctx, userID, actorID)
+	ret := m.ctrl.Call(m, "AddFavoriteActor", ctx, login, actorID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddFavoriteActor indicates an expected call of AddFavoriteActor.
-func (mr *MockUserRepositoryInterfaceMockRecorder) AddFavoriteActor(ctx, userID, actorID interface{}) *gomock.Call {
+func (mr *MockUserRepositoryInterfaceMockRecorder) AddFavoriteActor(ctx, login, actorID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFavoriteActor", reflect.TypeOf((*MockUserRepositoryInterface)(nil).AddFavoriteActor), ctx, userID, actorID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFavoriteActor", reflect.TypeOf((*MockUserRepositoryInterface)(nil).AddFavoriteActor), ctx, login, actorID)
 }
 
 // AddFavoriteMovie mocks base method.
-func (m *MockUserRepositoryInterface) AddFavoriteMovie(ctx context.Context, userID, movieID string) error {
+func (m *MockUserRepositoryInterface) AddFavoriteMovie(ctx context.Context, login, movieID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddFavoriteMovie", ctx, userID, movieID)
+	ret := m.ctrl.Call(m, "AddFavoriteMovie", ctx, login, movieID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddFavoriteMovie indicates an expected call of AddFavoriteMovie.
-func (mr *MockUserRepositoryInterfaceMockRecorder) AddFavoriteMovie(ctx, userID, movieID interface{}) *gomock.Call {
+func (mr *MockUserRepositoryInterfaceMockRecorder) AddFavoriteMovie(ctx, login, movieID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFavoriteMovie", reflect.TypeOf((*MockUserRepositoryInterface)(nil).AddFavoriteMovie), ctx, userID, movieID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFavoriteMovie", reflect.TypeOf((*MockUserRepositoryInterface)(nil).AddFavoriteMovie), ctx, login, movieID)
 }
 
 // CreateUserPostgres mocks base method.
@@ -119,6 +119,34 @@ func (m *MockUserRepositoryInterface) GetUserProfilePostgres(ctx context.Context
 func (mr *MockUserRepositoryInterfaceMockRecorder) GetUserProfilePostgres(ctx, login interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserProfilePostgres", reflect.TypeOf((*MockUserRepositoryInterface)(nil).GetUserProfilePostgres), ctx, login)
+}
+
+// RemoveFavoriteActor mocks base method.
+func (m *MockUserRepositoryInterface) RemoveFavoriteActor(ctx context.Context, login, actorID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveFavoriteActor", ctx, login, actorID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveFavoriteActor indicates an expected call of RemoveFavoriteActor.
+func (mr *MockUserRepositoryInterfaceMockRecorder) RemoveFavoriteActor(ctx, login, actorID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFavoriteActor", reflect.TypeOf((*MockUserRepositoryInterface)(nil).RemoveFavoriteActor), ctx, login, actorID)
+}
+
+// RemoveFavoriteMovie mocks base method.
+func (m *MockUserRepositoryInterface) RemoveFavoriteMovie(ctx context.Context, login, movieID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveFavoriteMovie", ctx, login, movieID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveFavoriteMovie indicates an expected call of RemoveFavoriteMovie.
+func (mr *MockUserRepositoryInterfaceMockRecorder) RemoveFavoriteMovie(ctx, login, movieID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFavoriteMovie", reflect.TypeOf((*MockUserRepositoryInterface)(nil).RemoveFavoriteMovie), ctx, login, movieID)
 }
 
 // UpdateUserPostgres mocks base method.

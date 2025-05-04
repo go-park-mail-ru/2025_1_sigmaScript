@@ -447,6 +447,8 @@ func TestUserRepository_UpdateUserPostgres(t *testing.T) {
 	})
 }
 
+// INTEGRATIONAL TESTS
+
 // func TestGetCollectionFromPostgres(t *testing.T) {
 // 	// TODO fix config: it`s test database test password
 // 	postgres := config.Postgres{
@@ -535,16 +537,53 @@ func TestUserRepository_UpdateUserPostgres(t *testing.T) {
 // 	ctxDb := config.WrapPgDatabaseContext(context.Background(), cfgDB)
 // 	ctxDb, cancel := context.WithTimeout(ctxDb, time.Second*30)
 // 	defer cancel()
-
 // 	pgdb, err := db.SetupDatabase(ctxDb, cancel)
 // 	assert.NoError(t, err)
-
 // 	staffRepo := NewUserRepository(pgdb)
-
-// 	err = staffRepo.AddFavoriteActor(t.Context(), "propolisss1", "7")
-
+// 	err = staffRepo.AddFavoriteActor(t.Context(), "KinoLooker", "7")
 // 	assert.NoError(t, err)
+// }
 
+// func TestRemoveActorFromFavoritesPostgres(t *testing.T) {
+// 	// TODO fix config: it`s test database test password
+// 	postgres := config.Postgres{
+// 		Host:            "127.0.0.1",
+// 		Port:            5433,
+// 		User:            "filmlk_user",
+// 		Password:        "filmlk_password",
+// 		Name:            "filmlk",
+// 		MaxOpenConns:    100,
+// 		MaxIdleConns:    30,
+// 		ConnMaxLifetime: 30,
+// 		ConnMaxIdleTime: 5,
+// 	}
+
+// 	avatarLocalStorage := config.LocalAvatarsStorage{
+// 		UserAvatarsFullPath:     "",
+// 		UserAvatarsRelativePath: "",
+// 	}
+
+// 	pgDatabase := config.Databases{
+// 		Postgres:     postgres,
+// 		LocalStorage: avatarLocalStorage,
+// 	}
+
+// 	pgListener := config.Listener{
+// 		Port: "5433",
+// 	}
+
+// 	cfgDB := config.ConfigPgDB{
+// 		Listener:  pgListener,
+// 		Databases: pgDatabase,
+// 	}
+// 	ctxDb := config.WrapPgDatabaseContext(context.Background(), cfgDB)
+// 	ctxDb, cancel := context.WithTimeout(ctxDb, time.Second*30)
+// 	defer cancel()
+// 	pgdb, err := db.SetupDatabase(ctxDb, cancel)
+// 	assert.NoError(t, err)
+// 	staffRepo := NewUserRepository(pgdb)
+// 	err = staffRepo.RemoveFavoriteActor(t.Context(), "KinoLooker", "7")
+// 	assert.NoError(t, err)
 // }
 
 // func TestAddMovieToFavoritesPostgres(t *testing.T) {
@@ -579,18 +618,54 @@ func TestUserRepository_UpdateUserPostgres(t *testing.T) {
 // 		Listener:  pgListener,
 // 		Databases: pgDatabase,
 // 	}
-
 // 	ctxDb := config.WrapPgDatabaseContext(context.Background(), cfgDB)
 // 	ctxDb, cancel := context.WithTimeout(ctxDb, time.Second*30)
 // 	defer cancel()
-
 // 	pgdb, err := db.SetupDatabase(ctxDb, cancel)
 // 	assert.NoError(t, err)
-
 // 	staffRepo := NewUserRepository(pgdb)
-
-// 	err = staffRepo.AddFavoriteMovie(t.Context(), "propolisss1", "7")
-
+// 	err = staffRepo.AddFavoriteMovie(t.Context(), "KinoLooker", "7")
 // 	assert.NoError(t, err)
+// }
 
+// func TestRemoveMovieFromFavoritesPostgres(t *testing.T) {
+// 	// TODO fix config: it`s test database test password
+// 	postgres := config.Postgres{
+// 		Host:            "127.0.0.1",
+// 		Port:            5433,
+// 		User:            "filmlk_user",
+// 		Password:        "filmlk_password",
+// 		Name:            "filmlk",
+// 		MaxOpenConns:    100,
+// 		MaxIdleConns:    30,
+// 		ConnMaxLifetime: 30,
+// 		ConnMaxIdleTime: 5,
+// 	}
+
+// 	avatarLocalStorage := config.LocalAvatarsStorage{
+// 		UserAvatarsFullPath:     "",
+// 		UserAvatarsRelativePath: "",
+// 	}
+
+// 	pgDatabase := config.Databases{
+// 		Postgres:     postgres,
+// 		LocalStorage: avatarLocalStorage,
+// 	}
+
+// 	pgListener := config.Listener{
+// 		Port: "5433",
+// 	}
+
+// 	cfgDB := config.ConfigPgDB{
+// 		Listener:  pgListener,
+// 		Databases: pgDatabase,
+// 	}
+// 	ctxDb := config.WrapPgDatabaseContext(context.Background(), cfgDB)
+// 	ctxDb, cancel := context.WithTimeout(ctxDb, time.Second*30)
+// 	defer cancel()
+// 	pgdb, err := db.SetupDatabase(ctxDb, cancel)
+// 	assert.NoError(t, err)
+// 	staffRepo := NewUserRepository(pgdb)
+// 	err = staffRepo.RemoveFavoriteMovie(t.Context(), "KinoLooker", "7")
+// 	assert.NoError(t, err)
 // }

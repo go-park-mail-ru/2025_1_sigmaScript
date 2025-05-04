@@ -9,4 +9,6 @@ type UserHandlerInterface interface {
 	GetProfile(w http.ResponseWriter, r *http.Request)
 	AddFavoriteMovie(w http.ResponseWriter, r *http.Request)
 	AddFavoriteActor(w http.ResponseWriter, r *http.Request)
+	RemoveFavoriteMovie(w http.ResponseWriter, r *http.Request)
+	RemoveFavoriteActor(w http.ResponseWriter, r *http.Request)
 }

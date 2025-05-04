@@ -52,6 +52,9 @@ func SetupUserHandlers(router *mux.Router, userHandler userDelivery.UserHandlerI
 
 	router.HandleFunc("/movie/{movie_id}/favorite", userHandler.AddFavoriteMovie).Methods(http.MethodPost, http.MethodOptions).Name("AddFavoriteMovieRoute")
 	router.HandleFunc("/name/{person_id}/favorite", userHandler.AddFavoriteActor).Methods(http.MethodPost, http.MethodOptions).Name("AddFavoriteActorRoute")
+
+	router.HandleFunc("/movie/{movie_id}/favorite", userHandler.RemoveFavoriteMovie).Methods(http.MethodDelete, http.MethodOptions).Name("RemoveFavoriteMovieRoute")
+	router.HandleFunc("/name/{person_id}/favorite", userHandler.RemoveFavoriteActor).Methods(http.MethodDelete, http.MethodOptions).Name("RemoveFavoriteActorRoute")
 }
 
 func ApplyMiddlewares(router *mux.Router) {

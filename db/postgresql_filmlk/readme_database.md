@@ -1,8 +1,13 @@
 #USAGE
 
+## Переходим в директорию с постгрес
+```bash
+cd db/postgresql_filmlk/
+```
+
 ## Экспортируем перепенные среды постгрес из <env_file>
 ```bash
-source ./export_env_vars.sh <env_file>
+source ../export_env_vars.sh <env_file>
 ```
 ## Поднимаем PostgreSQL с помощью docker compose
 ```bash

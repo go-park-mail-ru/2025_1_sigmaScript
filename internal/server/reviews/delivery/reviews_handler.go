@@ -19,6 +19,7 @@ import (
 const (
 	NEW_REVIEW_PLACEHOLDER_ID = -1
 	REVIEWS_PER_PAGE          = 20
+	MAX_REVIEW_LENGTH         = int64(2000)
 )
 
 type ReviewHandler struct {
@@ -128,7 +129,7 @@ func (h *ReviewHandler) CreateReview(w http.ResponseWriter, r *http.Request) {
 	validatedReviewText := ""
 	var errEscaping error
 	if len(newReviewDataJSON.ReviewText) > 0 {
-		validatedReviewText, errEscaping = escapingutil.ValidateInputTextData(newReviewDataJSON.ReviewText)
+		validatedReviewText, errEscaping = escapingutil.ValidateInputTextData(newReviewDataJSON.ReviewText, MAX_REVIEW_LENGTH)
 		if errEscaping != nil {
 			logger.Error().Err(errEscaping).Msg(errEscaping.Error())
 			jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, errEscaping.Error())
@@ -203,7 +204,7 @@ func (h *ReviewHandler) UpdateReview(w http.ResponseWriter, r *http.Request) {
 	validatedReviewText := ""
 	var errEscaping error
 	if len(newReviewDataJSON.ReviewText) > 0 {
-		validatedReviewText, errEscaping = escapingutil.ValidateInputTextData(newReviewDataJSON.ReviewText)
+		validatedReviewText, errEscaping = escapingutil.ValidateInputTextData(newReviewDataJSON.ReviewText, MAX_REVIEW_LENGTH)
 		if errEscaping != nil {
 			logger.Error().Err(errEscaping).Msg(errEscaping.Error())
 			jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, errEscaping.Error())

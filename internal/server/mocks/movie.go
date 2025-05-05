@@ -24,33 +24,30 @@ type GenreJSON struct {
 }
 
 type MovieJSON struct {
-	ID              int          `json:"id"`
-	Name            string       `json:"name"`
-	OriginalName    string       `json:"original_name,omitempty"`
-	About           string       `json:"about,omitempty"`
-	Poster          string       `json:"poster,omitempty"`
-	ReleaseYear     string       `json:"release_year,omitempty"`
-	Country         string       `json:"country,omitempty"`
-	Slogan          string       `json:"slogan,omitempty"`
-	Director        string       `json:"director,omitempty"`
-	Budget          int64        `json:"budget,omitempty"`
-	BoxOfficeUS     int64        `json:"box_office_us,omitempty"`
-	BoxOfficeGlobal int64        `json:"box_office_global,omitempty"`
-	BoxOfficeRussia int64        `json:"box_office_russia,omitempty"`
-	PremierRussia   string       `json:"premier_russia,omitempty"`
-	PremierGlobal   string       `json:"premier_global,omitempty"`
-	Rating          float64      `json:"rating,omitempty"`
-	Duration        string       `json:"duration,omitempty"`
-	Genres          string       `json:"genres,omitempty"`
-	Staff           []PersonJSON `json:"staff,omitempty"`
-	Reviews         []ReviewJSON `json:"reviews,omitempty"`
-
-	RatingKP   float64 `json:"rating_kp,omitempty"`   // Новое поле
-	RatingIMDB float64 `json:"rating_imdb,omitempty"` // Новое поле
-
-	Watchability []WatchProviderJSON `json:"watchability,omitempty"` // Новое поле. Массив платформ, где можно посмотреть фильм
-
-	PromoURL string `json:"promo_url,omitempty"` // Новое поле
+	ID              int                 `json:"id"`
+	Name            string              `json:"name"`
+	OriginalName    string              `json:"original_name,omitempty"`
+	About           string              `json:"about,omitempty"`
+	Poster          string              `json:"poster,omitempty"`
+	PromoURL        string              `json:"promo_url,omitempty"`
+	ReleaseYear     string              `json:"release_year,omitempty"`
+	Country         string              `json:"country,omitempty"`
+	Slogan          string              `json:"slogan,omitempty"`
+	Director        string              `json:"director,omitempty"`
+	Budget          int64               `json:"budget,omitempty"`
+	BoxOfficeUS     int64               `json:"box_office_us,omitempty"`
+	BoxOfficeGlobal int64               `json:"box_office_global,omitempty"`
+	BoxOfficeRussia int64               `json:"box_office_russia,omitempty"`
+	PremierRussia   string              `json:"premier_russia,omitempty"`
+	PremierGlobal   string              `json:"premier_global,omitempty"`
+	Rating          float64             `json:"rating,omitempty"`
+	Duration        string              `json:"duration,omitempty"`
+	Genres          string              `json:"genres,omitempty"`
+	Staff           []PersonJSON        `json:"staff,omitempty"`
+	Reviews         []ReviewJSON        `json:"reviews,omitempty"`
+	RatingKP        float64             `json:"rating_kp,omitempty"`
+	RatingIMDB      float64             `json:"rating_imdb,omitempty"`
+	Watchability    []WatchProviderJSON `json:"watchability,omitempty"`
 }
 
 // Новая структура

@@ -15,12 +15,12 @@ type MovieRepositoryInterface interface {
 		ctx context.Context,
 		userID string,
 		movieID string,
-		newReview mocks.NewReviewDataJSON) error
+		newReview mocks.NewReviewDataJSON) (*mocks.NewReviewDataJSON, error)
 	UpdateMovieReviewInRepo(
 		ctx context.Context,
 		userID string,
 		movieID string,
-		newReview mocks.NewReviewDataJSON) error
+		newReview mocks.NewReviewDataJSON) (*mocks.NewReviewDataJSON, error)
 }
 
 type MovieService struct {
@@ -60,30 +60,30 @@ func (s *MovieService) GetAllReviewsOfMovieByID(ctx context.Context, movieID int
 func (s *MovieService) CreateNewMovieReview(ctx context.Context,
 	userID string,
 	movieID string,
-	newReview mocks.NewReviewDataJSON) error {
+	newReview mocks.NewReviewDataJSON) (*mocks.NewReviewDataJSON, error) {
 	logger := log.Ctx(ctx)
 
-	err := s.movieRepo.CreateNewMovieReviewInRepo(ctx, userID, movieID, newReview)
+	reviewRes, err := s.movieRepo.CreateNewMovieReviewInRepo(ctx, userID, movieID, newReview)
 	if err != nil {
 		logger.Error().Err(err).Msg(err.Error())
-		return err
+		return nil, err
 	}
 
-	return nil
+	return reviewRes, nil
 }
 
 func (s *MovieService) UpdateMovieReview(
 	ctx context.Context,
 	userID string,
 	movieID string,
-	newReview mocks.NewReviewDataJSON) error {
+	newReview mocks.NewReviewDataJSON) (*mocks.NewReviewDataJSON, error) {
 	logger := log.Ctx(ctx)
 
-	err := s.movieRepo.UpdateMovieReviewInRepo(ctx, userID, movieID, newReview)
+	reviewRes, err := s.movieRepo.UpdateMovieReviewInRepo(ctx, userID, movieID, newReview)
 	if err != nil {
 		logger.Error().Err(err).Msg(err.Error())
-		return err
+		return nil, err
 	}
 
-	return nil
+	return reviewRes, nil
 }

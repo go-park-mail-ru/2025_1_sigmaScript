@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/ds"
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	authInterfaces "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery/interfaces"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
@@ -138,7 +137,7 @@ func (h *ReviewHandler) CreateReview(w http.ResponseWriter, r *http.Request) {
 	}
 	newReviewDataJSON.ReviewText = validatedReviewText
 
-	err = h.movieService.CreateNewMovieReview(r.Context(), user.ID, movieIDStr, *newReviewDataJSON)
+	reviewRes, err := h.movieService.CreateNewMovieReview(r.Context(), user.ID, movieIDStr, *newReviewDataJSON)
 	if err != nil {
 		wrapped := errors.Wrap(err, "error while creating review")
 		logger.Error().Err(wrapped).Msg(wrapped.Error())
@@ -146,7 +145,7 @@ func (h *ReviewHandler) CreateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: "successfully created new review"}); err != nil {
+	if err = jsonutil.SendJSON(r.Context(), w, reviewRes); err != nil {
 		logger.Error().Err(err).Msg(errs.ErrSendJSON)
 		return
 	}
@@ -213,7 +212,7 @@ func (h *ReviewHandler) UpdateReview(w http.ResponseWriter, r *http.Request) {
 	}
 	newReviewDataJSON.ReviewText = validatedReviewText
 
-	err = h.movieService.UpdateMovieReview(r.Context(), user.ID, movieIDStr, *newReviewDataJSON)
+	reviewResult, err := h.movieService.UpdateMovieReview(r.Context(), user.ID, movieIDStr, *newReviewDataJSON)
 	if err != nil {
 		wrapped := errors.Wrap(err, "error while updating review")
 		logger.Error().Err(wrapped).Msg(wrapped.Error())
@@ -221,7 +220,7 @@ func (h *ReviewHandler) UpdateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: "successfully created new review"}); err != nil {
+	if err = jsonutil.SendJSON(r.Context(), w, reviewResult); err != nil {
 		logger.Error().Err(err).Msg(errs.ErrSendJSON)
 		return
 	}

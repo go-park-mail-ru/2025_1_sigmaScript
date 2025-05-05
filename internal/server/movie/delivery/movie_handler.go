@@ -21,8 +21,8 @@ type MovieServiceInterface interface {
 	CreateNewMovieReview(ctx context.Context,
 		userID string,
 		movieID string,
-		newReview mocks.NewReviewDataJSON) error
-	UpdateMovieReview(ctx context.Context, userID string, movieID string, newReview mocks.NewReviewDataJSON) error
+		newReview mocks.NewReviewDataJSON) (*mocks.NewReviewDataJSON, error)
+	UpdateMovieReview(ctx context.Context, userID string, movieID string, newReview mocks.NewReviewDataJSON) (*mocks.NewReviewDataJSON, error)
 }
 
 type MovieHandler struct {

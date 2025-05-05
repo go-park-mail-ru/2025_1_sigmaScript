@@ -36,11 +36,12 @@ func (m *MockMovieRepositoryInterface) EXPECT() *MockMovieRepositoryInterfaceMoc
 }
 
 // CreateNewMovieReviewInRepo mocks base method.
-func (m *MockMovieRepositoryInterface) CreateNewMovieReviewInRepo(ctx context.Context, userID, movieID string, newReview mocks.NewReviewDataJSON) error {
+func (m *MockMovieRepositoryInterface) CreateNewMovieReviewInRepo(ctx context.Context, userID, movieID string, newReview mocks.NewReviewDataJSON) (*mocks.NewReviewDataJSON, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateNewMovieReviewInRepo", ctx, userID, movieID, newReview)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*mocks.NewReviewDataJSON)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // CreateNewMovieReviewInRepo indicates an expected call of CreateNewMovieReviewInRepo.
@@ -80,11 +81,12 @@ func (mr *MockMovieRepositoryInterfaceMockRecorder) GetMovieFromRepoByID(ctx, mo
 }
 
 // UpdateMovieReviewInRepo mocks base method.
-func (m *MockMovieRepositoryInterface) UpdateMovieReviewInRepo(ctx context.Context, userID, movieID string, newReview mocks.NewReviewDataJSON) error {
+func (m *MockMovieRepositoryInterface) UpdateMovieReviewInRepo(ctx context.Context, userID, movieID string, newReview mocks.NewReviewDataJSON) (*mocks.NewReviewDataJSON, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateMovieReviewInRepo", ctx, userID, movieID, newReview)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*mocks.NewReviewDataJSON)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateMovieReviewInRepo indicates an expected call of UpdateMovieReviewInRepo.

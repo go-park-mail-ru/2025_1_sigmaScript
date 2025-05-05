@@ -14,6 +14,7 @@ type ReviewJSON struct {
 }
 
 type NewReviewDataJSON struct {
+	ID         int     `json:"id,omitempty"`
 	ReviewText string  `json:"review_text,omitempty"`
 	Score      float64 `json:"score"`
 }

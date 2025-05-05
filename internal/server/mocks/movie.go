@@ -44,6 +44,20 @@ type MovieJSON struct {
 	Genres          string       `json:"genres,omitempty"`
 	Staff           []PersonJSON `json:"staff,omitempty"`
 	Reviews         []ReviewJSON `json:"reviews,omitempty"`
+
+	RatingKP   float64 `json:"rating_kp,omitempty"`   // Новое поле
+	RatingIMDB float64 `json:"rating_imdb,omitempty"` // Новое поле
+
+	Watchability []WatchProviderJSON `json:"watchability,omitempty"` // Новое поле. Массив платформ, где можно посмотреть фильм
+
+	PromoURL string `json:"promo_url,omitempty"` // Новое поле
+}
+
+// Новая структура
+type WatchProviderJSON struct {
+	Name string `json:"name"`
+	Logo string `json:"logo_url"`
+	Url  string `json:"movie_url"`
 }
 
 type Movies map[int]MovieJSON

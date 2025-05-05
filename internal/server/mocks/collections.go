@@ -1,10 +1,12 @@
 package mocks
 
 type Movie struct {
-	ID         int    `json:"id"`
-	Title      string `json:"title"`
-	PreviewURL string `json:"preview_url"`
-	Duration   string `json:"duration,omitempty"`
+	ID          int     `json:"id"`
+	Title       string  `json:"title"`
+	PreviewURL  string  `json:"preview_url"`
+	Duration    string  `json:"duration,omitempty"`
+	ReleaseDate string  `json:"release_date,omitempty"` // add
+	Rating      float64 `json:"rating,omitempty"`
 }
 
 type Collection map[int]Movie

@@ -52,6 +52,8 @@ const (
 	ErrNotFoundShort                 = "not_found"
 	ErrMsgGenerateCSRFToken          = "error generating CSRF token"
 	ErrMsgBadCSRFToken               = "bad csrf token"
+	ErrParseForm                     = "error parsing request form"
+	ErrParseFormShort                = "parse_form_error"
 )
 
 // jsonutil
@@ -80,9 +82,9 @@ const (
 
 // session
 const (
-	ErrMsgNegativeSessionIDLength = "Negative session ID length"
-	ErrMsgLengthTooShort          = "Length too short"
-	ErrMsgLengthTooLong           = "Length too long"
+	ErrMsgNegativeSessionIDLength = "negative session ID length"
+	ErrMsgLengthTooShort          = "length too short"
+	ErrMsgLengthTooLong           = "length too long"
 	ErrMsgFailedToGetSession      = "failed to get session"
 )
 

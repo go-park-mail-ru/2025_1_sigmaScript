@@ -20,4 +20,5 @@ type Profile struct {
 	UpdatedAt       string             `json:"updated_at,omitempty"`
 	MovieCollection []mocks.Movie      `json:"movie_collection,omitempty"`
 	Actors          []mocks.PersonJSON `json:"actors,omitempty"`
+	Reviews         []mocks.ReviewJSON `json:"reviews,omitempty"`
 }

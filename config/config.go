@@ -67,13 +67,13 @@ func New() (*Config, error) {
 		return nil, errors.Wrap(err, errs.ErrUnmarshalConfig)
 	}
 
-	config.PostgresConfig = *createPgConfig()
+	config.PostgresConfig = *setupPgConfig()
 
 	log.Info().Msg("Config initialized")
 	return &config, nil
 }
 
-func createPgConfig() *ConfigPgDB {
+func setupPgConfig() *ConfigPgDB {
 	// TODO fix config: it`s test database test password
 	postgres := Postgres{
 		Host:            viper.GetString(POSTGRES_HOST),

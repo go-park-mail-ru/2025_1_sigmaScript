@@ -5,9 +5,11 @@ import (
 
 	authDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
 	collectionDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/delivery"
+	genreDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/genre/delivery"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/middleware"
 	movieDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/delivery"
 	reviewsDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/reviews/delivery"
+	searchDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/search/delivery"
 	staffDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/delivery"
 	userDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/delivery/http"
 	"github.com/gorilla/mux"
@@ -39,6 +41,15 @@ func SetupStaffPersonHandlers(router *mux.Router, staffPersonHandler staffDelive
 func SetupReviewsHandlers(router *mux.Router, reviewsHandler reviewsDelivery.ReviewHandlerInterface) {
 	router.HandleFunc("/movie/{movie_id}/reviews", reviewsHandler.GetAllReviewsOfMovie).Methods(http.MethodGet, http.MethodOptions).Name("GetReviewsOfMovieRoute")
 	router.HandleFunc("/movie/{movie_id}/reviews", reviewsHandler.UpdateReview).Methods(http.MethodPost, http.MethodOptions).Name("UpdateReviewOfMovieRoute")
+}
+
+func SetupGenresHandlers(router *mux.Router, genreHandler genreDelivery.GenreHandlerInterface) {
+	router.HandleFunc("/genres", genreHandler.GetGenres).Methods(http.MethodGet, http.MethodOptions).Name("GetReviewsOfMovieRoute")
+	router.HandleFunc("/genres/{genre_id}", genreHandler.GetGenreByID).Methods(http.MethodGet, http.MethodOptions).Name("UpdateReviewOfMovieRoute")
+}
+
+func SetupSearchHandlers(router *mux.Router, searchHandler searchDelivery.SearchHandlerInterface) {
+	router.HandleFunc("/search", searchHandler.SearchActorsAndMovies).Methods(http.MethodPost, http.MethodOptions).Name("SearchRoute")
 }
 
 func SetupMovieHandlers(router *mux.Router, movieHandler movieDelivery.MovieHandlerInterface) {

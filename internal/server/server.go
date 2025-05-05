@@ -31,6 +31,15 @@ import (
 
 	csrfDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/csrf/delivery"
 	deliveryReviews "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/reviews/delivery"
+
+	deliveryGenre "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/genre/delivery"
+	repoGenre "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/genre/repository"
+	serviceGenre "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/genre/service"
+
+	deliverySearch "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/search/delivery"
+	repoSearch "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/search/repository"
+	serviceSearch "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/search/service"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -90,6 +99,14 @@ func (s *Server) Run() error {
 
 	movieReviewHandler := deliveryReviews.NewReviewHandler(userService, sessionService, movieService)
 
+	genreRepo := repoGenre.NewGenreRepository(pgdb)
+	genreService := serviceGenre.NewGenreService(genreRepo)
+	genreHandler := deliveryGenre.NewGenreHandler(genreService)
+
+	searchRepo := repoSearch.NewSearchRepository(pgdb)
+	searchService := serviceSearch.NewSearchService(searchRepo)
+	searchHandler := deliverySearch.NewSearchHandler(searchService)
+
 	mx := router.NewRouter()
 
 	log.Info().Msg("Configuring routes")
@@ -104,6 +121,8 @@ func (s *Server) Run() error {
 	router.SetupUserHandlers(mx, userHandler)
 	router.SetupMovieHandlers(mx, movieHandler)
 	router.SetupReviewsHandlers(mx, movieReviewHandler)
+	router.SetupGenresHandlers(mx, genreHandler)
+	router.SetupSearchHandlers(mx, searchHandler)
 
 	log.Info().Msg("Routes configured successfully")
 

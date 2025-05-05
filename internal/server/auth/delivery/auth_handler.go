@@ -3,7 +3,6 @@ package delivery
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/common"
@@ -96,8 +95,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	user := &models.User{
 		Username:       validatedUsername,
 		HashedPassword: string(hashedPass),
-		CreatedAt:      time.Now().String(),
-		UpdatedAt:      time.Now().String(),
 	}
 	err = h.userService.CreateUser(r.Context(), user)
 	if err != nil {

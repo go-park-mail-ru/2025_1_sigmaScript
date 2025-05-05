@@ -18,7 +18,10 @@ SELECT
 	c.name AS collection_name,
 	m.id as id,
 	m.name as title,
-	m.poster as preview_url,
+	CASE
+        WHEN c.name = 'promo' THEN m.promo_poster
+        ELSE m.poster
+    END AS preview_url,
 	m.duration as duration,
 	m.rating as rating
 FROM collection c

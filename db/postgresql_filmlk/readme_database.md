@@ -29,6 +29,6 @@ docker-compose down
 
 ## Подключение к контейнеру в постгрес (если надо что-то руками изменить)
 ```bash
-docker exec -it <docker_postgres_container> psql -U <POSTGRES_USER> -d POSTGRES_DB
+docker exec -it <docker_postgres_container> psql -U $POSTGRES_USER -d $POSTGRES_DB
 ```
 

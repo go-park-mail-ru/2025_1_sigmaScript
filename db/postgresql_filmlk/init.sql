@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS "review" CASCADE;
+DROP TABLE IF EXISTS "watch_provider" CASCADE;
 DROP TABLE IF EXISTS "user_person_favorite" CASCADE;
 DROP TABLE IF EXISTS "user_movie_favorite" CASCADE;
 DROP TABLE IF EXISTS "career_person" CASCADE;
@@ -84,7 +85,7 @@ CREATE TABLE "movie" (
     about TEXT DEFAULT 'Информация по этому фильму не указана',
     poster TEXT DEFAULT '/static/movies/poster_default_picture.webp',
     promo_poster TEXT DEFAULT '/static/movies/poster_default_picture.webp',
-    release_year DATE DEFAULT NULL,
+    release_year TIMESTAMPTZ DEFAULT NULL,
     country INTEGER REFERENCES country(id) DEFAULT NULL,
     slogan TEXT DEFAULT NULL,
     director TEXT DEFAULT NULL,
@@ -97,7 +98,9 @@ CREATE TABLE "movie" (
     rating DECIMAL(4,2) CHECK (rating <= 10.00) DEFAULT 5.00,
     duration TEXT DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    rating_kp DECIMAL(4,2) CHECK (rating <= 10.00) DEFAULT NULL,
+    rating_imdb DECIMAL(4,2) CHECK (rating <= 10.00) DEFAULT NULL
 );
 
 CREATE TABLE "collection_movie" (
@@ -152,6 +155,14 @@ CREATE TABLE "user_movie_favorite" (
     movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE,
     user_id INTEGER REFERENCES "user"(id) ON DELETE CASCADE,
     PRIMARY KEY (user_id, movie_id)
+);
+
+CREATE TABLE "watch_provider" (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE,
+	name TEXT NOT NULL CONSTRAINT provider_namechk CHECK (char_length(name) <= 255),
+	logo TEXT DEFAULT '/static/svg/play.svg',
+	watch_url TEXT DEFAULT '#'
 );
 
 
@@ -233,6 +244,9 @@ INSERT INTO movie (name, poster) VALUES
 ('Батя', '/img/promo_batya.webp'),
 ('Финист. первый Богатырь', '/img/promo_bogatyr.webp'),
 ('Матрица 2: Перезагрузка', '/img/7.webp');
+
+INSERT INTO movie (name, original_name, release_year, poster, duration, rating) VALUES
+('Легенда об Очи', 'The Legend of Ochi', '2025-05-16T00:00:00.000000Z', 'https://www.kino-teatr.ru/movie/poster/185445/232809.jpg', '1ч 35м', NULL);
 
 
 INSERT INTO collection (name, is_main_collection) VALUES
@@ -342,9 +356,9 @@ UPDATE person SET (full_name, en_full_name, photo, about, sex, growth, birthday)
 
 -- inserting movie genres
 INSERT INTO movie_genre (movie_id, genre_id) VALUES
-(2, 4), -- matrix
+(2, 4), -- 'матри'ix
 (2, 3),
-(24, 4), -- matrix 2
+(24, 4), -- 'матри'ix 2
 (24, 3),
 (24, 2);
 

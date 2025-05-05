@@ -88,6 +88,7 @@ CREATE TABLE "movie" (
     release_year TIMESTAMPTZ DEFAULT NULL,
     slogan TEXT DEFAULT NULL,
     director TEXT DEFAULT NULL,
+    country TEXT DEFAULT NULL,
     budget DECIMAL DEFAULT 0,
     box_office_us DECIMAL DEFAULT 0,
     box_office_global DECIMAL DEFAULT 0,
@@ -227,33 +228,34 @@ EXECUTE FUNCTION update_updated_at();
 
 -- some default data
 
-INSERT INTO movie (name, poster) VALUES
-('Бойцовский клуб', '/img/0.webp'),
-('Матрица', '/img/7.webp'),
-('Форрест Гамп', '/img/2.webp'),
-('Крестный отец', '/img/3.webp'),
-('Интерстеллар', '/img/4.webp'),
-('Криминальное чтиво', '/img/5.webp'),
-('Побег из Шоушенка', '/img/6.webp'),
-('Тёмный рыцарь', '/img/1.webp'),
-('Зелёная миля', '/img/8.webp'),
-('Одержимость', '/img/9.webp'),
-('Оппенгеймер', '/img/11.webp'),
-('Звёздные войны: Эпизод 4 – Новая надежда', '/img/12.webp'),
-('Рокки', '/img/13.webp'),
-('Джокер', '/img/14.webp'),
-('Игра в имитацию', '/img/15.webp'),
-('Начало', '/img/16.webp'),
-('Назад в будущее', '/img/17.webp'),
-('Гладиатор', '/img/18.webp'),
-('Титаник', '/img/19.webp'),
-('Ford против Ferrari', '/img/10.webp'),
-('Пророк. История Александра Пушкина', '/img/21.webp'),
-('Батя', '/img/23.webp'),
-('Финист. первый Богатырь', '/img/22.webp'),
-('Матрица 2: Перезагрузка', '/img/7.webp');
+INSERT INTO movie (name, poster, original_name) VALUES
+('Бойцовский клуб', '/img/0.webp', 'Fight Club'),
+('Матрица', '/img/7.webp', 'Matrix'),
+('Форрест Гамп', '/img/2.webp', 'Forrest Gump'),
+('Крестный отец', '/img/3.webp', 'Godfather'),
+('Интерстеллар', '/img/4.webp', 'Interstellar'),
+('Криминальное чтиво', '/img/5.webp', ''),
+('Побег из Шоушенка', '/img/6.webp', 'Escape from Shoushenk'),
+('Тёмный рыцарь', '/img/1.webp', 'Dark knight'),
+('Зелёная миля', '/img/8.webp', 'Green mile'),
+('Одержимость', '/img/9.webp', ''),
+('Оппенгеймер', '/img/11.webp', 'Oppenhimer'),
+('Звёздные войны: Эпизод 4 – Новая надежда', '/img/12.webp', ''),
+('Рокки', '/img/13.webp', 'Rokky'),
+('Джокер', '/img/14.webp', 'Joker'),
+('Игра в имитацию', '/img/15.webp', 'Imitation game'),
+('Начало', '/img/16.webp', 'Inception'),
+('Назад в будущее', '/img/17.webp', ''),
+('Гладиатор', '/img/18.webp', 'Gladiator'),
+('Титаник', '/img/19.webp', 'Titanic'),
+('Ford против Ferrari', '/img/10.webp', 'Ford vs Ferrari'),
+('Пророк. История Александра Пушкина', '/img/21.webp', 'Пророк. История Александра Пушкина'),
+('Батя', '/img/23.webp', 'Батя'),
+('Финист. первый Богатырь', '/img/22.webp', 'Финист. первый Богатырь'),
+('Матрица 2: Перезагрузка', '/img/7.webp', 'Matrix 2: Reload');
 
--- movi id = 25
+-- create incoming releses
+-- movie id = 25
 INSERT INTO movie (name, original_name, release_year, poster, duration, rating) VALUES
 (
     'Легенда об Очи',
@@ -276,7 +278,7 @@ AND poster = '/img/22.webp';
 INSERT INTO movie (
     name, original_name, about, short_description, poster, release_year, slogan,
     budget, box_office_us, box_office_global, box_office_russia, premier_russia, premier_global,
-    rating, rating_kp, rating_imdb, duration, logo, backdrop 
+    rating, rating_kp, rating_imdb, duration, logo, backdrop, country
 ) VALUES
 (
     'Человек-паук: Через вселенные',
@@ -297,7 +299,8 @@ INSERT INTO movie (
     8.4,
     '1ч 57м',
     'https://image.openmoviedb.com/tmdb-images/w500/bJ3VpPP3VkJM9H8GfRK8wSvTwPy.png',
-    'https://avatars.mds.yandex.net/get-ott/1531675/2a00000178cb2efc9762720b53a3b57633ef/2016x1134'
+    'https://avatars.mds.yandex.net/get-ott/1531675/2a00000178cb2efc9762720b53a3b57633ef/2016x1134',
+    'Канада, США'
 );
 
 INSERT INTO collection (name, is_main_collection) VALUES

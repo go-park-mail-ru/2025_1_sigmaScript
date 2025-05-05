@@ -115,7 +115,7 @@ CREATE TABLE "collection_movie" (
 CREATE TABLE "movie_staff" (
     staff_id INTEGER REFERENCES person(id) ON DELETE CASCADE,
     movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE,
-    role TEXT DEFAULT 'actor',
+    role career_type DEFAULT 'Актёр' NOT NULL,
     PRIMARY KEY (staff_id, movie_id)
 );
 
@@ -446,12 +446,14 @@ INSERT INTO movie_staff (movie_id, staff_id) VALUES
 (1, 7), -- brad pitt
 (2, 11), -- keanu reeves
 (24, 11), -- keanu reeves
-(26, 12),
-(26, 13),
-(26, 14),
 (26, 15),
 (26, 16),
 (26, 17);
+
+INSERT INTO movie_staff (movie_id, staff_id, role) VALUES
+(26, 12, 'Режиссёр'), 
+(26, 13, 'Режиссёр'),
+(26, 14, 'Режиссёр');
 
 -- inserting person genres
 INSERT INTO person_genre (person_id, genre_id) VALUES

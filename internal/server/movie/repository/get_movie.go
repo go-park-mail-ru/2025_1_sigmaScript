@@ -251,8 +251,8 @@ func (r *MoviePostgresRepository) GetMovieFromRepoByID(ctx context.Context, movi
 			return nil, errMsg
 		}
 
-		// skip if bad user
-		if !userLogin.Valid {
+		// skip if bad user or review
+		if !reviewID.Valid || !userLogin.Valid {
 			continue
 		}
 		reviewUser := mocks.ReviewUserDataJSON{

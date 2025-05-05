@@ -58,6 +58,20 @@ const (
 	WHERE u.id = $1;
 `
 
+	getUserReviewsQuery = `
+SELECT
+	r.id,
+	r.score,
+	r.review_text,
+	r.updated_at as created_at,
+	u.login,
+	u.avatar
+FROM "user" u
+LEFT JOIN review r ON r.user_id = u.id
+WHERE u.id = $1
+ORDER BY u.id;
+`
+
 	addFavoriteActorQuery = `
 	WITH user_id_res AS (
 		SELECT id
@@ -356,12 +370,75 @@ func (r *UserRepository) GetUserProfilePostgres(ctx context.Context, login strin
 		return nil, errMsg
 	}
 
+	// get reviews
+	resReviews := []mocks.ReviewJSON{}
+	execRowReviews, err := r.pgdb.Query(getUserReviewsQuery, user.ID)
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrapf(err, "error in query statement in GetMovieFromRepoByID").Error())
+		return nil, errors.Wrap(err, "error in prepare query statement in GetMovieFromRepoByID")
+	}
+	defer func() {
+		if closeErr := execRowReviews.Close(); closeErr != nil {
+			logger.Error().Err(closeErr).Msg("failed_to_close_statement")
+			return
+		}
+	}()
+
+	for execRowReviews.Next() {
+		var reviewID sql.NullInt64
+		var reviewScore sql.NullFloat64
+		var reviewText sql.NullString
+		var reviewCreatedAt sql.NullString
+
+		var userLogin sql.NullString
+		var userAvatar sql.NullString
+
+		if err := execRowReviews.Scan(
+			&reviewID,
+			&reviewScore,
+			&reviewText,
+			&reviewCreatedAt,
+			&userLogin,
+			&userAvatar,
+		); err != nil {
+			errMsg := errors.Wrap(err, "error in query scan in GetMovieFromRepoByID")
+			logger.Error().Err(errMsg).Msg(errMsg.Error())
+			return nil, errMsg
+		}
+
+		// skip if bad user or review
+		if !reviewID.Valid || !userLogin.Valid {
+			continue
+		}
+		reviewUser := mocks.ReviewUserDataJSON{
+			Login:  userLogin.String,
+			Avatar: userAvatar.String,
+		}
+
+		review := mocks.ReviewJSON{
+			ID:         int(reviewID.Int64),
+			Score:      reviewScore.Float64,
+			ReviewText: reviewText.String,
+			CreatedAt:  reviewCreatedAt.String,
+			User:       reviewUser,
+		}
+
+		resReviews = append(resReviews, review)
+	}
+	if execErr := execRowReviews.Err(); execErr != nil {
+		errMsg := errors.Wrap(execErr, "error in query next in GetMovieFromRepoByID")
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		return nil, errMsg
+	}
+
+	// result
 	result := models.Profile{
 		Username:        user.Username,
 		Avatar:          user.Avatar,
 		CreatedAt:       user.CreatedAt,
 		MovieCollection: resMovies,
 		Actors:          resStaff,
+		Reviews:         resReviews,
 	}
 	return &result, nil
 }

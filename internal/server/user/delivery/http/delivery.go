@@ -395,8 +395,8 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	result, err := h.userSvc.GetProfile(r.Context(), username)
 	if err != nil {
 		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
-		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrUnauthorizedShort,
-			errs.ErrUnauthorized)
+		jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrSomethingWentWrong,
+			errs.ErrSomethingWentWrong)
 		return
 	}
 

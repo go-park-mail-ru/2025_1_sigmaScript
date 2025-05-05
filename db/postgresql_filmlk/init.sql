@@ -1461,24 +1461,12 @@ INSERT INTO collection_movie (collection_id, movie_id) VALUES
 (3, 1048334);
 
 
-
--- create incoming releses
-INSERT INTO movie (id, name, original_name, release_year, poster, duration, rating) OVERRIDING SYSTEM VALUE VALUES
+-- movie id = 25
+INSERT INTO movie (id, name, original_name, about, poster, promo_poster, release_year, slogan,
+director, country, premier_russia, premier_global, duration, 
+rating_kp, rating_imdb, short_description, logo, backdrop) OVERRIDING SYSTEM VALUE VALUES
 (
     25,
-    'Легенда об Очи',
-    'The Legend of Ochi',
-    '2025-05-16T00:00:00.000000Z',
-    'https://www.kino-teatr.ru/movie/poster/185445/232809.jpg',
-    '1ч 35м',
-    NULL
-);
-
--- movie id = 25
-UPDATE movie set (name, original_name, about, poster, promo_poster, release_year, slogan,
-director, country, premier_russia, premier_global, duration, 
-rating_kp, rating_imdb, short_description, logo, backdrop) =
-(
     'Легенда об Очи',
     'The Legend of Ochi',
     'В отдаленной деревне на острове Карпатия застенчивую девочку воспитывают в страхе перед неуловимым видом животных, известным как очи. Но когда она обнаруживает, что раненый детеныш Очи остался дома, она убегает, чтобы вернуть его домой.',
@@ -1496,8 +1484,7 @@ rating_kp, rating_imdb, short_description, logo, backdrop) =
     'Девочка спасает маленькое лесное чудище и меняет мир',
     '/static/img/legend_of_ochi_name.webp',
     'https://platform.polygon.com/wp-content/uploads/sites/2/2025/01/https___cdn.sanity.io_images_xq1bjtf4_production_68467d7a0d4c6fa2936f45ec7c0405573bd00daf-2000x1125-1.jpg?quality=90&strip=all&crop=7.8125%2C0%2C84.375%2C100&w=2400'
-)
-where name = 'Легенда об Очи';
+);
 
 -- genres приключения семейный фэнтези
 -- Inserting data into the movie_genre table

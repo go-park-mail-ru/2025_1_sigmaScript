@@ -169,11 +169,12 @@ func (r *CollectionPostgresRepository) GetMainPageCollectionsFromRepo(ctx contex
 		}
 
 		movie := mocks.Movie{
-			ID:         int(movieID.Int64),
-			Title:      movieTitle.String,
-			PreviewURL: moviePreviewURL.String,
-			Duration:   movieDuration.String,
-			Rating:     movieRating.Float64,
+			ID:          int(movieID.Int64),
+			Title:       movieTitle.String,
+			PreviewURL:  moviePreviewURL.String,
+			Duration:    movieDuration.String,
+			ReleaseDate: movieReleaseDate.String,
+			Rating:      movieRating.Float64,
 		}
 		resCollections[collectionName][movie.ID] = movie
 

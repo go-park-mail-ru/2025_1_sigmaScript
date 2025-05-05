@@ -30,8 +30,12 @@ SELECT
 	m.premier_russia,
 	m.premier_global,
 	m.rating,
+	rating_kp,
+	rating_imdb,
 	m.duration,
-	string_agg(DISTINCT g.name, ', ' ORDER BY g.name) AS genres
+	string_agg(DISTINCT g.name, ', ' ORDER BY g.name) AS genres,
+	m.logo,
+	m.backdrop
 FROM
 	movie m
 LEFT JOIN
@@ -56,15 +60,20 @@ GROUP BY
 	m.premier_russia,
 	m.premier_global,
 	m.rating,
-	m.duration;
+	rating_kp,
+	rating_imdb,
+	m.duration,
+	m.logo,
+	m.backdrop;
 `
 
 	getMovieStaffQuery = `
 SELECT
 	m.name as movie_title,
 	p.id as id,
-	p.full_name,
-	p.photo
+	p.full_name as full_name,
+	p.photo as photo,
+	ms.role as career
 FROM movie m
 LEFT JOIN movie_staff ms ON m.id = ms.movie_id
 LEFT JOIN person p ON p.id = ms.staff_id
@@ -106,9 +115,13 @@ func (r *MoviePostgresRepository) GetMovieFromRepoByID(ctx context.Context, movi
 	resMovieBoxOfficeRussia := sql.NullInt64{}
 	resMoviePremierRussia := sql.NullString{}
 	resMoviePremierGlobal := sql.NullString{}
-	resMovieRating := sql.NullString{}
+	resMovieRating := sql.NullFloat64{}
+	resRatingKP := sql.NullFloat64{}
+	resRatingIMDB := sql.NullFloat64{}
 	resMovieDuration := sql.NullString{}
 	resMovieGenres := sql.NullString{}
+	resMovieLogo := sql.NullString{}
+	resMovieBackdrop := sql.NullString{}
 
 	// get movie info
 	execRow, err := r.pgdb.Query(getMovieInfoByIDQuery, movieID)
@@ -140,8 +153,12 @@ func (r *MoviePostgresRepository) GetMovieFromRepoByID(ctx context.Context, movi
 			&resMoviePremierRussia,
 			&resMoviePremierGlobal,
 			&resMovieRating,
+			&resRatingKP,
+			&resRatingIMDB,
 			&resMovieDuration,
 			&resMovieGenres,
+			&resMovieLogo,
+			&resMovieBackdrop,
 		); err != nil {
 			errMsg := errors.Wrap(err, "error in query scan in GetMovieFromRepoByID")
 			logger.Error().Err(errMsg).Msg(errMsg.Error())
@@ -150,13 +167,6 @@ func (r *MoviePostgresRepository) GetMovieFromRepoByID(ctx context.Context, movi
 	}
 	if execErr := execRow.Err(); execErr != nil {
 		errMsg := errors.Wrap(execErr, "error in query next in GetMovieFromRepoByID")
-		logger.Error().Err(errMsg).Msg(errMsg.Error())
-		return nil, errMsg
-	}
-
-	resMovieRatingFloat, err := strconv.ParseFloat(resMovieRating.String, 64)
-	if err != nil {
-		errMsg := errors.Wrap(err, "error in query statement in GetMovieFromRepoByID")
 		logger.Error().Err(errMsg).Msg(errMsg.Error())
 		return nil, errMsg
 	}
@@ -181,12 +191,14 @@ func (r *MoviePostgresRepository) GetMovieFromRepoByID(ctx context.Context, movi
 		var personID sql.NullInt64
 		var personFullName sql.NullString
 		var personPhoto sql.NullString
+		var personCareer sql.NullString
 
 		if err := execRowStaff.Scan(
 			&movieName,
 			&personID,
 			&personFullName,
 			&personPhoto,
+			&personCareer,
 		); err != nil {
 			errMsg := errors.Wrap(err, "error in query scan in GetMovieFromRepoByID")
 			logger.Error().Err(errMsg).Msg(errMsg.Error())
@@ -202,6 +214,7 @@ func (r *MoviePostgresRepository) GetMovieFromRepoByID(ctx context.Context, movi
 			ID:       int(personID.Int64),
 			FullName: personFullName.String,
 			Photo:    personPhoto.String,
+			Career:   personCareer.String,
 		}
 
 		resStaff = append(resStaff, person)
@@ -300,10 +313,15 @@ func (r *MoviePostgresRepository) GetMovieFromRepoByID(ctx context.Context, movi
 		BoxOfficeRussia: resMovieBoxOfficeRussia.Int64,
 		PremierRussia:   resMoviePremierRussia.String,
 		PremierGlobal:   resMoviePremierGlobal.String,
-		Rating:          resMovieRatingFloat,
+		Rating:          resMovieRating.Float64,
+		RatingKP:        resRatingKP.Float64,
+		RatingIMDB:      resRatingIMDB.Float64,
 		Duration:        resMovieDuration.String,
 		Staff:           resStaff,
 		Reviews:         resReviews,
+		Genres:          resMovieGenres.String,
+		Logo:            resMovieLogo.String,
+		Backdrop:        resMovieBackdrop.String,
 	}
 
 	return &resMovie, nil

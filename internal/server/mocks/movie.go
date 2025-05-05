@@ -48,6 +48,8 @@ type MovieJSON struct {
 	RatingKP        float64             `json:"rating_kp,omitempty"`
 	RatingIMDB      float64             `json:"rating_imdb,omitempty"`
 	Watchability    []WatchProviderJSON `json:"watchability,omitempty"`
+	Logo            string              `json:"logo,omitempty"`
+	Backdrop        string              `json:"backdrop,omitempty"`
 }
 
 // Новая структура

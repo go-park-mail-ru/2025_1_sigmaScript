@@ -229,89 +229,12 @@ EXECUTE FUNCTION update_updated_at();
 
 -- some default data
 
-INSERT INTO movie (name, poster, original_name) VALUES
-('Бойцовский клуб', '/img/0.webp', 'Fight Club'),
-('Матрица', '/img/7.webp', 'Matrix'),
-('Форрест Гамп', '/img/2.webp', 'Forrest Gump'),
-('Крестный отец', '/img/3.webp', 'Godfather'),
-('Интерстеллар', '/img/4.webp', 'Interstellar'),
-('Криминальное чтиво', '/img/5.webp', ''),
-('Побег из Шоушенка', '/img/6.webp', 'Escape from Shoushenk'),
-('Тёмный рыцарь', '/img/1.webp', 'Dark knight'),
-('Зелёная миля', '/img/8.webp', 'Green mile'),
-('Одержимость', '/img/9.webp', ''),
-('Оппенгеймер', '/img/11.webp', 'Oppenhimer'),
-('Звёздные войны: Эпизод 4 – Новая надежда', '/img/12.webp', ''),
-('Рокки', '/img/13.webp', 'Rokky'),
-('Джокер', '/img/14.webp', 'Joker'),
-('Игра в имитацию', '/img/15.webp', 'Imitation game'),
-('Начало', '/img/16.webp', 'Inception'),
-('Назад в будущее', '/img/17.webp', ''),
-('Гладиатор', '/img/18.webp', 'Gladiator'),
-('Титаник', '/img/19.webp', 'Titanic'),
-('Ford против Ferrari', '/img/10.webp', 'Ford vs Ferrari'),
-('Пророк. История Александра Пушкина', '/img/21.webp', 'Пророк. История Александра Пушкина'),
-('Батя', '/img/23.webp', 'Батя'),
-('Финист. первый Богатырь', '/img/22.webp', 'Финист. первый Богатырь'),
-('Матрица 2: Перезагрузка', '/img/7.webp', 'Matrix 2: Reload');
-
--- create incoming releses
--- movie id = 25
-INSERT INTO movie (name, original_name, release_year, poster, duration, rating) VALUES
-(
-    'Легенда об Очи',
-    'The Legend of Ochi',
-    '2025-05-16T00:00:00.000000Z',
-    'https://www.kino-teatr.ru/movie/poster/185445/232809.jpg',
-    '1ч 35м',
-    NULL
-);
-
-UPDATE movie SET promo_poster = '/img/promo_prorok.webp' WHERE name = 'Пророк. История Александра Пушкина'
-AND poster = '/img/21.webp';
-UPDATE movie SET promo_poster = '/img/promo_batya.webp' WHERE name = 'Батя'
-AND poster = '/img/23.webp';
-UPDATE movie SET promo_poster = '/img/promo_bogatyr.webp' WHERE name = 'Финист. первый Богатырь'
-AND poster = '/img/22.webp';
-
-
--- movie id = 26
-INSERT INTO movie (
-    name, original_name, about, short_description, poster, release_year, slogan,
-    budget, box_office_us, box_office_global, box_office_russia, premier_russia, premier_global,
-    rating, rating_kp, rating_imdb, duration, logo, backdrop, country
-) VALUES
-(
-    'Человек-паук: Через вселенные',
-    'Spider-Man: Into the Spider-Verse',
-    'Мы всё знаем о Питере Паркере. Он спас город, влюбился, а потом спасал город снова и снова… Но все это – в нашем измерении. А что если в результате работы гигантского коллайдера откроется окно из одного измерения в другое? Найдется ли в нем свой Человек-паук? И как он будет выглядеть? Приготовьтесь к тому, что в разных вселенных могут быть разные Люди-пауки и однажды им придется собраться вместе...',
-    'Пауки из разных измерений объединяются перед общей угрозой. Изобретательный кинокомикс с «Оскаром» за анимацию',
-    'https://image.openmoviedb.com/kinopoisk-images/1900788/64417bd3-838b-4910-a9f4-c278c509d568/x1000',
-    '2018-12-12T00:00:00.000000Z',
-    'Более одного носит маску',
-    90000000,
-    190241310,
-    375582637,
-    6298173,
-    '2018-12-13 03:00:00',
-    '2018-12-12 03:00:00',
-    9.1,
-    8.18,
-    8.4,
-    '1ч 57м',
-    'https://image.openmoviedb.com/tmdb-images/w500/bJ3VpPP3VkJM9H8GfRK8wSvTwPy.png',
-    'https://avatars.mds.yandex.net/get-ott/1531675/2a00000178cb2efc9762720b53a3b57633ef/2016x1134',
-    'Канада, США'
-);
-
+-- creating collections
 INSERT INTO collection (name, is_main_collection) VALUES
 ('Лучшие за всё время', TRUE),
 ('Номинанты на оскар', TRUE),
 ('promo', TRUE);
 
-UPDATE movie SET duration = '1ч 53м' WHERE id = 21;
-UPDATE movie SET duration = '1ч 16м' WHERE id = 22;
-UPDATE movie SET duration = '1ч 52м' WHERE id = 23;
 
 -- creating career roles
 INSERT INTO career (career) VALUES
@@ -347,31 +270,13 @@ INSERT INTO country (name) values
 ('США');
 
 
--- creating movies
-UPDATE movie SET (name, original_name, about, poster, release_year, Budget, box_office_us, box_office_global, rating, duration) =
-(
-    'Матрица',
-    'Matrix',
-    'Жизнь Томаса Андерсона разделена на две части: днём он — самый обычный офисный работник, получающий нагоняи от начальства, а ночью превращается в хакера по имени Нео, и нет места в сети, куда он бы не смог проникнуть. Но однажды всё меняется. Томас узнаёт ужасающую правду о реальности.',
-    '/static/img/7.webp',
-    '1999-1-1',
-    63000000,
-    171479930,
-    463517383,
-    8.5,
-    '2ч 16м'
-)
-where id = 2;
+
 
 INSERT INTO person (full_name, en_full_name, photo) VALUES
 ('Леонардо Ди Каприо', 'Leonardo DiCaprio', 'https://avatars.mds.yandex.net/get-entity_search/2310675/1130394491/S600xU_2x'),
 ('Морган Фримен', 'Morgan Freeman', 'https://avatars.mds.yandex.net/get-entity_search/2057552/1132084397/S600xU_2x'),
-( 'Том Хэнкс', 'Tom Hanks', 'https://avatars.mds.yandex.net/get-entity_search/2005770/833182325/S600xU_2x'),
 ('Джонни Депп', 'Johnny Depp', '/static/avatars/avatar_default_picture.svg'),
 ('Том Круз', 'Tom Cruise', '/static/avatars/avatar_default_picture.svg'),
-('Сэмюэл Л. Джексон', 'Samuel L. Jackson', 'https://avatars.mds.yandex.net/get-entity_search/98180/952678918/S600xU_2x'),
-('Брэд Питт', 'Brad Pitt', '/static/img/brad_pitt.webp'),
-('Рассел Кроу', 'Russell Crowe', 'https://avatars.mds.yandex.net/get-entity_search/478647/809836058/S600xU_2x'),
 ('Уилл Смит', 'Will Smith', '/static/avatars/avatar_default_picture.svg'),
 ('Мэтт Дэймон', 'Matt Damon', 'https://avatars.mds.yandex.net/get-entity_search/1245892/935872902/S600xU_2x'),
 ('Киану Ривз', '', ''),
@@ -396,83 +301,7 @@ UPDATE person SET (full_name, en_full_name, photo, about, sex, growth, birthday)
     'Мужчина',
     '186',
     '1964-09-2'
-) where id = 11;
-
-
--- inserting movie genres
-INSERT INTO movie_genre (movie_id, genre_id) VALUES
-(2, 4), -- matrixix
-(2, 3),
-(24, 4), -- matrix 2
-(24, 3),
-(24, 2),
-(26, 17),
-(26, 3),
-(26, 11),
-(26, 4),
-(26, 5),
-(26, 10),
-(26, 18);
-
-
--- inserting movie staff
-INSERT INTO movie_staff (movie_id, staff_id) VALUES
-(1, 7), -- brad pitt
-(2, 11), -- keanu reeves
-(24, 11), -- keanu reeves
-(26, 15),
-(26, 16),
-(26, 17);
-
-INSERT INTO movie_staff (movie_id, staff_id, role) VALUES
-(26, 12, 'Режиссёр'), 
-(26, 13, 'Режиссёр'),
-(26, 14, 'Режиссёр');
-
--- inserting person genres
-INSERT INTO person_genre (person_id, genre_id) VALUES
-(11, 4),
-(11, 3),
-(11, 2);
-
--- creating careers for persons
-insert into career_person (career_id, person_id) values (1, 11), (2, 11), (3, 11), (3, 12), (3, 13), (3, 14);
-
-
--- creating countries for movies
-INSERT INTO movie_country (movie_id, country_id) VALUES
-(26, 1),
-(26, 2);
-
--- creating watch provirders for movie 
-INSERT INTO watch_provider (movie_id, name, logo, watch_url) VALUES
-(
-    26,
-    'Триколор Кино и ТВ',
-    'https://avatars.mds.yandex.net/get-ott/239697/947e777c-2f73-4cbc-b09d-6bfa3966ba13/orig',
-    'https://kino.tricolor.tv/watch/chelovek-pauk-cherez-vselennye-2018/'
-),
-(
-    26,
-    'Кинопоиск HD',
-    'https://play-lh.googleusercontent.com/5czw6iycA8YhjI653GQdwnnmu8NNzEMXV32gZKoVCYZV6PQUAv_YV0uJ2PU1E-Jm9PE=w480-h960-rw',
-    'https://hd.kinopoisk.ru/film/4d924361a6c32b09aeee7d1a63f9c3bf?content_tab=overview'
-);
-
-------------
--- test user
-INSERT into "user" (login, hashed_password)
-VALUES ('KinoLooker', '123456');
-
--- add reviews to test user
-INSERT INTO review (user_id, movie_id, review_text, score) VALUES
-(1, 1, 'Отличный фильм!', 9.0),
-(1, 2, 'Отличный фильм!', 8.0),
-(1, 3, 'Отличный фильм!', 10.0);
-
--- add favorites to test user
-insert into user_person_favorite (person_id, user_id) values (1, 1), (2, 1);
-insert into user_movie_favorite  (movie_id, user_id) values (4, 1), (3, 1), (26, 1);
+) where full_name = 'Киану Ривз';
 
 
 -- Start Transaction
@@ -1630,3 +1459,68 @@ INSERT INTO collection_movie (collection_id, movie_id) VALUES
 (3, 841081),
 (3, 854),
 (3, 1048334);
+
+
+
+-- create incoming releses
+INSERT INTO movie (id, name, original_name, release_year, poster, duration, rating) OVERRIDING SYSTEM VALUE VALUES
+(
+    25,
+    'Легенда об Очи',
+    'The Legend of Ochi',
+    '2025-05-16T00:00:00.000000Z',
+    'https://www.kino-teatr.ru/movie/poster/185445/232809.jpg',
+    '1ч 35м',
+    NULL
+);
+
+-- movie id = 25
+UPDATE movie set (name, original_name, about, poster, promo_poster, release_year, slogan,
+director, country, premier_russia, premier_global, duration, 
+rating_kp, rating_imdb, short_description, logo, backdrop) =
+(
+    'Легенда об Очи',
+    'The Legend of Ochi',
+    'В отдаленной деревне на острове Карпатия застенчивую девочку воспитывают в страхе перед неуловимым видом животных, известным как очи. Но когда она обнаруживает, что раненый детеныш Очи остался дома, она убегает, чтобы вернуть его домой.',
+    'https://www.kino-teatr.ru/movie/poster/185445/232809.jpg',
+    NULL,
+    '2025-05-08T00:00:00.000000Z',
+    'Там есть что-то еще.',
+    'Исайя Саксон',
+    'США, Финляндия, Великобритания',
+    '2025-05-08T00:00:00.000000Z',
+    '2025-01-26T00:00:00.000000Z',
+    '1ч 35мин',
+    6.1,
+    6.3,
+    'Девочка спасает маленькое лесное чудище и меняет мир',
+    '/static/img/legend_of_ochi_name.webp',
+    'https://platform.polygon.com/wp-content/uploads/sites/2/2025/01/https___cdn.sanity.io_images_xq1bjtf4_production_68467d7a0d4c6fa2936f45ec7c0405573bd00daf-2000x1125-1.jpg?quality=90&strip=all&crop=7.8125%2C0%2C84.375%2C100&w=2400'
+)
+where name = 'Легенда об Очи';
+
+-- genres приключения семейный фэнтези
+-- Inserting data into the movie_genre table
+INSERT INTO movie_genre (movie_id, genre_id)
+VALUES
+((SELECT id FROM movie WHERE name = 'Легенда об Очи'), (SELECT id FROM genre WHERE name = 'фэнтези')),
+((SELECT id FROM movie WHERE name = 'Легенда об Очи'), (SELECT id FROM genre WHERE name = 'приключения')),
+((SELECT id FROM movie WHERE name = 'Легенда об Очи'), (SELECT id FROM genre WHERE name = 'семейный'))
+ON CONFLICT (movie_id, genre_id) DO NOTHING;
+
+
+------------
+-- test user
+INSERT into "user" (login, hashed_password)
+VALUES ('KinoLooker', '123456');
+
+-- add reviews to test user
+INSERT INTO review (user_id, movie_id, review_text, score) VALUES
+(1, 361, 'Отличный фильм!', 9.0),
+(1, 400787, 'Отличный фильм!', 8.0),
+(1, 448, 'Отличный фильм!', 10.0);
+
+-- add favorites to test user
+insert into user_person_favorite (person_id, user_id) values (1089330, 1), (2378404, 1);
+insert into user_movie_favorite  (movie_id, user_id) values (361, 1), (400787, 1), (448, 1);
+

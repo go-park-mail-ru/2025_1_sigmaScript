@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS "watch_provider" CASCADE;
 DROP TABLE IF EXISTS "user_person_favorite" CASCADE;
 DROP TABLE IF EXISTS "user_movie_favorite" CASCADE;
 DROP TABLE IF EXISTS "career_person" CASCADE;
+DROP TABLE IF EXISTS "movie_country" CASCADE;
 DROP TABLE IF EXISTS "person_genre" CASCADE;
 DROP TABLE IF EXISTS "movie_genre" CASCADE;
 DROP TABLE IF EXISTS "movie_staff" CASCADE;
@@ -72,7 +73,6 @@ CREATE TABLE "genre" (
 CREATE TABLE "country" (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name TEXT NOT NULL,
-    code TEXT NOT NULL,
     flag TEXT DEFAULT '/static/flags/flag_default_picture.webp',
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -86,7 +86,6 @@ CREATE TABLE "movie" (
     poster TEXT DEFAULT '/static/movies/poster_default_picture.webp',
     promo_poster TEXT DEFAULT '/static/movies/poster_default_picture.webp',
     release_year TIMESTAMPTZ DEFAULT NULL,
-    country INTEGER REFERENCES country(id) DEFAULT NULL,
     slogan TEXT DEFAULT NULL,
     director TEXT DEFAULT NULL,
     budget DECIMAL DEFAULT 0,
@@ -100,7 +99,10 @@ CREATE TABLE "movie" (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     rating_kp DECIMAL(4,2) CHECK (rating <= 10.00) DEFAULT NULL,
-    rating_imdb DECIMAL(4,2) CHECK (rating <= 10.00) DEFAULT NULL
+    rating_imdb DECIMAL(4,2) CHECK (rating <= 10.00) DEFAULT NULL,
+    short_description TEXT DEFAULT NULL,
+    logo TEXT DEFAULT '#',
+    backdrop TEXT DEFAULT '#'
 );
 
 CREATE TABLE "collection_movie" (
@@ -132,6 +134,12 @@ CREATE TABLE "person_genre" (
     person_id INTEGER REFERENCES person(id) ON DELETE CASCADE,
     genre_id INTEGER REFERENCES genre(id) ON DELETE CASCADE,
     PRIMARY KEY (genre_id, person_id)
+);
+
+CREATE TABLE "movie_country" (
+    country_id INTEGER REFERENCES country(id) ON DELETE CASCADE,
+    movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE,
+    PRIMARY KEY (country_id, movie_id)
 );
 
 CREATE TABLE "review" (
@@ -240,14 +248,57 @@ INSERT INTO movie (name, poster) VALUES
 ('Гладиатор', '/img/18.webp'),
 ('Титаник', '/img/19.webp'),
 ('Ford против Ferrari', '/img/10.webp'),
-('Пророк. История Александра Пушкина', '/img/promo_prorok.webp'),
-('Батя', '/img/promo_batya.webp'),
-('Финист. первый Богатырь', '/img/promo_bogatyr.webp'),
+('Пророк. История Александра Пушкина', '/img/21.webp'),
+('Батя', '/img/23.webp'),
+('Финист. первый Богатырь', '/img/22.webp'),
 ('Матрица 2: Перезагрузка', '/img/7.webp');
 
+-- movi id = 25
 INSERT INTO movie (name, original_name, release_year, poster, duration, rating) VALUES
-('Легенда об Очи', 'The Legend of Ochi', '2025-05-16T00:00:00.000000Z', 'https://www.kino-teatr.ru/movie/poster/185445/232809.jpg', '1ч 35м', NULL);
+(
+    'Легенда об Очи',
+    'The Legend of Ochi',
+    '2025-05-16T00:00:00.000000Z',
+    'https://www.kino-teatr.ru/movie/poster/185445/232809.jpg',
+    '1ч 35м',
+    NULL
+);
 
+UPDATE movie SET promo_poster = '/img/promo_prorok.webp' WHERE name = 'Пророк. История Александра Пушкина'
+AND poster = '/img/21.webp';
+UPDATE movie SET promo_poster = '/img/promo_batya.webp' WHERE name = 'Батя'
+AND poster = '/img/23.webp';
+UPDATE movie SET promo_poster = '/img/promo_bogatyr.webp' WHERE name = 'Финист. первый Богатырь'
+AND poster = '/img/22.webp';
+
+
+-- movie id = 26
+INSERT INTO movie (
+    name, original_name, about, short_description, poster, release_year, slogan,
+    budget, box_office_us, box_office_global, box_office_russia, premier_russia, premier_global,
+    rating, rating_kp, rating_imdb, duration, logo, backdrop 
+) VALUES
+(
+    'Человек-паук: Через вселенные',
+    'Spider-Man: Into the Spider-Verse',
+    'Мы всё знаем о Питере Паркере. Он спас город, влюбился, а потом спасал город снова и снова… Но все это – в нашем измерении. А что если в результате работы гигантского коллайдера откроется окно из одного измерения в другое? Найдется ли в нем свой Человек-паук? И как он будет выглядеть? Приготовьтесь к тому, что в разных вселенных могут быть разные Люди-пауки и однажды им придется собраться вместе...',
+    'Пауки из разных измерений объединяются перед общей угрозой. Изобретательный кинокомикс с «Оскаром» за анимацию',
+    'https://image.openmoviedb.com/kinopoisk-images/1900788/64417bd3-838b-4910-a9f4-c278c509d568/x1000',
+    '2018-12-12T00:00:00.000000Z',
+    'Более одного носит маску',
+    90000000,
+    190241310,
+    375582637,
+    6298173,
+    '2018-12-13 03:00:00',
+    '2018-12-12 03:00:00',
+    9.1,
+    8.18,
+    8.4,
+    '1ч 57м',
+    'https://image.openmoviedb.com/tmdb-images/w500/bJ3VpPP3VkJM9H8GfRK8wSvTwPy.png',
+    'https://avatars.mds.yandex.net/get-ott/1531675/2a00000178cb2efc9762720b53a3b57633ef/2016x1134'
+);
 
 INSERT INTO collection (name, is_main_collection) VALUES
 ('Лучшие за всё время', TRUE),
@@ -294,22 +345,29 @@ INSERT INTO career (career) VALUES
 
 -- creating genres
 INSERT INTO genre (name) values
-('триллер'),
-('драма'),
-('фантастика'),
-('боевик'),
-('комедия'),
-('мелодрама'),
-('история'),
-('военный'),
-('криминал'),
-('приключения'),
-('фэнтези'),
-('музыка'),
-('биография'),
-('спорт'),
-('детектив'),
-('мюзикл');
+('триллер'), -- 1
+('драма'), -- 2
+('фантастика'), -- 3
+('боевик'), -- 4
+('комедия'), -- 5
+('мелодрама'), -- 6
+('история'), -- 7
+('военный'), -- 8
+('криминал'), -- 9
+('приключения'), -- 10
+('фэнтези'), -- 11
+('музыка'), -- 12
+('биография'), -- 13
+('спорт'), -- 14
+('детектив'), -- 15
+('мюзикл'), -- 16
+('мультфильм'), -- 17
+('семейный'); -- 18
+
+-- creating countries
+INSERT INTO country (name) values
+('Канада'),
+('США');
 
 
 -- creating movies
@@ -329,7 +387,6 @@ UPDATE movie SET (name, original_name, about, poster, release_year, Budget, box_
 where id = 2;
 
 INSERT INTO person (full_name, en_full_name, photo) VALUES
-
 ('Леонардо Ди Каприо', 'Leonardo DiCaprio', 'https://avatars.mds.yandex.net/get-entity_search/2310675/1130394491/S600xU_2x'),
 ('Морган Фримен', 'Morgan Freeman', 'https://avatars.mds.yandex.net/get-entity_search/2057552/1132084397/S600xU_2x'),
 ( 'Том Хэнкс', 'Tom Hanks', 'https://avatars.mds.yandex.net/get-entity_search/2005770/833182325/S600xU_2x'),
@@ -340,7 +397,18 @@ INSERT INTO person (full_name, en_full_name, photo) VALUES
 ('Рассел Кроу', 'Russell Crowe', 'https://avatars.mds.yandex.net/get-entity_search/478647/809836058/S600xU_2x'),
 ('Уилл Смит', 'Will Smith', '/static/avatars/avatar_default_picture.svg'),
 ('Мэтт Дэймон', 'Matt Damon', 'https://avatars.mds.yandex.net/get-entity_search/1245892/935872902/S600xU_2x'),
-('Киану Ривз', '', '');
+('Киану Ривз', '', ''),
+('Боб Персичетти', '', ''),
+('Питер Рэмзи', '', ''),
+('Родни Ротман', '', '');
+
+-- peron id 15-17
+INSERT INTO person (full_name, en_full_name, photo) VALUES
+('Шамеик Мур', 'Shameik Moore', 'https://st.kp.yandex.net/images/actor_iphone/iphone360_2378404.jpg'),
+('Джейк Джонсон', 'Jake Johnson', 'https://st.kp.yandex.net/images/actor_iphone/iphone360_1089330.jpg'),
+('Хейли Стайнфелд', 'Hailee Steinfeld', 'https://st.kp.yandex.net/images/actor_iphone/iphone360_1478559.jpg');
+
+
 
 UPDATE person SET (full_name, en_full_name, photo, about, sex, growth, birthday) =
 (
@@ -356,17 +424,31 @@ UPDATE person SET (full_name, en_full_name, photo, about, sex, growth, birthday)
 
 -- inserting movie genres
 INSERT INTO movie_genre (movie_id, genre_id) VALUES
-(2, 4), -- 'матри'ix
+(2, 4), -- matrixix
 (2, 3),
-(24, 4), -- 'матри'ix 2
+(24, 4), -- matrix 2
 (24, 3),
-(24, 2);
+(24, 2),
+(26, 17),
+(26, 3),
+(26, 11),
+(26, 4),
+(26, 5),
+(26, 10),
+(26, 18);
+
 
 -- inserting movie staff
 INSERT INTO movie_staff (movie_id, staff_id) VALUES
 (1, 7), -- brad pitt
 (2, 11), -- keanu reeves
-(24, 11);
+(24, 11), -- keanu reeves
+(26, 12),
+(26, 13),
+(26, 14),
+(26, 15),
+(26, 16),
+(26, 17);
 
 -- inserting person genres
 INSERT INTO person_genre (person_id, genre_id) VALUES
@@ -375,12 +457,35 @@ INSERT INTO person_genre (person_id, genre_id) VALUES
 (11, 2);
 
 -- creating careers for persons
-insert into career_person (career_id, person_id) values (1, 11), (2, 11), (3, 11);
+insert into career_person (career_id, person_id) values (1, 11), (2, 11), (3, 11), (3, 12), (3, 13), (3, 14);
 
+
+-- creating countries for movies
+INSERT INTO movie_country (movie_id, country_id) VALUES
+(26, 1),
+(26, 2);
+
+-- creating watch provirders for movie 
+INSERT INTO watch_provider (movie_id, name, logo, watch_url) VALUES
+(
+    26,
+    'Триколор Кино и ТВ',
+    'https://avatars.mds.yandex.net/get-ott/239697/947e777c-2f73-4cbc-b09d-6bfa3966ba13/orig',
+    'https://kino.tricolor.tv/watch/chelovek-pauk-cherez-vselennye-2018/'
+),
+(
+    26,
+    'Кинопоиск HD',
+    'https://play-lh.googleusercontent.com/5czw6iycA8YhjI653GQdwnnmu8NNzEMXV32gZKoVCYZV6PQUAv_YV0uJ2PU1E-Jm9PE=w480-h960-rw',
+    'https://hd.kinopoisk.ru/film/4d924361a6c32b09aeee7d1a63f9c3bf?content_tab=overview'
+);
+
+------------
+-- test user
 INSERT into "user" (login, hashed_password)
 VALUES ('KinoLooker', '123456');
 
--- add reviews
+-- add reviews to test user
 INSERT INTO review (user_id, movie_id, review_text, score) VALUES
 (1, 1, 'Отличный фильм!', 9.0),
 (1, 2, 'Отличный фильм!', 8.0),
@@ -388,5 +493,5 @@ INSERT INTO review (user_id, movie_id, review_text, score) VALUES
 
 -- add favorites to test user
 insert into user_person_favorite (person_id, user_id) values (1, 1), (2, 1);
-insert into user_movie_favorite  (movie_id, user_id) values (4, 1), (3, 1);
+insert into user_movie_favorite  (movie_id, user_id) values (4, 1), (3, 1), (26, 1);
 

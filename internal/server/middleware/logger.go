@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -35,7 +36,14 @@ func RequestWithLoggerMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("X-Request-ID", requestID)
 
 		logger := log.With().Str("request_id", requestID).Caller().Logger()
-		ctxtWithLogger := logger.WithContext(ctx)
+
+		md := metadata.Pairs(
+			"request_id", requestID,
+		)
+
+		ctxMD := metadata.NewOutgoingContext(ctx, md)
+
+		ctxtWithLogger := logger.WithContext(ctxMD)
 
 		customResponseWriter := NewResponseWriterWithStatus(w, r.URL.Path)
 

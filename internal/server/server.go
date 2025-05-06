@@ -6,12 +6,16 @@ import (
 	"net/http"
 	"time"
 
+	auth "github.com/go-park-mail-ru/2025_1_sigmaScript/auth_service/api/auth_api_v1/proto"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/db"
+
 	deliveryAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
-	repoAuthSessions "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/repository"
-	serviceAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service"
+	// repoAuthSessions "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/repository"
+	// serviceAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service"
 	repoUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/repository"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	deliveryUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/delivery/http"
 	serviceUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/service"
@@ -40,6 +44,8 @@ import (
 	repoSearch "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/search/repository"
 	serviceSearch "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/search/service"
 
+	client "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/grpc_client"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -65,6 +71,22 @@ func New(cfg *config.Config) *Server {
 }
 
 func (s *Server) Run() error {
+	log.Info().Msg("Trying to connect to auth service")
+	aGrpcConn, err := grpc.NewClient(
+		":8081",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return fmt.Errorf("error couldnt connect to grpc: %w", err)
+	}
+	log.Info().Msg("Auth service connection opened successfully")
+
+	defer func() {
+		if clErr := aGrpcConn.Close(); clErr != nil {
+			log.Error().Msg("couldn't close auth microservice grpc connection")
+		}
+	}()
+
 	ctxPgDb := config.WrapPgDatabaseContext(context.Background(), s.Config.PostgresConfig)
 	ctxPgDb, cancelPgDb := context.WithTimeout(ctxPgDb, time.Second*30)
 	defer cancelPgDb()
@@ -74,8 +96,10 @@ func (s *Server) Run() error {
 		return fmt.Errorf("error couldnt connect to postgres database: %w", err)
 	}
 
-	sessionRepo := repoAuthSessions.NewSessionRepository()
-	sessionService := serviceAuth.NewSessionService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionRepo)
+	// sessionRepo := repoAuthSessions.NewSessionRepository()
+	// sessionService := serviceAuth.NewSessionService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionRepo)
+
+	sessionService := client.NewAuthClient(auth.NewSessionRPCClient(aGrpcConn))
 
 	userRepo := repoUsers.NewUserRepository(pgdb)
 	userService := serviceUsers.NewUserService(userRepo)

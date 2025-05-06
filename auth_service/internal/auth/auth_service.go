@@ -60,7 +60,7 @@ func New(isTest bool) (*AppAuth, error) {
 func (a *AppAuth) Run() {
 	lis, err := net.Listen("tcp", a.cfg.Listener.Port)
 	if err != nil {
-		a.logger.Fatal().Msgf("failed to setup listener: %v: %v", a.cfg.Listener, err)
+		a.logger.Fatal().Msgf("failed to setup listener: %v", err)
 	}
 
 	a.logger.Info().Msgf("starting server at %s", a.cfg.Listener.Port)

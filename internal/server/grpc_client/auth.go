@@ -17,20 +17,20 @@ type AuthClientInterface interface {
 
 // AuthClient struct implements AuthClientInterface
 type AuthClient struct {
-	authMS auth.SessionRPCClient
+	authMicroService auth.SessionRPCClient
 }
 
 // NewAuthClient returns an instance of AuthClientInterface
 func NewAuthClient(authMS auth.SessionRPCClient) AuthClientInterface {
 	return &AuthClient{
-		authMS: authMS,
+		authMicroService: authMS,
 	}
 }
 
 // CreateSession creates new session
 func (cl *AuthClient) CreateSession(ctx context.Context, username string) (string, error) {
 
-	resp, err := cl.authMS.CreateSession(ctx, &auth.CreateSessionRequest{UserID: username})
+	resp, err := cl.authMicroService.CreateSession(ctx, &auth.CreateSessionRequest{UserID: username})
 
 	if err != nil {
 		return "", err
@@ -41,7 +41,7 @@ func (cl *AuthClient) CreateSession(ctx context.Context, username string) (strin
 
 // DestroySession destroys session
 func (cl *AuthClient) DeleteSession(ctx context.Context, cookie string) error {
-	_, err := cl.authMS.DeleteSession(ctx, &auth.DestroySessionRequest{Cookie: cookie})
+	_, err := cl.authMicroService.DeleteSession(ctx, &auth.DestroySessionRequest{Cookie: cookie})
 
 	if err != nil {
 		return err
@@ -53,7 +53,7 @@ func (cl *AuthClient) DeleteSession(ctx context.Context, cookie string) error {
 // Session checks active session
 func (cl *AuthClient) GetSession(ctx context.Context, cookie string) (string, error) {
 
-	resp, err := cl.authMS.GetSession(ctx, &auth.GetSessionRequest{Cookie: cookie})
+	resp, err := cl.authMicroService.GetSession(ctx, &auth.GetSessionRequest{Cookie: cookie})
 
 	if err != nil {
 		return "", err

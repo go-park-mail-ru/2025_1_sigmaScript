@@ -3,6 +3,8 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"runtime"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -24,6 +26,7 @@ func MiddlewareCors(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Methods", viper.GetString(kinolkAllowedMethodsEnv))
 		w.Header().Set("Access-Control-Allow-Credentials", viper.GetString(kinolkAllowCredentialsEnv))
 		w.Header().Set("Access-Control-Allow-Headers", viper.GetString(kinolkAllowedHeadersEnv))
+		w.Header().Set("Access-Control-Expose-Headers", viper.GetString(kinolkAllowedHeadersEnv))
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
@@ -45,10 +48,15 @@ func PreventPanicMiddleware(next http.Handler) http.Handler {
 			logger := log.Ctx(r.Context())
 
 			if err := recover(); err != nil {
-
 				logger.Error().Msgf("Catched by middleware: panic happend: %v", err)
 
-				http.Error(w, "Internal server error", 500)
+				stackTrace := make([]byte, 4<<10)
+				n := runtime.Stack(stackTrace, true)
+				stackTrace = stackTrace[:n]
+
+				logger.Error().Msg(fmt.Sprintf("Panic stack trace: %s ", strings.TrimSpace(string(stackTrace))))
+
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
 			}
 		}()
 

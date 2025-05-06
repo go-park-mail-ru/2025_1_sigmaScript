@@ -7,9 +7,11 @@ import (
 )
 
 func (s *UserService) DeleteUser(ctx context.Context, login string) error {
-	err := s.repo.DeleteUser(ctx, login)
+	logger := log.Ctx(ctx)
+
+	err := s.repo.DeleteUserPostgres(ctx, login)
 	if err != nil {
-		log.Error().Err(err).Msg(err.Error())
+		logger.Error().Err(err).Msg(err.Error())
 		return err
 	}
 

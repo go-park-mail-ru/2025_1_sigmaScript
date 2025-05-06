@@ -3,7 +3,6 @@ package delivery
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/common"
@@ -14,6 +13,7 @@ import (
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/validation/auth"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/cookie"
+	escapingutil "github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/escaping_util"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -77,11 +77,24 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	validatedUsername, err := escapingutil.ValidateInputTextData(reg.Username)
+	if err != nil {
+		logger.Error().Err(err).Msg(err.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, err.Error())
+		return
+	}
+
+	// expire old session cookie if it exists
+	errOldSession := cookie.ExpireOldSessionCookie(w, r, h.cookieData, h.sessionService)
+	if errOldSession != nil {
+		logger.Error().Err(errOldSession).Msg(errOldSession.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrSomethingWentWrong, errs.ErrMsgFailedToGetSession)
+		return
+	}
+
 	user := &models.User{
-		Username:       reg.Username,
+		Username:       validatedUsername,
 		HashedPassword: string(hashedPass),
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
 	}
 	err = h.userService.CreateUser(r.Context(), user)
 	if err != nil {
@@ -102,12 +115,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	logger.Info().Msg("User registered successfully")
-
-	// expire old session cookie if it exists
-	errOldSession := cookie.ExpireOldSessionCookie(w, r, h.cookieData, h.sessionService)
-	if errOldSession != nil {
-		logger.Warn().Err(errOldSession).Msg(errOldSession.Error())
-	}
 
 	newSessionID, err := h.sessionService.CreateSession(r.Context(), reg.Username)
 	if err != nil {
@@ -130,8 +137,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
-// expires old session cookie if it exists
 
 // Session http handler method gets user data by session
 func (h *AuthHandler) Session(w http.ResponseWriter, r *http.Request) {
@@ -185,6 +190,16 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	validatedUsername, err := escapingutil.ValidateInputTextData(login.Username)
+	if err != nil {
+		logger.Error().Err(err).Msg(err.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, err.Error())
+		return
+	}
+
+	// Escape input data
+	login.Username = validatedUsername
+
 	err = h.userService.Login(r.Context(), login)
 	if err != nil {
 		switch err.Error() {
@@ -209,7 +224,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// expire old session cookie if it exists
 	errOldSession := cookie.ExpireOldSessionCookie(w, r, h.cookieData, h.sessionService)
 	if errOldSession != nil {
-		logger.Warn().Err(errOldSession).Msg(errOldSession.Error())
+		logger.Error().Err(errOldSession).Msg(errOldSession.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrSomethingWentWrong, errs.ErrMsgFailedToGetSession)
+		return
 	}
 
 	newSessionID, err := h.sessionService.CreateSession(r.Context(), login.Username)

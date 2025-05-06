@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/db"
 	deliveryAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
 	repoAuthSessions "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/repository"
 	serviceAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service"
@@ -17,7 +19,6 @@ import (
 	deliveryCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/delivery"
 	repoCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/repository"
 	serviceCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/service"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/router"
 
 	deliveryStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/delivery"
@@ -27,6 +28,17 @@ import (
 	deliveryMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/delivery"
 	repoMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/repository"
 	serviceMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/service"
+
+	csrfDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/csrf/delivery"
+	deliveryReviews "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/reviews/delivery"
+
+	deliveryGenre "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/genre/delivery"
+	repoGenre "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/genre/repository"
+	serviceGenre "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/genre/service"
+
+	deliverySearch "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/search/delivery"
+	repoSearch "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/search/repository"
+	serviceSearch "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/search/service"
 
 	"github.com/rs/zerolog/log"
 )
@@ -53,26 +65,47 @@ func New(cfg *config.Config) *Server {
 }
 
 func (s *Server) Run() error {
+	ctxPgDb := config.WrapPgDatabaseContext(context.Background(), s.Config.PostgresConfig)
+	ctxPgDb, cancelPgDb := context.WithTimeout(ctxPgDb, time.Second*30)
+	defer cancelPgDb()
+
+	pgdb, err := db.SetupDatabase(ctxPgDb, cancelPgDb)
+	if err != nil {
+		return fmt.Errorf("error couldnt connect to postgres database: %w", err)
+	}
+
 	sessionRepo := repoAuthSessions.NewSessionRepository()
 	sessionService := serviceAuth.NewSessionService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionRepo)
 
-	userRepo := repoUsers.NewUserRepository()
+	userRepo := repoUsers.NewUserRepository(pgdb)
 	userService := serviceUsers.NewUserService(userRepo)
 	userHandler := deliveryUsers.NewUserHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)
 
 	authHandler := deliveryAuth.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)
 
-	staffPersonRepo := repoStaff.NewStaffPersonRepository(&mocks.ExistingActors)
+	csrfHandler := csrfDelivery.NewCSRFHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionService)
+
+	staffPersonRepo := repoStaff.NewStaffPersonPostgresRepository(pgdb)
 	staffPersonService := serviceStaff.NewStaffPersonService(staffPersonRepo)
 	staffPersonHandler := deliveryStaff.NewStaffPersonHandler(staffPersonService)
 
-	collectionRepo := repoCollection.NewCollectionRepository(&mocks.MainPageCollections)
+	collectionRepo := repoCollection.NewCollectionPostgresRepository(pgdb)
 	collectionService := serviceCollection.NewCollectionService(collectionRepo)
 	collectionHandler := deliveryCollection.NewCollectionHandler(collectionService)
 
-	movieRepo := repoMovie.NewMovieRepository(&mocks.ExistingMovies)
+	movieRepo := repoMovie.NewMoviePostgresRepository(pgdb)
 	movieService := serviceMovie.NewMovieService(movieRepo)
 	movieHandler := deliveryMovie.NewMovieHandler(movieService)
+
+	movieReviewHandler := deliveryReviews.NewReviewHandler(userService, sessionService, movieService)
+
+	genreRepo := repoGenre.NewGenreRepository(pgdb)
+	genreService := serviceGenre.NewGenreService(genreRepo)
+	genreHandler := deliveryGenre.NewGenreHandler(genreService)
+
+	searchRepo := repoSearch.NewSearchRepository(pgdb)
+	searchService := serviceSearch.NewSearchService(searchRepo)
+	searchHandler := deliverySearch.NewSearchHandler(searchService)
 
 	mx := router.NewRouter()
 
@@ -80,10 +113,16 @@ func (s *Server) Run() error {
 
 	router.ApplyMiddlewares(mx)
 	router.SetupAuth(mx, authHandler)
+
+	router.SetupCsrf(mx, csrfHandler)
+
 	router.SetupCollections(mx, collectionHandler)
 	router.SetupStaffPersonHandlers(mx, staffPersonHandler)
 	router.SetupUserHandlers(mx, userHandler)
 	router.SetupMovieHandlers(mx, movieHandler)
+	router.SetupReviewsHandlers(mx, movieReviewHandler)
+	router.SetupGenresHandlers(mx, genreHandler)
+	router.SetupSearchHandlers(mx, searchHandler)
 
 	log.Info().Msg("Routes configured successfully")
 

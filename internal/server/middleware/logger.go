@@ -26,13 +26,13 @@ const (
 // RequestWithLoggerMiddleware places logger inside request context
 func RequestWithLoggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestID := r.Header.Get("Request-ID")
+		requestID := r.Header.Get("X-Request-ID")
 		if requestID == "" {
 			requestID = createRequestID()
 		}
 
 		ctx := context.WithValue(r.Context(), requestIDKey, requestID)
-		w.Header().Set("Request-ID", requestID)
+		w.Header().Set("X-Request-ID", requestID)
 
 		logger := log.With().Str("request_id", requestID).Caller().Logger()
 		ctxtWithLogger := logger.WithContext(ctx)
@@ -40,11 +40,10 @@ func RequestWithLoggerMiddleware(next http.Handler) http.Handler {
 		customResponseWriter := NewResponseWriterWithStatus(w, r.URL.Path)
 
 		requestStartTime := time.Now()
-		bodyCopy := getBodyCopy(r)
 
 		next.ServeHTTP(customResponseWriter, r.WithContext(ctxtWithLogger))
 		status := customResponseWriter.Status
-		logRequestData(r.WithContext(ctxtWithLogger), requestStartTime, logMiddleware, requestID, status, requestURLPath(w, r), bodyCopy)
+		logRequestData(r.WithContext(ctxtWithLogger), requestStartTime, logMiddleware, requestID, status, requestURLPath(w, r))
 	})
 }
 
@@ -83,7 +82,7 @@ func requestURLPath(w http.ResponseWriter, r *http.Request) string {
 	return urlPath.GetName()
 }
 
-func getBodyCopy(r *http.Request) []byte {
+func GetBodyCopy(r *http.Request) []byte {
 	logger := log.Ctx(r.Context())
 
 	bodyBytes, err := io.ReadAll(r.Body)
@@ -99,6 +98,7 @@ func getBodyCopy(r *http.Request) []byte {
 	errBodyClose := r.Body.Close()
 	if errBodyClose != nil {
 		logger.Error().Err(err).Msg("Failed to close original request body")
+		return nil
 	}
 
 	// replace old read body with new bodyBytes
@@ -107,7 +107,7 @@ func getBodyCopy(r *http.Request) []byte {
 	return bodyBytes
 }
 
-func logRequestData(r *http.Request, start time.Time, msg string, requestID string, status int, path string, bodyBytes []byte) {
+func logRequestData(r *http.Request, start time.Time, msg string, requestID string, status int, path string) {
 	logger := log.Ctx(r.Context())
 
 	duration := time.Since(start)
@@ -117,7 +117,6 @@ func logRequestData(r *http.Request, start time.Time, msg string, requestID stri
 		Str("remote_addr", r.RemoteAddr).
 		Str("url", path).
 		Str("request_id", requestID).
-		Bytes("body", bodyBytes).
 		Dur("work_time", duration).
 		Int("status", status).
 		Str("user_agent", r.UserAgent()).

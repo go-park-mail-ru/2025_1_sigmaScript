@@ -2,7 +2,9 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
@@ -13,10 +15,34 @@ import (
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/delivery/http/dto"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/validation/auth"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/cookie"
+	hashsaltfilename "github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/hash_salt_filename"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/pkg/jsonutil"
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
+)
+
+const (
+	KinolkAvatarsFolder     = "KINOLK_AVATARS_FOLDER"
+	KinolkAvatarsStaticPath = "KINOLK_AVATARS_STATIC_PATH"
+
+	COOKIE_DAYS_LIMIT        = 3
+	COOKIE_EXPIRED_LAST_YEAR = -1
+)
+
+var ALLOWED_IMAGE_TYPES = map[string]struct{}{
+	"image/png":     {},
+	"image/jpeg":    {},
+	"image/jpg":     {},
+	"image/svg+xml": {},
+	"image/webp":    {},
+}
+
+const (
+	MB       = 1 << 20
+	LIMIT_MB = 1
 )
 
 type UserHandler struct {
@@ -33,7 +59,7 @@ func NewUserHandler(ctx context.Context, userSvc interfaces.UserServiceInterface
 	}
 }
 
-func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) UpdateUserPassword(w http.ResponseWriter, r *http.Request) {
 	logger := log.Ctx(r.Context())
 
 	sessionCookie, err := r.Cookie("session_id")
@@ -58,7 +84,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userReq.NewPassword != userReq.RepeatedNewPassword {
+	if userReq.NewPassword != userReq.RepeatedNewPassword || userReq.OldPassword == "" {
 		logger.Info().Msg("Passwords mismatch")
 		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errors.New(errs.ErrPasswordsMismatchShort).Error(), errs.ErrPasswordsMismatch)
 		return
@@ -86,6 +112,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get user from repo
 	user, err := h.userSvc.GetUser(r.Context(), username)
 	if err != nil {
 		wrapped := errors.Wrap(err, "error getting user")
@@ -106,7 +133,14 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		HashedPassword: string(hashedPass),
 		Avatar:         userReq.Avatar,
 		CreatedAt:      user.CreatedAt,
-		UpdatedAt:      time.Now(),
+	}
+
+	// expire old session cookie
+	errOldSession := cookie.ExpireOldSessionCookie(w, r, h.cookieData, h.sessionSvc)
+	if errOldSession != nil {
+		logger.Error().Err(errOldSession).Msg(errOldSession.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrSomethingWentWrong, errs.ErrMsgFailedToGetSession)
+		return
 	}
 
 	if err = h.userSvc.UpdateUser(r.Context(), username, newUser); err != nil {
@@ -114,12 +148,6 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		logger.Error().Err(wrapped).Msg(wrapped.Error())
 		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
 		return
-	}
-
-	// expire old session cookie if it exists
-	errOldSession := cookie.ExpireOldSessionCookie(w, r, h.cookieData, h.sessionSvc)
-	if errOldSession != nil {
-		logger.Warn().Err(errOldSession).Msg(errOldSession.Error())
 	}
 
 	newSessionID, err := h.sessionSvc.CreateSession(r.Context(), newUser.Username)
@@ -139,6 +167,409 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, cookie.PreparedNewCookie(h.cookieData, newSessionID))
 
 	if err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: "successfully updated user"}); err != nil {
+		logger.Error().Err(err).Msg(errs.ErrSendJSON)
+		return
+	}
+}
+
+func (h *UserHandler) UpdateUserLogin(w http.ResponseWriter, r *http.Request) {
+	logger := log.Ctx(r.Context())
+
+	sessionCookie, err := r.Cookie("session_id")
+	if err != nil {
+		logger.Warn().Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrUnauthorizedShort,
+			errs.ErrUnauthorized)
+		return
+	}
+
+	username, errSession := h.sessionSvc.GetSession(r.Context(), sessionCookie.Value)
+	if errSession != nil {
+		logger.Error().Err(errors.Wrap(errSession, errs.ErrMsgSessionNotExists)).Msg(errs.ErrMsgFailedToGetSession)
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrMsgSessionNotExists, errs.ErrMsgFailedToGetSession)
+		return
+	}
+
+	var userReq *dto.UpdateUserRequest
+	if err = jsonutil.ReadJSON(r, &userReq); err != nil {
+		logger.Error().Err(errors.Wrap(err, errs.ErrParseJSON)).Msg(errors.Wrap(err, errs.ErrParseJSON).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errors.Wrap(err, errs.ErrParseJSONShort).Error(), errs.ErrBadPayload)
+		return
+	}
+
+	if err = auth.IsValidLogin(userReq.Username); err != nil {
+		logger.Error().Err(errors.Wrap(err, errs.ErrInvalidLogin)).Msg(errors.Wrap(err, errs.ErrInvalidLogin).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errors.Wrap(err, errs.ErrInvalidLoginShort).Error(),
+			errors.Wrap(err, errs.ErrInvalidLogin).Error())
+		return
+	}
+
+	// get user from repo
+	user, err := h.userSvc.GetUser(r.Context(), username)
+	if err != nil {
+		wrapped := errors.Wrap(err, "error getting user")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+		return
+	}
+
+	if bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(userReq.OldPassword)) != nil {
+		err = errors.New(errs.ErrInvalidPassword)
+		logger.Error().Err(err).Msg(err.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrInvalidPasswordShort, err.Error())
+		return
+	}
+
+	updatedUser := &models.User{
+		Username:       userReq.Username,
+		HashedPassword: user.HashedPassword,
+		CreatedAt:      user.CreatedAt,
+	}
+
+	// expire old session cookie
+	errOldSession := cookie.ExpireOldSessionCookie(w, r, h.cookieData, h.sessionSvc)
+	if errOldSession != nil {
+		logger.Error().Err(errOldSession).Msg(errOldSession.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrSomethingWentWrong, errs.ErrMsgFailedToGetSession)
+		return
+	}
+
+	if err = h.userSvc.UpdateUser(r.Context(), username, updatedUser); err != nil {
+		wrapped := errors.Wrap(err, "error updating user")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+		return
+	}
+
+	newSessionID, err := h.sessionSvc.CreateSession(r.Context(), updatedUser.Username)
+	if err != nil {
+		logger.Error().Err(err).Msgf("error happened: %v", err.Error())
+
+		if errors.Is(err, errs.ErrGenerateSession) {
+			jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrMsgGenerateSessionShort,
+				errs.ErrMsgGenerateSession)
+			return
+		}
+		jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrSomethingWentWrong,
+			errs.ErrSomethingWentWrong)
+		return
+	}
+
+	http.SetCookie(w, cookie.PreparedNewCookie(h.cookieData, newSessionID))
+
+	if err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: "successfully updated user"}); err != nil {
+		logger.Error().Err(err).Msg(errs.ErrSendJSON)
+		return
+	}
+}
+
+func (h *UserHandler) UpdateUserAvatar(w http.ResponseWriter, r *http.Request) {
+	uploadDir := viper.GetString(KinolkAvatarsFolder)
+	logger := log.Ctx(r.Context())
+
+	// check if file too large
+	contentLengthStr := r.Header.Get("Content-Length")
+	if contentLengthStr == "" {
+		errMsg := errors.New("Request file is empty")
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrParseJSONShort,
+			errMsg.Error())
+		return
+	}
+	contentLength, err := strconv.ParseInt(contentLengthStr, 10, 64)
+	if err != nil {
+		wrapped := errors.Wrap(err, "error updating user avatar")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrSomethingWentWrong, wrapped.Error())
+		return
+	}
+	if contentLength > LIMIT_MB*MB {
+		errMsg := errors.New(fmt.Sprintf("Request is too large. Maximum size is %d MB", LIMIT_MB))
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrParseJSONShort,
+			errMsg.Error())
+		return
+	}
+
+	sessionCookie, err := r.Cookie("session_id")
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrUnauthorizedShort,
+			errs.ErrUnauthorized)
+		return
+	}
+
+	username, errSession := h.sessionSvc.GetSession(r.Context(), sessionCookie.Value)
+	if errSession != nil {
+		logger.Error().Err(errors.Wrap(errSession, errs.ErrMsgSessionNotExists)).Msg(errs.ErrMsgFailedToGetSession)
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrMsgSessionNotExists, errs.ErrMsgFailedToGetSession)
+		return
+	}
+
+	// Parse the multipart form, limit upload size
+	err = r.ParseMultipartForm(LIMIT_MB * MB)
+	if err != nil {
+		wrapped := errors.Wrap(err, "error uploading file")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+		return
+	}
+
+	// Get the file from the form data
+	file, header, err := r.FormFile("image")
+	if err != nil {
+		wrapped := errors.Wrap(err, "error uploading file")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+		return
+	}
+	defer file.Close()
+
+	// Check file extension
+	ext := header.Header.Get("Content-Type")
+	if _, ok := ALLOWED_IMAGE_TYPES[ext]; !ok {
+		wrapped := errors.Wrap(errs.ErrInvalidFileType, errs.ErrMsgOnlyAllowedImageFormats)
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+		return
+	}
+
+	// get user info
+	user, err := h.userSvc.GetUser(r.Context(), username)
+	if err != nil {
+		wrapped := errors.Wrap(err, "error getting user")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+		return
+	}
+
+	hashedAvatarName := hashsaltfilename.HashSaltFilename(header.Filename)
+
+	newUser := &models.User{
+		Username:       user.Username,
+		HashedPassword: user.HashedPassword,
+		Avatar:         viper.GetString(KinolkAvatarsStaticPath) + hashedAvatarName,
+		CreatedAt:      user.CreatedAt,
+		UpdatedAt:      time.Now().String(),
+	}
+
+	if err = h.userSvc.UpdateUser(r.Context(), username, newUser); err != nil {
+		wrapped := errors.Wrap(err, "error updating user")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, wrapped.Error(), wrapped.Error())
+		return
+	}
+
+	errSrv := h.userSvc.UpdateUserAvatar(r.Context(), uploadDir, hashedAvatarName, file, *user)
+	if errSrv != nil {
+		wrapped := errors.Wrap(err, "error updating user avatar")
+		logger.Error().Err(wrapped).Msg(wrapped.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrSomethingWentWrong, wrapped.Error())
+		return
+	}
+
+	if err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: "successfully updated user avatar"}); err != nil {
+		logger.Error().Err(err).Msg(errs.ErrSendJSON)
+		return
+	}
+}
+
+func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
+	logger := log.Ctx(r.Context())
+
+	sessionCookie, err := r.Cookie("session_id")
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrUnauthorizedShort,
+			errs.ErrUnauthorized)
+		return
+	}
+
+	username, errSession := h.sessionSvc.GetSession(r.Context(), sessionCookie.Value)
+	if errSession != nil {
+		logger.Error().Err(errors.Wrap(errSession, errs.ErrMsgSessionNotExists)).Msg(errs.ErrMsgFailedToGetSession)
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrMsgSessionNotExists, errs.ErrMsgFailedToGetSession)
+		return
+	}
+
+	result, err := h.userSvc.GetProfile(r.Context(), username)
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusInternalServerError, errs.ErrSomethingWentWrong,
+			errs.ErrSomethingWentWrong)
+		return
+	}
+
+	// result
+	if err = jsonutil.SendJSON(r.Context(), w, result); err != nil {
+		logger.Error().Err(err).Msg(errs.ErrSendJSON)
+		return
+	}
+}
+
+func (h *UserHandler) AddFavoriteMovie(w http.ResponseWriter, r *http.Request) {
+	logger := log.Ctx(r.Context())
+
+	vars := mux.Vars(r)
+	movieIDStr, ok := vars["movie_id"]
+	if !ok {
+		errMsg := errors.New("movie_id not found in path variables")
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, "Missing movie_id parameter")
+		return
+	}
+
+	sessionCookie, err := r.Cookie("session_id")
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrUnauthorizedShort,
+			errs.ErrUnauthorized)
+		return
+	}
+
+	username, errSession := h.sessionSvc.GetSession(r.Context(), sessionCookie.Value)
+	if errSession != nil {
+		logger.Error().Err(errors.Wrap(errSession, errs.ErrMsgSessionNotExists)).Msg(errs.ErrMsgFailedToGetSession)
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrMsgSessionNotExists, errs.ErrMsgFailedToGetSession)
+		return
+	}
+
+	err = h.userSvc.AddFavoriteMovie(r.Context(), username, movieIDStr)
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrAlreadyExistsShort,
+			errs.ErrAlreadyExists)
+		return
+	}
+
+	// result
+	if err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: "successfully added movie to favorites"}); err != nil {
+		logger.Error().Err(err).Msg(errs.ErrSendJSON)
+		return
+	}
+}
+
+func (h *UserHandler) AddFavoriteActor(w http.ResponseWriter, r *http.Request) {
+	logger := log.Ctx(r.Context())
+
+	vars := mux.Vars(r)
+	actorIDStr, ok := vars["person_id"]
+	if !ok {
+		errMsg := errors.New("person_id not found in path variables")
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, "Missing person_id parameter")
+		return
+	}
+
+	sessionCookie, err := r.Cookie("session_id")
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrUnauthorizedShort,
+			errs.ErrUnauthorized)
+		return
+	}
+
+	username, errSession := h.sessionSvc.GetSession(r.Context(), sessionCookie.Value)
+	if errSession != nil {
+		logger.Error().Err(errors.Wrap(errSession, errs.ErrMsgSessionNotExists)).Msg(errs.ErrMsgFailedToGetSession)
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrMsgSessionNotExists, errs.ErrMsgFailedToGetSession)
+		return
+	}
+
+	err = h.userSvc.AddFavoriteActor(r.Context(), username, actorIDStr)
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrAlreadyExistsShort,
+			errs.ErrAlreadyExists)
+		return
+	}
+
+	// result
+	if err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: "successfully added person to favorites"}); err != nil {
+		logger.Error().Err(err).Msg(errs.ErrSendJSON)
+		return
+	}
+}
+
+func (h *UserHandler) RemoveFavoriteMovie(w http.ResponseWriter, r *http.Request) {
+	logger := log.Ctx(r.Context())
+
+	vars := mux.Vars(r)
+	movieIDStr, ok := vars["movie_id"]
+	if !ok {
+		errMsg := errors.New("movie_id not found in path variables")
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, "Missing movie_id parameter")
+		return
+	}
+
+	sessionCookie, err := r.Cookie("session_id")
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrUnauthorizedShort,
+			errs.ErrUnauthorized)
+		return
+	}
+
+	username, errSession := h.sessionSvc.GetSession(r.Context(), sessionCookie.Value)
+	if errSession != nil {
+		logger.Error().Err(errors.Wrap(errSession, errs.ErrMsgSessionNotExists)).Msg(errs.ErrMsgFailedToGetSession)
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrMsgSessionNotExists, errs.ErrMsgFailedToGetSession)
+		return
+	}
+
+	err = h.userSvc.RemoveFavoriteMovie(r.Context(), username, movieIDStr)
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrNotFoundShort,
+			errs.ErrNotFoundShort)
+		return
+	}
+
+	// result
+	if err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: "successfully removed movie from favorites"}); err != nil {
+		logger.Error().Err(err).Msg(errs.ErrSendJSON)
+		return
+	}
+}
+
+func (h *UserHandler) RemoveFavoriteActor(w http.ResponseWriter, r *http.Request) {
+	logger := log.Ctx(r.Context())
+
+	vars := mux.Vars(r)
+	actorIDStr, ok := vars["person_id"]
+	if !ok {
+		errMsg := errors.New("person_id not found in path variables")
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrBadPayload, "Missing person_id parameter")
+		return
+	}
+
+	sessionCookie, err := r.Cookie("session_id")
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrUnauthorizedShort,
+			errs.ErrUnauthorized)
+		return
+	}
+
+	username, errSession := h.sessionSvc.GetSession(r.Context(), sessionCookie.Value)
+	if errSession != nil {
+		logger.Error().Err(errors.Wrap(errSession, errs.ErrMsgSessionNotExists)).Msg(errs.ErrMsgFailedToGetSession)
+		jsonutil.SendError(r.Context(), w, http.StatusUnauthorized, errs.ErrMsgSessionNotExists, errs.ErrMsgFailedToGetSession)
+		return
+	}
+
+	err = h.userSvc.RemoveFavoriteActor(r.Context(), username, actorIDStr)
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrap(err, errs.ErrUnauthorized).Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrNotFoundShort,
+			errs.ErrNotFoundShort)
+		return
+	}
+
+	// result
+	if err = jsonutil.SendJSON(r.Context(), w, ds.Response{Message: "successfully removed person from favorites"}); err != nil {
 		logger.Error().Err(err).Msg(errs.ErrSendJSON)
 		return
 	}

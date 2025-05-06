@@ -14,6 +14,7 @@ import (
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 )
 
+//go:generate mockgen -source=$GOFILE -destination=mocks/mocks.go -package=delivery_mocks StaffPersonServiceInterface
 type StaffPersonServiceInterface interface {
 	GetPersonByID(ctx context.Context, personID int) (*mocks.PersonJSON, error)
 }

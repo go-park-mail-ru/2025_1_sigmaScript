@@ -270,40 +270,6 @@ INSERT INTO country (name) values
 ('США');
 
 
-
-
-INSERT INTO person (full_name, en_full_name, photo) VALUES
-('Леонардо Ди Каприо', 'Leonardo DiCaprio', 'https://avatars.mds.yandex.net/get-entity_search/2310675/1130394491/S600xU_2x'),
-('Морган Фримен', 'Morgan Freeman', 'https://avatars.mds.yandex.net/get-entity_search/2057552/1132084397/S600xU_2x'),
-('Джонни Депп', 'Johnny Depp', '/static/avatars/avatar_default_picture.svg'),
-('Том Круз', 'Tom Cruise', '/static/avatars/avatar_default_picture.svg'),
-('Уилл Смит', 'Will Smith', '/static/avatars/avatar_default_picture.svg'),
-('Мэтт Дэймон', 'Matt Damon', 'https://avatars.mds.yandex.net/get-entity_search/1245892/935872902/S600xU_2x'),
-('Киану Ривз', '', ''),
-('Боб Персичетти', '', ''),
-('Питер Рэмзи', '', ''),
-('Родни Ротман', '', '');
-
--- peron id 15-17
-INSERT INTO person (full_name, en_full_name, photo) VALUES
-('Шамеик Мур', 'Shameik Moore', 'https://st.kp.yandex.net/images/actor_iphone/iphone360_2378404.jpg'),
-('Джейк Джонсон', 'Jake Johnson', 'https://st.kp.yandex.net/images/actor_iphone/iphone360_1089330.jpg'),
-('Хейли Стайнфелд', 'Hailee Steinfeld', 'https://st.kp.yandex.net/images/actor_iphone/iphone360_1478559.jpg');
-
-
-
-UPDATE person SET (full_name, en_full_name, photo, about, sex, growth, birthday) =
-(
-    'Киану Ривз',
-    'Keanu Reeves',
-    'https://i.pinimg.com/originals/a3/70/0b/a3700bdf15fcceabf740e1f347dbb5a2.jpg',
-    '\nКиану Чарльз Ривз — канадский актёр, кинорежиссёр, кинопродюсер и музыкант.\nНаиболее известен своими ролями в киносериях «Матрица», «Билл и Тед», «Джон Уик», а также в фильмах «На гребне волны», «Скорость», «Адвокат дьявола», «Константин: Повелитель тьмы».\nОбладатель звезды на Голливудской «Аллее славы».',
-    'Мужчина',
-    '186',
-    '1964-09-2'
-) where full_name = 'Киану Ривз';
-
-
 -- Start Transaction
 BEGIN;
 
@@ -1511,3 +1477,53 @@ INSERT INTO review (user_id, movie_id, review_text, score) VALUES
 insert into user_person_favorite (person_id, user_id) values (1089330, 1), (2378404, 1);
 insert into user_movie_favorite  (movie_id, user_id) values (361, 1), (400787, 1), (448, 1);
 
+
+
+
+
+-- INSERT INTO person (full_name, en_full_name, photo) VALUES
+-- ('Леонардо Ди Каприо', 'Leonardo DiCaprio', 'https://avatars.mds.yandex.net/get-entity_search/2310675/1130394491/S600xU_2x'),
+-- ('Морган Фримен', 'Morgan Freeman', 'https://avatars.mds.yandex.net/get-entity_search/2057552/1132084397/S600xU_2x'),
+-- ('Джонни Депп', 'Johnny Depp', '/static/avatars/avatar_default_picture.svg'),
+-- ('Том Круз', 'Tom Cruise', '/static/avatars/avatar_default_picture.svg'),
+-- ('Уилл Смит', 'Will Smith', '/static/avatars/avatar_default_picture.svg'),
+-- ('Мэтт Дэймон', 'Matt Damon', 'https://avatars.mds.yandex.net/get-entity_search/1245892/935872902/S600xU_2x'),
+-- ('Киану Ривз', '', ''),
+-- ('Боб Персичетти', '', ''),
+-- ('Питер Рэмзи', '', ''),
+-- ('Родни Ротман', '', '');
+
+-- -- peron id 15-17
+-- INSERT INTO person (full_name, en_full_name, photo) VALUES
+-- ('Шамеик Мур', 'Shameik Moore', 'https://st.kp.yandex.net/images/actor_iphone/iphone360_2378404.jpg'),
+-- ('Джейк Джонсон', 'Jake Johnson', 'https://st.kp.yandex.net/images/actor_iphone/iphone360_1089330.jpg'),
+-- ('Хейли Стайнфелд', 'Hailee Steinfeld', 'https://st.kp.yandex.net/images/actor_iphone/iphone360_1478559.jpg');
+
+
+
+-- UPDATE person SET (full_name, en_full_name, photo, about, sex, growth, birthday) =
+-- (
+--     'Киану Ривз',
+--     'Keanu Reeves',
+--     'https://i.pinimg.com/originals/a3/70/0b/a3700bdf15fcceabf740e1f347dbb5a2.jpg',
+--     '\nКиану Чарльз Ривз — канадский актёр, кинорежиссёр, кинопродюсер и музыкант.\nНаиболее известен своими ролями в киносериях «Матрица», «Билл и Тед», «Джон Уик», а также в фильмах «На гребне волны», «Скорость», «Адвокат дьявола», «Константин: Повелитель тьмы».\nОбладатель звезды на Голливудской «Аллее славы».',
+--     'Мужчина',
+--     '186',
+--     '1964-09-2'
+-- ) where full_name = 'Киану Ривз';
+
+
+-- -- creating watch provirders for movie 
+-- INSERT INTO watch_provider (movie_id, name, logo, watch_url) VALUES
+-- (
+--     920265,
+--     'Триколор Кино и ТВ',
+--     'https://avatars.mds.yandex.net/get-ott/239697/947e777c-2f73-4cbc-b09d-6bfa3966ba13/orig',
+--     'https://kino.tricolor.tv/watch/chelovek-pauk-cherez-vselennye-2018/'
+-- ),
+-- (
+--     920265,
+--     'Кинопоиск HD',
+--     'https://play-lh.googleusercontent.com/5czw6iycA8YhjI653GQdwnnmu8NNzEMXV32gZKoVCYZV6PQUAv_YV0uJ2PU1E-Jm9PE=w480-h960-rw',
+--     'https://hd.kinopoisk.ru/film/4d924361a6c32b09aeee7d1a63f9c3bf?content_tab=overview'
+-- );

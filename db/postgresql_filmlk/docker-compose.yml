@@ -14,5 +14,9 @@ services:
       - ./db_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
-volumes:
-  db_data:
+    networks:
+      - filmlk-net # Add the shared network
+
+networks:
+  filmlk-net:
+    external: true # Declare it as external

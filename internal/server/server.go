@@ -9,21 +9,18 @@ import (
 	auth "github.com/go-park-mail-ru/2025_1_sigmaScript/auth_service/api/auth_api_v1/proto"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/db"
+	user "github.com/go-park-mail-ru/2025_1_sigmaScript/user_service/api/user_api_v1/proto"
 
 	deliveryAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
-	// repoAuthSessions "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/repository"
-	// serviceAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service"
-	repoUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/repository"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-
-	deliveryUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/delivery/http"
-	serviceUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/service"
 
 	deliveryCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/delivery"
 	repoCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/repository"
 	serviceCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/service"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/router"
+	deliveryUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/delivery/http"
 
 	deliveryStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/delivery"
 	repoStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/repository"
@@ -87,6 +84,22 @@ func (s *Server) Run() error {
 		}
 	}()
 
+	uGrpcConn, err := grpc.NewClient(
+		":8082",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return fmt.Errorf("error couldnt connect to grpc: %w", err)
+	}
+	log.Info().Msg("Auth service connection opened successfully")
+
+	defer func() {
+		if clErr := uGrpcConn.Close(); clErr != nil {
+			log.Error().Msg("couldn't close auth microservice grpc connection")
+		}
+	}()
+
+
 	ctxPgDb := config.WrapPgDatabaseContext(context.Background(), s.Config.PostgresConfig)
 	ctxPgDb, cancelPgDb := context.WithTimeout(ctxPgDb, time.Second*30)
 	defer cancelPgDb()
@@ -101,8 +114,9 @@ func (s *Server) Run() error {
 
 	sessionService := client.NewAuthClient(auth.NewSessionRPCClient(aGrpcConn))
 
-	userRepo := repoUsers.NewUserRepository(pgdb)
-	userService := serviceUsers.NewUserService(userRepo)
+	//userRepo := repoUsers.NewUserRepository(pgdb)
+	//userService := serviceUsers.NewUserService(userRepo)
+	userService := client.NewUserClient(user.NewUserServiceClient(uGrpcConn))
 	userHandler := deliveryUsers.NewUserHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)
 
 	authHandler := deliveryAuth.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)

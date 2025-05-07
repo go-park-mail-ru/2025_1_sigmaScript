@@ -1,0 +1,138 @@
+syntax = "proto3";
+
+package userservice;
+option go_package = "./;pb";
+
+import "google/protobuf/empty.proto";
+
+service UserService {
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  rpc CreateUser(CreateUserRequest) returns (google.protobuf.Empty);
+  rpc Login(LoginRequest) returns (google.protobuf.Empty);
+  rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty);
+  rpc UpdateUser(UpdateUserRequest) returns (google.protobuf.Empty);
+  rpc UpdateUserAvatar(UpdateUserAvatarRequest) returns (google.protobuf.Empty);
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  rpc AddFavoriteMovie(FavoriteMovieRequest) returns (google.protobuf.Empty);
+  rpc AddFavoriteActor(FavoriteActorRequest) returns (google.protobuf.Empty);
+  rpc RemoveFavoriteMovie(FavoriteMovieRequest) returns (google.protobuf.Empty);
+  rpc RemoveFavoriteActor(FavoriteActorRequest) returns (google.protobuf.Empty);
+}
+
+message GetUserRequest {
+  string login = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message CreateUserRequest {
+  User user = 1;
+}
+
+message LoginRequest {
+  LoginData login_data = 1;
+}
+
+message DeleteUserRequest {
+  string login = 1;
+}
+
+message UpdateUserRequest {
+  string login = 1;
+  User new_user = 2;
+}
+
+message UpdateUserAvatarRequest {
+  string upload_dir = 1;
+  string hashed_avatar_name = 2;
+  bytes avatar_file = 3;
+  User user = 4;
+}
+
+message GetProfileRequest {
+  string login = 1;
+}
+
+message GetProfileResponse {
+  Profile profile = 1;
+}
+
+message FavoriteMovieRequest {
+  string login = 1;
+  string movie_id = 2;
+}
+
+message FavoriteActorRequest {
+  string login = 1;
+  string actor_id = 2;
+}
+
+message User {
+  string id = 1;
+  string username = 2;
+  string avatar = 3;
+  string created_at = 4;
+  string updated_at = 5;
+  string hashed_password = 6;
+}
+
+message Profile {
+  string username = 1;
+  string avatar = 2;
+  string created_at = 3;
+  string updated_at = 4;
+  repeated Movie movie_collection = 5;
+  repeated Person actors = 6;
+  repeated Review reviews = 7;
+}
+
+message LoginData {
+  string username = 1;
+  string password = 2;
+}
+
+message RegisterData {
+  string username = 1;
+  string password = 2;
+  string repeated_password = 3;
+}
+
+message Movie {
+  int32 id = 1;
+  string title = 2;
+  string preview_url = 3;
+  string duration = 4;
+  string release_date = 5;
+  double rating = 6;
+}
+
+message Person {
+  int32 id = 1;
+  string full_name = 2;
+  string en_full_name = 3;
+  string photo = 4;
+  string about = 5;
+  string sex = 6;
+  string growth = 7;
+  string birthday = 8;
+  string death = 9;
+  string career = 10;
+  string genres = 11;
+  string total_films = 12;
+  map<int32, Movie> movie_collection = 13;
+}
+
+message ReviewUserData {
+  string login = 1;
+  string avatar = 2;
+}
+
+message Review {
+  int32 id = 1;
+  double score = 2;
+  string review_text = 3;
+  string created_at = 4;
+  ReviewUserData user = 5;
+}

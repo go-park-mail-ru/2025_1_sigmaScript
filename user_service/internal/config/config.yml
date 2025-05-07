@@ -1,0 +1,16 @@
+listener:
+  port: ":8082"
+
+database:
+  host: "127.0.0.1"
+  port: 5433
+  user: "filmlk_user"
+  password: "filmlk_password"
+  dbname: "filmlk"
+  max_open_conns: 10
+  max_idle_conns: 5
+  conn_max_lifetime: 300s
+  conn_max_idle_time: 60s
+
+storage:
+  relative_path: "/static/avatars/"

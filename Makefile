@@ -3,6 +3,7 @@ COVERAGE_HTML := coverage.html
 COVERIGNORE_FILE := cover_ignore.txt
 APP_NAME := filmlook.a
 AUTH_SERVICE_NAME := filmlook_auth_service.a
+USER_SERVICE_NAME := filmlook_user_service.a
 
 UNAME := $(shell uname -s)
 ifeq ($(UNAME), Linux)
@@ -50,4 +51,13 @@ clean:
 build-auth-service:
 	@GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o $(AUTH_SERVICE_NAME)$(if $(filter windows,$(GOOS)),.exe,) ./auth_service/cmd/main.go
 
-.PHONY: build cross-build run test html coverage clean build-auth-service
+build-user-service:
+	@GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o $(USER_SERVICE_NAME)$(if $(filter windows,$(GOOS)),.exe,) ./user_service/cmd/main.go
+
+run-auth-service: build-auth-service
+	@./$(AUTH_SERVICE_NAME)
+
+run-user-service: build-user-service
+	@./$(USER_SERVICE_NAME)
+
+.PHONY: build cross-build run test html coverage clean build-auth-service run-auth-service build-user-service run-user-service

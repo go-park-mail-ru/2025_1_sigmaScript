@@ -85,7 +85,7 @@ func (a *AppAuth) GracefulShutdown() error {
 	a.logger.Info().Msg("Graceful shutdown")
 
 	a.srv.GracefulStop()
-	a.logger.Info().Msg("Auth service grpc shut down")
+	a.logger.Info().Msg("Auth movie_service grpc shut down")
 
 	return nil
 }

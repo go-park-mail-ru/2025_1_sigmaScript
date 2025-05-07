@@ -1,4 +1,4 @@
-package service
+package movie_service
 
 import (
 	"context"

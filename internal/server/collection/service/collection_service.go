@@ -25,7 +25,7 @@ func NewCollectionService(collectionRepo CollectionRepositoryInterface) *Collect
 func (s *CollectionService) GetMainPageCollections(ctx context.Context) (mocks.Collections, error) {
 	logger := log.Ctx(ctx)
 
-	logger.Info().Msg("Get Collections from service")
+	logger.Info().Msg("Get Collections from movie_service")
 
 	collections, err := s.collectionRepo.GetMainPageCollectionsFromRepo(ctx)
 	if err != nil {

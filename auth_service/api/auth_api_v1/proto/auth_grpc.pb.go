@@ -14,7 +14,7 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// SessionRPCClient is the client API for SessionRPC service.
+// SessionRPCClient is the client API for SessionRPC movie_service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SessionRPCClient interface {
@@ -58,7 +58,7 @@ func (c *sessionRPCClient) GetSession(ctx context.Context, in *GetSessionRequest
 	return out, nil
 }
 
-// SessionRPCServer is the server API for SessionRPC service.
+// SessionRPCServer is the server API for SessionRPC movie_service.
 // All implementations must embed UnimplementedSessionRPCServer
 // for forward compatibility
 type SessionRPCServer interface {
@@ -83,7 +83,7 @@ func (UnimplementedSessionRPCServer) GetSession(context.Context, *GetSessionRequ
 }
 func (UnimplementedSessionRPCServer) mustEmbedUnimplementedSessionRPCServer() {}
 
-// UnsafeSessionRPCServer may be embedded to opt out of forward compatibility for this service.
+// UnsafeSessionRPCServer may be embedded to opt out of forward compatibility for this movie_service.
 // Use of this interface is not recommended, as added methods to SessionRPCServer will
 // result in compilation errors.
 type UnsafeSessionRPCServer interface {
@@ -148,7 +148,7 @@ func _SessionRPC_GetSession_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-// SessionRPC_ServiceDesc is the grpc.ServiceDesc for SessionRPC service.
+// SessionRPC_ServiceDesc is the grpc.ServiceDesc for SessionRPC movie_service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var SessionRPC_ServiceDesc = grpc.ServiceDesc{

@@ -1,0 +1,163 @@
+syntax = "proto3";
+
+package movieservice;
+option go_package = "./;pb";
+
+message MovieJSON {
+    int32 id                 = 1;
+    string name              = 2;
+    string original_name     = 3;
+    string about             = 4;
+    string poster            = 5;
+    string promo_url         = 6;
+    string release_year      = 7;
+    string country           = 8;
+    string slogan            = 9;
+    string director          = 10;
+    int64  budget            = 11;
+    int64  box_office_us     = 12;
+    int64  box_office_global = 13;
+    int64  box_office_russia = 14;
+    string premier_russia    = 15;
+    string premier_global    = 16;
+    double rating            = 17;
+    string duration          = 18;
+    string genres            = 19;
+    repeated PersonJSON staff             = 20;
+    repeated ReviewJSON reviews           = 21;
+    double rating_kp         = 22;
+    double rating_imdb       = 23;
+    repeated WatchProviderJSON watchability = 24;
+    string logo              = 25;
+    string backdrop          = 26;
+}
+
+message PersonJSON {
+    int32 id            = 1;
+    string full_name    = 2;
+    string en_full_name = 3;
+    string photo        = 4;
+    string about        = 5;
+    string sex          = 6;
+    string growth       = 7;
+    string birthday     = 8;
+    string death        = 9;
+    string career       = 10;
+    string genres       = 11;
+    string total_films  = 12;
+    map<int32,MovieJSON> movie_collection = 13;
+}
+
+message ReviewUserDataJSON {
+    string login  = 1;
+    string avatar = 2;
+}
+
+message ReviewJSON {
+    int32 id           = 1;
+    ReviewUserDataJSON user       = 2;
+    string review_text = 3;
+    double score       = 4;
+    string created_at  = 5;
+}
+
+message NewReviewDataJSON {
+    string review_text = 1;
+    double score       = 2;
+}
+
+message WatchProviderJSON {
+    string name = 1;
+    string url  = 2;
+}
+
+message Genre {
+    string id   = 1;
+    string name = 2;
+    repeated MovieJSON movies = 3;
+}
+
+message Collection {
+    string name        = 1;
+    repeated MovieJSON movies = 2;
+}
+
+// --- RPC request & response messages ---
+
+message GetMovieByIDRequest {
+    int32 movie_id = 1;
+}
+message GetMovieByIDResponse {
+    MovieJSON movie = 1;
+}
+
+message GetAllReviewsOfMovieByIDRequest {
+    int32 movie_id = 1;
+}
+message GetAllReviewsOfMovieByIDResponse {
+    repeated ReviewJSON reviews = 1;
+}
+
+message CreateNewMovieReviewRequest {
+    string user_id    = 1;
+    string movie_id   = 2;
+    NewReviewDataJSON new_review = 3;
+}
+message CreateNewMovieReviewResponse {
+    NewReviewDataJSON review = 1;
+}
+
+message UpdateMovieReviewRequest {
+    string user_id    = 1;
+    string movie_id   = 2;
+    NewReviewDataJSON new_review = 3;
+}
+message UpdateMovieReviewResponse {
+    NewReviewDataJSON review = 1;
+}
+
+message GetPersonByIDRequest {
+    int32 person_id = 1;
+}
+message GetPersonByIDResponse {
+    PersonJSON person = 1;
+}
+
+message GetGenreByIDRequest {
+    string genre_id = 1;
+}
+message GetGenreByIDResponse {
+    Genre genre = 1;
+}
+
+message GetAllGenresRequest {}
+message GetAllGenresResponse {
+    repeated Genre genres = 1;
+}
+
+message SearchActorsAndMoviesRequest {
+    string query = 1;
+}
+message SearchActorsAndMoviesResponse {
+    repeated MovieJSON movies = 1;
+    repeated PersonJSON actors = 2;
+}
+
+message GetMainPageCollectionsRequest {}
+message GetMainPageCollectionsResponse {
+    repeated Collection collections = 1;
+}
+
+service MovieRPC {
+    rpc GetMovieByID(GetMovieByIDRequest) returns (GetMovieByIDResponse);
+    rpc GetAllReviewsOfMovieByID(GetAllReviewsOfMovieByIDRequest) returns (GetAllReviewsOfMovieByIDResponse);
+    rpc CreateNewMovieReview(CreateNewMovieReviewRequest) returns (CreateNewMovieReviewResponse);
+    rpc UpdateMovieReview(UpdateMovieReviewRequest) returns (UpdateMovieReviewResponse);
+
+    rpc GetPersonByID(GetPersonByIDRequest) returns (GetPersonByIDResponse);
+    rpc GetGenreByID(GetGenreByIDRequest) returns (GetGenreByIDResponse);
+    rpc GetAllGenres(GetAllGenresRequest) returns (GetAllGenresResponse);
+    rpc SearchActorsAndMovies(SearchActorsAndMoviesRequest) returns (SearchActorsAndMoviesResponse);
+
+    rpc GetMainPageCollections(GetMainPageCollectionsRequest) returns (GetMainPageCollectionsResponse);
+}

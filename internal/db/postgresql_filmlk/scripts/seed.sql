@@ -1,233 +1,4 @@
-DROP TABLE IF EXISTS "review" CASCADE;
-DROP TABLE IF EXISTS "watch_provider" CASCADE;
-DROP TABLE IF EXISTS "user_person_favorite" CASCADE;
-DROP TABLE IF EXISTS "user_movie_favorite" CASCADE;
-DROP TABLE IF EXISTS "career_person" CASCADE;
-DROP TABLE IF EXISTS "movie_country" CASCADE;
-DROP TABLE IF EXISTS "person_genre" CASCADE;
-DROP TABLE IF EXISTS "movie_genre" CASCADE;
-DROP TABLE IF EXISTS "movie_staff" CASCADE;
-DROP TABLE IF EXISTS "collection_movie" CASCADE;
-DROP TABLE IF EXISTS "country" CASCADE;
-DROP TABLE IF EXISTS "genre" CASCADE;
-DROP TABLE IF EXISTS "career" CASCADE;
-DROP TABLE IF EXISTS "person" CASCADE;
-DROP TABLE IF EXISTS "collection" CASCADE;
-DROP TABLE IF EXISTS "user" CASCADE;
-DROP TABLE IF EXISTS "movie" CASCADE;
-
-
-DROP TYPE IF EXISTS sex_type;
-CREATE TYPE sex_type AS ENUM ('Мужчина', 'Женщина', 'secret', '');
-
-CREATE TABLE "user" (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    login TEXT UNIQUE NOT NULL CONSTRAINT loginchk CHECK (char_length(login) <= 255),
-    hashed_password TEXT NOT NULL,
-    avatar TEXT DEFAULT '/static/avatars/avatar_default_picture.svg',
-    birth_date DATE DEFAULT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE "collection" (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name TEXT NOT NULL CONSTRAINT collection_namechk CHECK (char_length(name) <= 255),
-    is_main_collection BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
-
-DROP TYPE IF EXISTS career_type;
-CREATE TYPE career_type AS ENUM ('Актёр', 'Продюсер', 'Режиссёр', 'Сценарист');
-
-CREATE TABLE "career" (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    career career_type DEFAULT 'Актёр' NOT NULL UNIQUE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE "person" (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    full_name TEXT NOT NULL,
-    en_full_name TEXT DEFAULT NULL,
-    photo TEXT DEFAULT '/static/avatars/avatar_default_picture.svg',
-    about TEXT DEFAULT 'Информация по этому человеку не указана',
-    sex sex_type DEFAULT '',
-    growth TEXT DEFAULT NULL,
-    birthday DATE DEFAULT NULL,
-    death DATE DEFAULT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE "genre" (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name TEXT NOT NULL UNIQUE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE "country" (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name TEXT NOT NULL,
-    flag TEXT DEFAULT '/static/flags/flag_default_picture.webp',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE "movie" (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name TEXT NOT NULL CONSTRAINT movie_namechk CHECK (char_length(name) <= 255),
-    original_name TEXT CONSTRAINT movie_orig_namechk CHECK (char_length(original_name) <= 255) DEFAULT NULL,
-    about TEXT DEFAULT 'Информация по этому фильму не указана',
-    poster TEXT DEFAULT '/static/movies/poster_default_picture.webp',
-    promo_poster TEXT DEFAULT '/static/movies/poster_default_picture.webp',
-    release_year TIMESTAMPTZ DEFAULT NULL,
-    slogan TEXT DEFAULT NULL,
-    director TEXT DEFAULT NULL,
-    country TEXT DEFAULT NULL,
-    budget DECIMAL DEFAULT 0,
-    box_office_us DECIMAL DEFAULT 0,
-    box_office_global DECIMAL DEFAULT 0,
-    box_office_russia DECIMAL DEFAULT 0,
-    premier_russia DATE DEFAULT NULL,
-    premier_global DATE DEFAULT NULL,
-    rating DECIMAL(4,2) CHECK (rating <= 10.00) DEFAULT 5.00,
-    duration TEXT DEFAULT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    rating_kp DECIMAL(4,2) CHECK (rating <= 10.00) DEFAULT NULL,
-    rating_imdb DECIMAL(4,2) CHECK (rating <= 10.00) DEFAULT NULL,
-    short_description TEXT DEFAULT NULL,
-    logo TEXT DEFAULT '#',
-    backdrop TEXT DEFAULT '#',
-    watchability BOOLEAN DEFAULT FALSE
-);
-
-CREATE TABLE "collection_movie" (
-    collection_id INTEGER REFERENCES collection(id) ON DELETE CASCADE,
-    movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE,
-    PRIMARY KEY (collection_id, movie_id)
-);
-
-CREATE TABLE "movie_staff" (
-    staff_id INTEGER REFERENCES person(id) ON DELETE CASCADE,
-    movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE,
-    role career_type DEFAULT 'Актёр' NOT NULL,
-    PRIMARY KEY (staff_id, movie_id)
-);
-
-CREATE TABLE "movie_genre" (
-    genre_id INTEGER REFERENCES genre(id) ON DELETE CASCADE,
-    movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE,
-    PRIMARY KEY (genre_id, movie_id)
-);
-
-CREATE TABLE "career_person" (
-    career_id INTEGER REFERENCES career(id) ON DELETE CASCADE,
-    person_id INTEGER REFERENCES person(id) ON DELETE CASCADE,
-    PRIMARY KEY (career_id, person_id)
-);
-
-CREATE TABLE "person_genre" (
-    person_id INTEGER REFERENCES person(id) ON DELETE CASCADE,
-    genre_id INTEGER REFERENCES genre(id) ON DELETE CASCADE,
-    PRIMARY KEY (genre_id, person_id)
-);
-
-CREATE TABLE "movie_country" (
-    country_id INTEGER REFERENCES country(id) ON DELETE CASCADE,
-    movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE,
-    PRIMARY KEY (country_id, movie_id)
-);
-
-CREATE TABLE "review" (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id INTEGER REFERENCES "user"(id) ON DELETE CASCADE,
-    movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE,
-    review_text TEXT DEFAULT NULL,
-    score DECIMAL(4,2) CHECK (score <= 10.00) DEFAULT 5.00,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_user_movie_id UNIQUE (user_id, movie_id)
-);
-
-CREATE TABLE "user_person_favorite" (
-    person_id INTEGER REFERENCES person(id) ON DELETE CASCADE,
-    user_id INTEGER REFERENCES "user"(id) ON DELETE CASCADE,
-    PRIMARY KEY (user_id, person_id)
-);
-
-CREATE TABLE "user_movie_favorite" (
-    movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE,
-    user_id INTEGER REFERENCES "user"(id) ON DELETE CASCADE,
-    PRIMARY KEY (user_id, movie_id)
-);
-
-CREATE TABLE "watch_provider" (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE,
-	name TEXT NOT NULL CONSTRAINT provider_namechk CHECK (char_length(name) <= 255),
-	logo TEXT DEFAULT '/static/svg/play.svg',
-	watch_url TEXT DEFAULT '#'
-);
-
-
--- add update triggers to tables
-CREATE OR REPLACE FUNCTION update_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER update_user_updated_at
-BEFORE UPDATE ON "user"
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER update_review_updated_at
-BEFORE UPDATE ON "review"
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER update_country_updated_at
-BEFORE UPDATE ON "country"
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER update_genre_updated_at
-BEFORE UPDATE ON "genre"
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER update_person_updated_at
-BEFORE UPDATE ON "person"
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER update_collection_updated_at
-BEFORE UPDATE ON "collection"
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER update_movie_updated_at
-BEFORE UPDATE ON "movie"
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER update_career_updated_at
-BEFORE UPDATE ON "career"
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at();
-
-
-
--- some default data
+-- creating some default data
 
 -- creating collections
 INSERT INTO collection (name, is_main_collection) VALUES
@@ -1323,6 +1094,480 @@ COMMIT;
 -- Start Transaction
 BEGIN;
 
+-- ==========================================================================
+-- Movie: 835086 - Ford против Ferrari (Ford v Ferrari)
+-- ==========================================================================
+
+-- Insert Genres if they don't exist
+INSERT INTO genre (name) VALUES ('биография') ON CONFLICT (name) DO NOTHING;
+INSERT INTO genre (name) VALUES ('спорт') ON CONFLICT (name) DO NOTHING;
+INSERT INTO genre (name) VALUES ('драма') ON CONFLICT (name) DO NOTHING;
+INSERT INTO genre (name) VALUES ('боевик') ON CONFLICT (name) DO NOTHING;
+
+-- Insert Persons (Staff) if they don't exist
+-- Note: Person 21495 (Кристиан Бэйл) might have been inserted by previous scripts.
+INSERT INTO person (id, full_name, en_full_name, photo) OVERRIDING SYSTEM VALUE VALUES
+(21495, 'Кристиан Бэйл', 'Christian Bale', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_21495.jpg'),
+(6458, 'Мэтт Дэймон', 'Matt Damon', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_6458.jpg'),
+(1558407, 'Катрина Балф', 'Caitríona Balfe', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_1558407.jpg'),
+(28674, 'Трэйси Леттс', 'Tracy Letts', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_28674.jpg')
+ON CONFLICT (id) DO NOTHING;
+
+-- Insert Movie
+INSERT INTO movie (
+    id, name, original_name, about, poster, promo_poster, release_year, slogan, director, country,
+    budget, box_office_us, box_office_global, box_office_russia, premier_russia, premier_global,
+    rating, duration, rating_kp, rating_imdb, short_description, logo, backdrop, watchability
+)
+OVERRIDING SYSTEM VALUE VALUES (
+    835086,                                                                        -- ID
+    'Ford против Ferrari',                                                         -- Name
+    'Ford v Ferrari',                                                              -- OriginalName
+    E'В начале 1960-х Генри Форд II принимает решение улучшить имидж компании и сменить курс на производство более модных автомобилей. После неудавшейся попытки купить практически банкрота Ferrari американцы решают бросить вызов итальянским конкурентам на трассе и выиграть престижную гонку 24 часа Ле-Мана. Чтобы создать подходящую машину, компания нанимает автоконструктора Кэррола Шэлби, а тот отказывается работать без выдающегося, но, как считается, трудного в общении гонщика Кена Майлза. Вместе они принимаются за разработку впоследствии знаменитого спорткара Ford GT40.', -- About
+    'https://image.openmoviedb.com/kinopoisk-images/1898899/211e880d-c183-43aa-83b0-13c08109eaf7/orig', -- Poster
+    NULL,                                                                          -- PromoURL is empty
+    '2019-01-01 00:00:00+00'::TIMESTAMPTZ,                                         -- ReleaseYear
+    'Они взяли американскую мечту на прогулку',                                     -- Slogan
+    'Джеймс Мэнголд',                                                              -- Director
+    'США',                                                                         -- Country
+    97600000,                                                                      -- Budget
+    117624357,                                                                     -- BoxOfficeUS
+    225508210,                                                                     -- BoxOfficeGlobal
+    11535765,                                                                      -- BoxOfficeRussia
+    '2019-11-14'::DATE,                                                            -- PremierRussia
+    '2019-08-30'::DATE,                                                            -- PremierGlobal
+    7.5,                                                                           -- Rating
+    '152',                                                                         -- Duration
+    8.229,                                                                         -- RatingKP
+    8.1,                                                                           -- RatingIMDB
+    'Автоконструктор и строптивый гонщик против непобедимых конкурентов. Биографическая драма о любви к скорости', -- ShortDescription
+    'https://image.openmoviedb.com/tmdb-images/original/lbQW0gtgCTHM7YLmX0Qt3HUv00w.png', -- Logo
+    'https://image.openmoviedb.com/tmdb-images/original/2vq5GTJOahE03mNYZGxIynlHcWr.jpg', -- Backdrop
+    FALSE                                                                          -- Watchability is nil
+) ON CONFLICT (id) DO NOTHING;
+
+-- Link Staff to Movie
+INSERT INTO movie_staff (staff_id, movie_id, role) VALUES
+(21495, 835086, 'Актёр'),
+(6458, 835086, 'Актёр'),
+(1558407, 835086, 'Актёр'),
+(28674, 835086, 'Актёр')
+ON CONFLICT (staff_id, movie_id) DO NOTHING;
+
+-- Link Genres to Movie
+INSERT INTO movie_genre (genre_id, movie_id) VALUES
+((SELECT id from genre where name = 'биография'), 835086),
+((SELECT id from genre where name = 'спорт'), 835086),
+((SELECT id from genre where name = 'драма'), 835086),
+((SELECT id from genre where name = 'боевик'), 835086)
+ON CONFLICT (genre_id, movie_id) DO NOTHING;
+
+-- ==========================================================================
+-- Movie: 4745315 - Очи (The Legend of Ochi)
+-- ==========================================================================
+
+-- Insert Genres if they don't exist
+INSERT INTO genre (name) VALUES ('фэнтези') ON CONFLICT (name) DO NOTHING;
+INSERT INTO genre (name) VALUES ('приключения') ON CONFLICT (name) DO NOTHING;
+INSERT INTO genre (name) VALUES ('семейный') ON CONFLICT (name) DO NOTHING;
+
+-- Insert Persons (Staff) if they don't exist
+INSERT INTO person (id, full_name, en_full_name, photo) OVERRIDING SYSTEM VALUE VALUES
+(4607985, 'Хелена Ценгель', 'Helena Zengel', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_4607985.jpg'),
+(9274, 'Уиллем Дефо', 'Willem Dafoe', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_9274.jpg'),
+(12557, 'Эмили Уотсон', 'Emily Watson', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_12557.jpg'),
+(3423339, 'Финн Вулфхард', 'Finn Wolfhard', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_3423339.jpg')
+ON CONFLICT (id) DO NOTHING;
+
+-- Insert Movie
+INSERT INTO movie (
+    id, name, original_name, about, poster, promo_poster, release_year, slogan, director, country,
+    budget, box_office_us, box_office_global, box_office_russia, premier_russia, premier_global,
+    rating, duration, rating_kp, rating_imdb, short_description, logo, backdrop, watchability
+)
+OVERRIDING SYSTEM VALUE VALUES (
+    4745315,                                                                       -- ID
+    'Очи',                                                                         -- Name
+    'The Legend of Ochi',                                                          -- OriginalName
+    E'Девочка Юрайя родилась на\u00a0гористом острове посреди океана. В\u00a0здешних дремучих лесах водится много диких зверей, но\u00a0самыми опасными считаются загадочные существа очи. Одни считают, что\u00a0это лишь сказка для\u00a0детей, другие\u00a0—\u00a0что это\u00a0враждебные создания. Однажды Юрайя находит в\u00a0лесу потерявшегося детеныша очи\u00a0и решает вернуть его\u00a0родителям. Девочке придется найти общий язык с\u00a0этим необычным обитателем леса и\u00a0доказать людям, что\u00a0дружить с\u00a0очи лучше, чем\u00a0их бояться.', -- About
+    'https://image.openmoviedb.com/kinopoisk-images/10703959/d5e29d8d-d37d-4836-a212-a9daaf7ad603/orig', -- Poster
+    NULL,                                                                          -- PromoURL is empty
+    '2025-01-01 00:00:00+00'::TIMESTAMPTZ,                                         -- ReleaseYear
+    NULL,                                                                          -- Slogan is empty
+    'Исайя Сэксон',                                                                -- Director
+    'США',                                                                         -- Country
+    0,                                                                             -- Budget
+    1857500,                                                                       -- BoxOfficeUS
+    1943615,                                                                       -- BoxOfficeGlobal
+    0,                                                                             -- BoxOfficeRussia
+    '2025-05-08'::DATE,                                                            -- PremierRussia
+    '2025-01-26'::DATE,                                                            -- PremierGlobal
+    7.5,                                                                           -- Rating
+    '95',                                                                          -- Duration
+    6.03,                                                                          -- RatingKP
+    6.3,                                                                           -- RatingIMDB
+    'Дочь охотника пытается спасти таинственного зверька, попавшего в капкан. Семейное фэнтези студии А24', -- ShortDescription
+    NULL,                                                                          -- Logo is empty
+    'https://image.openmoviedb.com/kinopoisk-ott-images/13051577/2a000001964402c4d37b49cd25970045ff0b/orig', -- Backdrop
+    FALSE                                                                          -- Watchability is nil
+) ON CONFLICT (id) DO NOTHING;
+
+-- Link Staff to Movie
+INSERT INTO movie_staff (staff_id, movie_id, role) VALUES
+(4607985, 4745315, 'Актёр'),
+(9274, 4745315, 'Актёр'),
+(12557, 4745315, 'Актёр'),
+(3423339, 4745315, 'Актёр')
+ON CONFLICT (staff_id, movie_id) DO NOTHING;
+
+-- Link Genres to Movie
+INSERT INTO movie_genre (genre_id, movie_id) VALUES
+((SELECT id from genre where name = 'фэнтези'), 4745315),
+((SELECT id from genre where name = 'приключения'), 4745315),
+((SELECT id from genre where name = 'семейный'), 4745315)
+ON CONFLICT (genre_id, movie_id) DO NOTHING;
+
+-- ==========================================================================
+-- Movie: 4295935 - Железное Сердце (Ironheart)
+-- ==========================================================================
+
+-- Insert Genres if they don't exist
+-- 'фантастика', 'фэнтези', 'боевик', 'драма', 'приключения' already handled
+
+-- Insert Persons (Staff) if they don't exist
+INSERT INTO person (id, full_name, en_full_name, photo) OVERRIDING SYSTEM VALUE VALUES
+(5007742, 'Доминик Торн', 'Dominique Thorne', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_5007742.jpg'),
+(3825086, 'Энтони Рамос', 'Anthony Ramos', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_3825086.jpg'),
+(1536639, 'Мэнни Монтана', 'Manny Montana', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_1536639.jpg'),
+(1217737, 'Олден Эренрайк', 'Alden Ehrenreich', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_1217737.jpg')
+ON CONFLICT (id) DO NOTHING;
+
+-- Insert Movie
+INSERT INTO movie (
+    id, name, original_name, about, poster, promo_poster, release_year, slogan, director, country,
+    budget, box_office_us, box_office_global, box_office_russia, premier_russia, premier_global,
+    rating, duration, rating_kp, rating_imdb, short_description, logo, backdrop, watchability
+)
+OVERRIDING SYSTEM VALUE VALUES (
+    4295935,                                                                       -- ID
+    'Железное Сердце',                                                             -- Name
+    'Ironheart',                                                                   -- OriginalName
+    'Гениальная юная изобретательница Рири Уильямс создает самую совершенную броню со времен Железного Человека.', -- About
+    'https://image.openmoviedb.com/kinopoisk-images/1629390/b3ba5385-567c-422d-8e15-8f57b68cbd61/orig', -- Poster
+    NULL,                                                                          -- PromoURL is empty
+    '2025-01-01 00:00:00+00'::TIMESTAMPTZ,                                         -- ReleaseYear
+    NULL,                                                                          -- Slogan is empty
+    'Саманта Бэйли',                                                               -- Director
+    'США',                                                                         -- Country
+    0,                                                                             -- Budget
+    0,                                                                             -- BoxOfficeUS
+    0,                                                                             -- BoxOfficeGlobal
+    0,                                                                             -- BoxOfficeRussia
+    NULL,                                                                          -- PremierRussia is empty
+    '2025-06-24'::DATE,                                                            -- PremierGlobal
+    7.5,                                                                           -- Rating
+    NULL,                                                                          -- Duration is empty
+    0.0,                                                                           -- RatingKP
+    0.0,                                                                           -- RatingIMDB
+    NULL,                                                                          -- ShortDescription is empty
+    NULL,                                                                          -- Logo is empty
+    'https://m.media-amazon.com/images/M/MV5BMDdkOWY3OWEtZWNmNy00NDdjLTkyMjgtNDdjYzI5OGMzNTExXkEyXkFqcGc@._V1_.jpg', -- Backdrop
+    FALSE                                                                          -- Watchability is nil
+) ON CONFLICT (id) DO NOTHING;
+
+-- Link Staff to Movie
+INSERT INTO movie_staff (staff_id, movie_id, role) VALUES
+(5007742, 4295935, 'Актёр'),
+(3825086, 4295935, 'Актёр'),
+(1536639, 4295935, 'Актёр'),
+(1217737, 4295935, 'Актёр')
+ON CONFLICT (staff_id, movie_id) DO NOTHING;
+
+-- Link Genres to Movie
+INSERT INTO movie_genre (genre_id, movie_id) VALUES
+((SELECT id from genre where name = 'фантастика'), 4295935),
+((SELECT id from genre where name = 'фэнтези'), 4295935),
+((SELECT id from genre where name = 'боевик'), 4295935),
+((SELECT id from genre where name = 'драма'), 4295935),
+((SELECT id from genre where name = 'приключения'), 4295935)
+ON CONFLICT (genre_id, movie_id) DO NOTHING;
+
+-- ==========================================================================
+-- Movie: 920265 - Человек-паук: Через вселенные (Spider-Man: Into the Spider-Verse)
+-- ==========================================================================
+
+-- Insert Genres if they don't exist
+INSERT INTO genre (name) VALUES ('мультфильм') ON CONFLICT (name) DO NOTHING;
+INSERT INTO genre (name) VALUES ('комедия') ON CONFLICT (name) DO NOTHING;
+-- 'фантастика', 'фэнтези', 'боевик', 'приключения', 'семейный' already handled
+
+-- Insert Persons (Staff) if they don't exist
+-- Note: Person 542248 (Махершала Али) might have been inserted by previous scripts.
+INSERT INTO person (id, full_name, en_full_name, photo) OVERRIDING SYSTEM VALUE VALUES
+(2378404, 'Шамеик Мур', 'Shameik Moore', 'https://st.kp.yandex.net/images/actor_iphone/iphone360_2378404.jpg'),
+(1089330, 'Джейк Джонсон', 'Jake Johnson', 'https://st.kp.yandex.net/images/actor_iphone/iphone360_1089330.jpg'),
+(1478559, 'Хейли Стайнфелд', 'Hailee Steinfeld', 'https://st.kp.yandex.net/images/actor_iphone/iphone360_1478559.jpg'),
+(542248, 'Махершала Али', 'Mahershala Ali', 'https://st.kp.yandex.net/images/actor_iphone/iphone360_542248.jpg')
+ON CONFLICT (id) DO NOTHING;
+
+-- Insert Movie
+INSERT INTO movie (
+    id, name, original_name, about, poster, promo_poster, release_year, slogan, director, country,
+    budget, box_office_us, box_office_global, box_office_russia, premier_russia, premier_global,
+    rating, duration, rating_kp, rating_imdb, short_description, logo, backdrop, watchability
+)
+OVERRIDING SYSTEM VALUE VALUES (
+    920265,                                                                        -- ID
+    'Человек-паук: Через вселенные',                                               -- Name
+    'Spider-Man: Into the Spider-Verse',                                           -- OriginalName
+    'В центре сюжета уникальной и инновационной в визуальном плане картины подросток из Нью-Йорка Майлз Моралес, который живет в мире безграничных возможностей вселенных Человека-паука, где костюм супергероя носит не только он.', -- About
+    'https://image.openmoviedb.com/kinopoisk-images/1900788/64417bd3-838b-4910-a9f4-c278c509d568/orig', -- Poster
+    NULL,                                                                          -- PromoURL is empty
+    '2018-01-01 00:00:00+00'::TIMESTAMPTZ,                                         -- ReleaseYear
+    'Более одного носит маску',                                                    -- Slogan
+    'Боб Персичетти',                                                              -- Director
+    'Канада',                                                                      -- Country
+    90000000,                                                                      -- Budget
+    190241310,                                                                     -- BoxOfficeUS
+    375582637,                                                                     -- BoxOfficeGlobal
+    6298173,                                                                       -- BoxOfficeRussia
+    '2018-12-13'::DATE,                                                            -- PremierRussia
+    '2018-12-12'::DATE,                                                            -- PremierGlobal
+    7.5,                                                                           -- Rating
+    '117',                                                                         -- Duration
+    8.178,                                                                         -- RatingKP
+    8.4,                                                                           -- RatingIMDB
+    'Пауки из разных измерений объединяются перед общей угрозой. Изобретательный кинокомикс с «Оскаром» за анимацию', -- ShortDescription
+    'https://image.openmoviedb.com/tmdb-images/original/bJ3VpPP3VkJM9H8GfRK8wSvTwPy.png', -- Logo
+    'https://image.openmoviedb.com/tmdb-images/original/8mnXR9rey5uQ08rZAvzojKWbDQS.jpg', -- Backdrop
+    FALSE                                                                          -- Watchability is nil
+) ON CONFLICT (id) DO NOTHING;
+
+-- Link Staff to Movie
+INSERT INTO movie_staff (staff_id, movie_id, role) VALUES
+(2378404, 920265, 'Актёр'),
+(1089330, 920265, 'Актёр'),
+(1478559, 920265, 'Актёр'),
+(542248, 920265, 'Актёр')
+ON CONFLICT (staff_id, movie_id) DO NOTHING;
+
+-- Link Genres to Movie
+INSERT INTO movie_genre (genre_id, movie_id) VALUES
+((SELECT id from genre where name = 'мультфильм'), 920265),
+((SELECT id from genre where name = 'фантастика'), 920265),
+((SELECT id from genre where name = 'фэнтези'), 920265),
+((SELECT id from genre where name = 'боевик'), 920265),
+((SELECT id from genre where name = 'комедия'), 920265),
+((SELECT id from genre where name = 'приключения'), 920265),
+((SELECT id from genre where name = 'семейный'), 920265)
+ON CONFLICT (genre_id, movie_id) DO NOTHING;
+
+-- ==========================================================================
+-- Movie: 841081 - Ла-Ла Ленд (La La Land)
+-- ==========================================================================
+
+-- Insert Genres if they don't exist
+INSERT INTO genre (name) VALUES ('мюзикл') ON CONFLICT (name) DO NOTHING;
+INSERT INTO genre (name) VALUES ('мелодрама') ON CONFLICT (name) DO NOTHING;
+INSERT INTO genre (name) VALUES ('музыка') ON CONFLICT (name) DO NOTHING;
+-- 'драма', 'комедия' already handled
+
+-- Insert Persons (Staff) if they don't exist
+-- Note: Person 8552 (Дж.К. Симмонс) might have been inserted by previous scripts.
+INSERT INTO person (id, full_name, en_full_name, photo) OVERRIDING SYSTEM VALUE VALUES
+(10143, 'Райан Гослинг', 'Ryan Gosling', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_10143.jpg'),
+(1130955, 'Эмма Стоун', 'Emma Stone', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_1130955.jpg'),
+(1074124, 'Джон Ледженд', 'John Legend', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_1074124.jpg'),
+(8552, 'Дж.К. Симмонс', 'J.K. Simmons', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_8552.jpg')
+ON CONFLICT (id) DO NOTHING;
+
+-- Insert Movie
+INSERT INTO movie (
+    id, name, original_name, about, poster, promo_poster, release_year, slogan, director, country,
+    budget, box_office_us, box_office_global, box_office_russia, premier_russia, premier_global,
+    rating, duration, rating_kp, rating_imdb, short_description, logo, backdrop, watchability
+)
+OVERRIDING SYSTEM VALUE VALUES (
+    841081,                                                                        -- ID
+    'Ла-Ла Ленд',                                                                  -- Name
+    'La La Land',                                                                  -- OriginalName
+    'Это история любви старлетки, которая между прослушиваниями подает кофе состоявшимся кинозвездам, и фанатичного джазового музыканта, вынужденного подрабатывать в заштатных барах. Но пришедший к влюбленным успех начинает подтачивать их отношения.', -- About
+    'https://image.openmoviedb.com/kinopoisk-images/10835644/7e786437-eada-4d23-baea-f3a5ebf57e06/orig', -- Poster
+    NULL,                                                                          -- PromoURL is empty
+    '2016-01-01 00:00:00+00'::TIMESTAMPTZ,                                         -- ReleaseYear
+    'Бесстрашным мечтателям посвящается…',                                         -- Slogan
+    'Дэмьен Шазелл',                                                               -- Director
+    'США',                                                                         -- Country
+    30000000,                                                                      -- Budget
+    151101803,                                                                     -- BoxOfficeUS
+    447407695,                                                                     -- BoxOfficeGlobal
+    5913961,                                                                       -- BoxOfficeRussia
+    '2017-01-12'::DATE,                                                            -- PremierRussia
+    '2016-08-31'::DATE,                                                            -- PremierGlobal
+    7.5,                                                                           -- Rating
+    '128',                                                                         -- Duration
+    8.029,                                                                         -- RatingKP
+    8.0,                                                                           -- RatingIMDB
+    'Миа и Себастьян выбирают между личным счастьем и амбициями. Трагикомичный мюзикл о компромиссе в жизни артиста', -- ShortDescription
+    'https://image.openmoviedb.com/tmdb-images/original/97DYpdDmiOpfn9l9I2dGxDH01t1.svg', -- Logo
+    'https://image.openmoviedb.com/kinopoisk-ott-images/224348/2a00000161286a724010933d8658b746baa2/orig', -- Backdrop
+    FALSE                                                                          -- Watchability is nil
+) ON CONFLICT (id) DO NOTHING;
+
+-- Link Staff to Movie
+INSERT INTO movie_staff (staff_id, movie_id, role) VALUES
+(10143, 841081, 'Актёр'),
+(1130955, 841081, 'Актёр'),
+(1074124, 841081, 'Актёр'),
+(8552, 841081, 'Актёр')
+ON CONFLICT (staff_id, movie_id) DO NOTHING;
+
+-- Link Genres to Movie
+INSERT INTO movie_genre (genre_id, movie_id) VALUES
+((SELECT id from genre where name = 'мюзикл'), 841081),
+((SELECT id from genre where name = 'драма'), 841081),
+((SELECT id from genre where name = 'мелодрама'), 841081),
+((SELECT id from genre where name = 'комедия'), 841081),
+((SELECT id from genre where name = 'музыка'), 841081)
+ON CONFLICT (genre_id, movie_id) DO NOTHING;
+
+-- ==========================================================================
+-- Movie: 854 - Такси 2 (Taxi 2)
+-- ==========================================================================
+
+-- Insert Genres if they don't exist
+INSERT INTO genre (name) VALUES ('криминал') ON CONFLICT (name) DO NOTHING;
+-- 'боевик', 'комедия' already handled
+
+-- Insert Persons (Staff) if they don't exist
+INSERT INTO person (id, full_name, en_full_name, photo) OVERRIDING SYSTEM VALUE VALUES
+(55289, 'Сами Насери', 'Samy Naceri', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_55289.jpg'),
+(2365, 'Фредерик Дифенталь', 'Frédéric Diefenthal', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_2365.jpg'),
+(32545, 'Марион Котийяр', 'Marion Cotillard', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_32545.jpg'),
+(55290, 'Эмма Виклунд', 'Emma Wiklund', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_55290.jpg')
+ON CONFLICT (id) DO NOTHING;
+
+-- Insert Movie
+INSERT INTO movie (
+    id, name, original_name, about, poster, promo_poster, release_year, slogan, director, country,
+    budget, box_office_us, box_office_global, box_office_russia, premier_russia, premier_global,
+    rating, duration, rating_kp, rating_imdb, short_description, logo, backdrop, watchability
+)
+OVERRIDING SYSTEM VALUE VALUES (
+    854,                                                                           -- ID
+    'Такси 2',                                                                     -- Name
+    'Taxi 2',                                                                      -- OriginalName
+    E'Во Францию прибывает министр обороны Японии. Цель его визита - ознакомиться с французским опытом борьбы с терроризмом и подписать «контракт века» о взаимном сотрудничестве.\n\nНеожиданно во время показательных выступлений французской полиции министра обороны похищают якудза, желающая сорвать заключение наиважнейшего контракта. Даниэль и Эмильен отправляются на поиски высокого гостя. В дело вступает уже хорошо знакомое нам такси.', -- About
+    'https://image.openmoviedb.com/kinopoisk-images/1629390/a89ba16c-271c-4fb9-b1a5-806449bc3d62/orig', -- Poster
+    NULL,                                                                          -- PromoURL is empty
+    '2000-01-01 00:00:00+00'::TIMESTAMPTZ,                                         -- ReleaseYear
+    'Le 29 mars, il passe la seconde',                                             -- Slogan
+    'Жерар Кравчик',                                                               -- Director
+    'Франция',                                                                     -- Country
+    12000000,                                                                      -- Budget
+    626164,                                                                        -- BoxOfficeUS
+    60726164,                                                                      -- BoxOfficeGlobal
+    580000,                                                                        -- BoxOfficeRussia
+    '2000-12-21'::DATE,                                                            -- PremierRussia
+    '2000-03-25'::DATE,                                                            -- PremierGlobal
+    7.5,                                                                           -- Rating
+    '88',                                                                          -- Duration
+    7.735,                                                                         -- RatingKP
+    6.5,                                                                           -- RatingIMDB
+    'Жажда скорости Даниэля поможет спасти японского министра от якудза. Сиквел комедийного проекта Люка Бессона', -- ShortDescription
+    'https://image.openmoviedb.com/tmdb-images/original/fOmbtIqbmbsAhAfkm1LR0kM7phb.png', -- Logo
+    'https://image.openmoviedb.com/kinopoisk-ott-images/224348/2a0000016b2c54c6a65e64b1585f126b5a49/orig', -- Backdrop
+    FALSE                                                                          -- Watchability is nil
+) ON CONFLICT (id) DO NOTHING;
+
+-- Link Staff to Movie
+INSERT INTO movie_staff (staff_id, movie_id, role) VALUES
+(55289, 854, 'Актёр'),
+(2365, 854, 'Актёр'),
+(32545, 854, 'Актёр'),
+(55290, 854, 'Актёр')
+ON CONFLICT (staff_id, movie_id) DO NOTHING;
+
+-- Link Genres to Movie
+INSERT INTO movie_genre (genre_id, movie_id) VALUES
+((SELECT id from genre where name = 'боевик'), 854),
+((SELECT id from genre where name = 'комедия'), 854),
+((SELECT id from genre where name = 'криминал'), 854)
+ON CONFLICT (genre_id, movie_id) DO NOTHING;
+
+-- ==========================================================================
+-- Movie: 1048334 - Джокер (Joker)
+-- ==========================================================================
+
+-- Insert Genres if they don't exist
+INSERT INTO genre (name) VALUES ('триллер') ON CONFLICT (name) DO NOTHING;
+-- 'драма', 'криминал' already handled
+
+-- Insert Persons (Staff) if they don't exist
+-- Note: Person 10020 (Хоакин Феникс) might have been inserted by previous scripts.
+INSERT INTO person (id, full_name, en_full_name, photo) OVERRIDING SYSTEM VALUE VALUES
+(10020, 'Хоакин Феникс', 'Joaquin Phoenix', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_10020.jpg'),
+(718, 'Роберт Де Ниро', 'Robert De Niro', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_718.jpg'),
+(3394604, 'Зази Битц', 'Zazie Beetz', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_3394604.jpg'),
+(40447, 'Фрэнсис Конрой', 'Frances Conroy', 'https://image.openmoviedb.com/kinopoisk-st-images//actor_iphone/iphone360_40447.jpg')
+ON CONFLICT (id) DO NOTHING;
+
+-- Insert Movie
+INSERT INTO movie (
+    id, name, original_name, about, poster, promo_poster, release_year, slogan, director, country,
+    budget, box_office_us, box_office_global, box_office_russia, premier_russia, premier_global,
+    rating, duration, rating_kp, rating_imdb, short_description, logo, backdrop, watchability
+)
+OVERRIDING SYSTEM VALUE VALUES (
+    1048334,                                                                       -- ID
+    'Джокер',                                                                      -- Name
+    'Joker',                                                                       -- OriginalName
+    E'Готэм, начало 1980-х годов. Комик Артур Флек живет с больной матерью, которая с детства учит его «ходить с улыбкой». Пытаясь нести в мир хорошее и дарить людям радость, Артур сталкивается с человеческой жестокостью и постепенно приходит к выводу, что этот мир получит от него не добрую улыбку, а ухмылку злодея Джокера.', -- About
+    'https://image.openmoviedb.com/kinopoisk-images/1946459/84934543-5991-4c93-97eb-beb6186a3ad7/orig', -- Poster
+    NULL,                                                                          -- PromoURL is empty
+    '2019-01-01 00:00:00+00'::TIMESTAMPTZ,                                         -- ReleaseYear
+    '«Сделай счастливое лицо»',                                                    -- Slogan
+    'Тодд Филлипс',                                                                -- Director
+    'США',                                                                         -- Country
+    55000000,                                                                      -- Budget
+    335451311,                                                                     -- BoxOfficeUS
+    1078751311,                                                                    -- BoxOfficeGlobal
+    31418225,                                                                      -- BoxOfficeRussia
+    '2019-10-03'::DATE,                                                            -- PremierRussia
+    '2019-08-31'::DATE,                                                            -- PremierGlobal
+    7.5,                                                                           -- Rating
+    '122',                                                                         -- Duration
+    7.996,                                                                         -- RatingKP
+    8.3,                                                                           -- RatingIMDB
+    'Как неудачливый комик стал самым опасным человеком в Готэме. Бенефис Хоакина Феникса и «Оскар» за саундтрек', -- ShortDescription
+    'https://image.openmoviedb.com/tmdb-images/original/tDzUDdxHk4yNcZskimqHQbD1JZ1.png', -- Logo
+    'https://image.openmoviedb.com/tmdb-images/original/rlay2M5QYvi6igbGcFjq8jxeusY.jpg', -- Backdrop
+    FALSE                                                                          -- Watchability is nil
+) ON CONFLICT (id) DO NOTHING;
+
+-- Link Staff to Movie
+INSERT INTO movie_staff (staff_id, movie_id, role) VALUES
+(10020, 1048334, 'Актёр'),
+(718, 1048334, 'Актёр'),
+(3394604, 1048334, 'Актёр'),
+(40447, 1048334, 'Актёр')
+ON CONFLICT (staff_id, movie_id) DO NOTHING;
+
+-- Link Genres to Movie
+INSERT INTO movie_genre (genre_id, movie_id) VALUES
+((SELECT id from genre where name = 'драма'), 1048334),
+((SELECT id from genre where name = 'криминал'), 1048334),
+((SELECT id from genre where name = 'триллер'), 1048334)
+ON CONFLICT (genre_id, movie_id) DO NOTHING;
+
+
+-- Commit Transaction
+COMMIT;
+
+
+-- Start Transaction
+BEGIN;
+
 -- Inserting data into the movie table
 INSERT INTO movie (id, name, original_name, about, poster, promo_poster, release_year, slogan, director, country, budget, box_office_us, box_office_global, box_office_russia, premier_russia, premier_global, rating, duration, rating_kp, rating_imdb, short_description, logo, backdrop, created_at, updated_at)
 OVERRIDING SYSTEM VALUE VALUES
@@ -1411,7 +1656,6 @@ INSERT INTO collection_movie (collection_id, movie_id) VALUES
 (1, 326),
 (1, 111543),
 
-
 (2, 1108577),
 (2, 725190),
 (2, 6462),
@@ -1438,7 +1682,7 @@ rating_kp, rating_imdb, short_description, logo, backdrop) OVERRIDING SYSTEM VAL
     'В отдаленной деревне на острове Карпатия застенчивую девочку воспитывают в страхе перед неуловимым видом животных, известным как очи. Но когда она обнаруживает, что раненый детеныш Очи остался дома, она убегает, чтобы вернуть его домой.',
     'https://www.kino-teatr.ru/movie/poster/185445/232809.jpg',
     NULL,
-    '2025-05-08T00:00:00.000000Z',
+    '2025-06-08T00:00:00.000000Z',
     'Там есть что-то еще.',
     'Исайя Саксон',
     'США, Финляндия, Великобритания',
@@ -1476,54 +1720,3 @@ INSERT INTO review (user_id, movie_id, review_text, score) VALUES
 -- add favorites to test user
 insert into user_person_favorite (person_id, user_id) values (1089330, 1), (2378404, 1);
 insert into user_movie_favorite  (movie_id, user_id) values (361, 1), (400787, 1), (448, 1);
-
-
-
-
-
--- INSERT INTO person (full_name, en_full_name, photo) VALUES
--- ('Леонардо Ди Каприо', 'Leonardo DiCaprio', 'https://avatars.mds.yandex.net/get-entity_search/2310675/1130394491/S600xU_2x'),
--- ('Морган Фримен', 'Morgan Freeman', 'https://avatars.mds.yandex.net/get-entity_search/2057552/1132084397/S600xU_2x'),
--- ('Джонни Депп', 'Johnny Depp', '/static/avatars/avatar_default_picture.svg'),
--- ('Том Круз', 'Tom Cruise', '/static/avatars/avatar_default_picture.svg'),
--- ('Уилл Смит', 'Will Smith', '/static/avatars/avatar_default_picture.svg'),
--- ('Мэтт Дэймон', 'Matt Damon', 'https://avatars.mds.yandex.net/get-entity_search/1245892/935872902/S600xU_2x'),
--- ('Киану Ривз', '', ''),
--- ('Боб Персичетти', '', ''),
--- ('Питер Рэмзи', '', ''),
--- ('Родни Ротман', '', '');
-
--- -- peron id 15-17
--- INSERT INTO person (full_name, en_full_name, photo) VALUES
--- ('Шамеик Мур', 'Shameik Moore', 'https://st.kp.yandex.net/images/actor_iphone/iphone360_2378404.jpg'),
--- ('Джейк Джонсон', 'Jake Johnson', 'https://st.kp.yandex.net/images/actor_iphone/iphone360_1089330.jpg'),
--- ('Хейли Стайнфелд', 'Hailee Steinfeld', 'https://st.kp.yandex.net/images/actor_iphone/iphone360_1478559.jpg');
-
-
-
--- UPDATE person SET (full_name, en_full_name, photo, about, sex, growth, birthday) =
--- (
---     'Киану Ривз',
---     'Keanu Reeves',
---     'https://i.pinimg.com/originals/a3/70/0b/a3700bdf15fcceabf740e1f347dbb5a2.jpg',
---     '\nКиану Чарльз Ривз — канадский актёр, кинорежиссёр, кинопродюсер и музыкант.\nНаиболее известен своими ролями в киносериях «Матрица», «Билл и Тед», «Джон Уик», а также в фильмах «На гребне волны», «Скорость», «Адвокат дьявола», «Константин: Повелитель тьмы».\nОбладатель звезды на Голливудской «Аллее славы».',
---     'Мужчина',
---     '186',
---     '1964-09-2'
--- ) where full_name = 'Киану Ривз';
-
-
--- -- creating watch provirders for movie 
--- INSERT INTO watch_provider (movie_id, name, logo, watch_url) VALUES
--- (
---     920265,
---     'Триколор Кино и ТВ',
---     'https://avatars.mds.yandex.net/get-ott/239697/947e777c-2f73-4cbc-b09d-6bfa3966ba13/orig',
---     'https://kino.tricolor.tv/watch/chelovek-pauk-cherez-vselennye-2018/'
--- ),
--- (
---     920265,
---     'Кинопоиск HD',
---     'https://play-lh.googleusercontent.com/5czw6iycA8YhjI653GQdwnnmu8NNzEMXV32gZKoVCYZV6PQUAv_YV0uJ2PU1E-Jm9PE=w480-h960-rw',
---     'https://hd.kinopoisk.ru/film/4d924361a6c32b09aeee7d1a63f9c3bf?content_tab=overview'
--- );

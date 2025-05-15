@@ -2,7 +2,8 @@ version: '3'
 
 services:
   db:
-    image: postgres:15-alpine
+    build:
+      dockerfile: postgres.Dockerfile
     container_name: filmlk_db
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -11,12 +12,23 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - ./db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    healthcheck:
+      test: [ 'CMD-SHELL', "sh -c 'pg_isready -U service_user -d ${POSTGRES_DB:-filmlk}'" ]
+      interval: 2s
+      timeout: 3s
+      retries: 3
     networks:
       - filmlk-net # Add the shared network
+
+volumes:
+  db_data:
+
 
 networks:
   filmlk-net:
     external: true # Declare it as external
+    name: filmlk-net

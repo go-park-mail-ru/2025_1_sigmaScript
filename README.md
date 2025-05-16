@@ -24,4 +24,4 @@
 
 [Фронтенд проекта](https://github.com/frontend-park-mail-ru/2025_1_sigmaScript)
 
-[Описание базы данных](db/normalized/relations.md)
+[Описание базы данных](internal/db/normalized/relations.md)

@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -e
-
 source ./export_env_vars.sh ".env"
 
 srvs_paths=("internal/db/postgresql_filmlk" "user_service" "auth_service" "movie_service" "./")
@@ -17,11 +16,10 @@ for service_path in "${srvs_paths[@]}"; do
 
   pushd "$service_path" > /dev/null
   docker-compose down -v
-  docker-compose up -d
   popd > /dev/null
 done
 
 echo "Проверяем статус всех контейнеров..."
 docker ps
 
-echo "Все сервисы запущены!"
+echo "Все сервисы остановлены!"

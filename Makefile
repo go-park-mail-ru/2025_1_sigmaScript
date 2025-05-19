@@ -32,8 +32,11 @@ build-linux:
 build-darwin:
 	@make build GOOS=darwin GOARCH=arm64
 
-run: build
-	@./$(APP_NAME)
+run:
+	@./start_app.sh
+
+stop:
+	@./stop_app.sh
 
 test:
 	@go test -coverprofile=$(COVERAGE_FILE) -covermode=atomic $(TEST_PACKAGES)
@@ -70,4 +73,4 @@ run-movie-service: build-movie-service
 run-auth-service: build-auth-service
 	@./$(AUTH_SERVICE_NAME)
 
-.PHONY: build cross-build run test html coverage clean build-auth-service run-auth-service build-user-service run-user-service
+.PHONY: build cross-build run stop test html coverage clean build-auth-service run-auth-service build-user-service run-user-service

@@ -28,7 +28,6 @@ is_postgres_var() {
 
 
 while IFS= read -r line; do
-# while IFS='=' read -r var_name var_value; do
   if [[ "$line" =~ ^# || -z "$line" ]]; then
     continue
   fi

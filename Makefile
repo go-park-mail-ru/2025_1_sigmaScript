@@ -20,23 +20,29 @@ TEST_PACKAGES := $(shell go list ./... | grep -v -Ff $(COVERIGNORE_FILE))
 GOOS?=$(shell go env GOOS)
 GOARCH?=$(shell go env GOARCH)
 
-build:
+build-bin:
 	@GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o $(APP_NAME)$(if $(filter windows,$(GOOS)),.exe,) ./cmd/main.go
 
 build-windows:
-	@make build GOOS=windows GOARCH=amd64
+	@make build-bin GOOS=windows GOARCH=amd64
 
 build-linux:
-	@make build GOOS=linux GOARCH=amd64
+	@make build-bin GOOS=linux GOARCH=amd64
 
 build-darwin:
-	@make build GOOS=darwin GOARCH=arm64
+	@make build-bin GOOS=darwin GOARCH=arm64
+
+build:
+	@./start_app.sh --build
 
 run:
 	@./start_app.sh
 
 stop:
 	@./stop_app.sh
+
+remove:
+	@./stop_app.sh --remove
 
 test:
 	@go test -coverprofile=$(COVERAGE_FILE) -covermode=atomic $(TEST_PACKAGES)
@@ -73,4 +79,4 @@ run-movie-service: build-movie-service
 run-auth-service: build-auth-service
 	@./$(AUTH_SERVICE_NAME)
 
-.PHONY: build cross-build run stop test html coverage clean build-auth-service run-auth-service build-user-service run-user-service
+.PHONY: build build-bin cross-build run stop test html coverage clean build-auth-service run-auth-service build-user-service run-user-service

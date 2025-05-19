@@ -1,7 +1,13 @@
 #!/bin/bash
 
-set -e
 source ./export_env_vars.sh ".env"
+
+remove_flag=""
+
+if [[ "$1" == "--remove" ]]; then
+  remove_flag="-v"
+fi
+
 
 srvs_paths=("internal/db/postgresql_filmlk" "user_service" "auth_service" "movie_service" "./")
 
@@ -15,9 +21,18 @@ for service_path in "${srvs_paths[@]}"; do
   fi
 
   pushd "$service_path" > /dev/null
-  docker-compose down -v
+
+  if [[ "$1" == "--remove" ]]; then
+    docker-compose down -v
+  else
+    docker-compose down
+  fi  
   popd > /dev/null
 done
+
+if [[ "$1" == "--remove" ]]; then
+  docker volume prune -f
+fi
 
 echo "Проверяем статус всех контейнеров..."
 docker ps

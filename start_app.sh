@@ -1,6 +1,11 @@
 #!/bin/bash
 
-set -e
+
+build_flag=""
+
+if [[ "$1" == "--build" ]]; then
+  build_flag="$1"
+fi
 
 source ./export_env_vars.sh ".env"
 
@@ -16,8 +21,14 @@ for service_path in "${srvs_paths[@]}"; do
   fi
 
   pushd "$service_path" > /dev/null
-  docker-compose down -v
-  docker-compose up -d
+  if [[ "$1" == "--build" ]]; then
+    echo "building docker-compose for $service_path..."
+    docker-compose down -v
+    docker-compose up --build -d
+  else
+    docker-compose down -v
+    docker-compose up -d
+  fi
   popd > /dev/null
 done
 

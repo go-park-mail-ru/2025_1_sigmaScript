@@ -5,6 +5,7 @@ services:
     build:
       dockerfile: postgres.Dockerfile
     container_name: filmlk_db
+    image: postgresql_filmlk-db:latest
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}

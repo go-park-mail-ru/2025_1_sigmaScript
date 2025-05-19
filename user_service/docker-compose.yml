@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  user_service:
+    container_name: user_service
+    image: user_service:latest
+    build:
+      context: ..
+      dockerfile: user_service/Dockerfile
+    restart: always
+    ports:
+      - "8082:8082"
+    networks:
+      - filmlk-net
+    volumes:
+      - ${KINOLK_AVATARS_FOLDER:-/static/avatars/}:${KINOLK_AVATARS_FOLDER:-/static/avatars/}
+
+networks:
+  filmlk-net:
+    external:
+      name: filmlk-net

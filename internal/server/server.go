@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	auth "github.com/go-park-mail-ru/2025_1_sigmaScript/auth_service/api/auth_api_v1/proto"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
@@ -12,9 +11,6 @@ import (
 	movie "github.com/go-park-mail-ru/2025_1_sigmaScript/movie_service/api/movie_api_v1/proto"
 	user "github.com/go-park-mail-ru/2025_1_sigmaScript/user_service/api/user_api_v1/proto"
 
-	// repoAuthSessions "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/movie_repo"
-	// serviceAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/movie_service"
-	//repoUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/repository"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -23,9 +19,6 @@ import (
 
 	csrfDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/csrf/delivery"
 	deliveryMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/delivery"
-
-	//repoMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/repository"
-	//serviceMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/service"
 
 	deliveryReviews "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/reviews/delivery"
 	deliveryStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/delivery"
@@ -63,7 +56,7 @@ func New(cfg *config.Config) *Server {
 func (s *Server) Run() error {
 	log.Info().Msg("Trying to connect to auth movie_service")
 	aGrpcConn, err := grpc.NewClient(
-		":8081",
+		"auth_service:8081",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
@@ -79,7 +72,7 @@ func (s *Server) Run() error {
 
 	log.Info().Msg("Trying to connect to auth movie_service")
 	mGrpcConn, err := grpc.NewClient(
-		":8083",
+		"movie_service:8083",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
@@ -94,7 +87,7 @@ func (s *Server) Run() error {
 	}()
 
 	uGrpcConn, err := grpc.NewClient(
-		":8082",
+		"user_service:8082",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
@@ -108,22 +101,8 @@ func (s *Server) Run() error {
 		}
 	}()
 
-	ctxPgDb := config.WrapPgDatabaseContext(context.Background(), s.Config.PostgresConfig)
-	ctxPgDb, cancelPgDb := context.WithTimeout(ctxPgDb, time.Second*30)
-	defer cancelPgDb()
-
-	// pgdb, err := db.SetupDatabase(ctxPgDb, cancelPgDb)
-	// if err != nil {
-	// 	return fmt.Errorf("error couldnt connect to postgres database: %w", err)
-	// }
-
-	// sessionRepo := repoAuthSessions.NewSessionRepository()
-	// sessionService := serviceAuth.NewSessionService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionRepo)
-
 	sessionService := client.NewAuthClient(auth.NewSessionRPCClient(aGrpcConn))
 
-	//userRepo := repoUsers.NewUserRepository(pgdb)
-	//userService := serviceUsers.NewUserService(userRepo)
 	userService := client.NewUserClient(user.NewUserServiceClient(uGrpcConn))
 	userHandler := deliveryUsers.NewUserHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)
 
@@ -134,22 +113,14 @@ func (s *Server) Run() error {
 	movieService := client.NewMovieClient(movie.NewMovieRPCClient(mGrpcConn))
 	movieHandler := deliveryMovie.NewMovieHandler(movieService)
 
-	//staffPersonRepo := repoStaff.NewStaffPersonPostgresRepository(pgdb)
-	//staffPersonService := serviceStaff.NewStaffPersonService(staffPersonRepo)
 	staffPersonHandler := deliveryStaff.NewStaffPersonHandler(movieService)
 
-	//collectionRepo := repoCollection.NewCollectionPostgresRepository(pgdb)
-	//collectionService := serviceCollection.NewCollectionService(collectionRepo)
 	collectionHandler := deliveryCollection.NewCollectionHandler(movieService)
 
 	movieReviewHandler := deliveryReviews.NewReviewHandler(userService, sessionService, movieService)
 
-	//genreRepo := repoGenre.NewGenreRepository(pgdb)
-	//genreService := serviceGenre.NewGenreService(genreRepo)
 	genreHandler := deliveryGenre.NewGenreHandler(movieService)
 
-	//searchRepo := repoSearch.NewSearchRepository(pgdb)
-	//searchService := serviceSearch.NewSearchService(searchRepo)
 	searchHandler := deliverySearch.NewSearchHandler(movieService)
 
 	mx := router.NewRouter()

@@ -1,5 +1,5 @@
 server:
-  address: localhost
+  address: main_server
   port: 8080
   read_timeout: 5s
   write_timeout: 5s
@@ -18,3 +18,19 @@ cookie:
   same_site: 3
   path: "/"
   expiration_age: -1
+
+database:
+  host: filmlk_db
+  port: 5432
+  user: "filmlk_user"
+  password: "filmlk_password"
+  dbname: "filmlk"
+  max_open_conns: 10
+  max_idle_conns: 5
+  conn_max_lifetime: 300s
+  conn_max_idle_time: 60s
+
+storage:
+  relative_path: "/static/avatars/"
+
+

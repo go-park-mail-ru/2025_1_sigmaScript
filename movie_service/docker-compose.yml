@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  movie_service:
+    container_name: movie_service
+    image: movie_service:latest
+    build:
+      context: ..
+      dockerfile: movie_service/Dockerfile
+    restart: always
+    ports:
+      - "8083:8083"
+    networks:
+      - filmlk-net
+
+networks:
+  filmlk-net:
+    external:
+      name: filmlk-net

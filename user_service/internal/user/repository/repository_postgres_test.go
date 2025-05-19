@@ -11,7 +11,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/user_service/internal/models"
 	"github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"

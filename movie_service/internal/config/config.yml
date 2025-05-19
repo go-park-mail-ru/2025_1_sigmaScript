@@ -2,8 +2,8 @@ listener:
   port: ":8083"
 
 database:
-  host: "127.0.0.1"
-  port: 5433
+  host: filmlk_db
+  port: 5432
   user: "filmlk_user"
   password: "filmlk_password"
   dbname: "filmlk"

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config/defaults"
@@ -67,24 +68,24 @@ func New() (*Config, error) {
 		return nil, errors.Wrap(err, errs.ErrUnmarshalConfig)
 	}
 
-	config.PostgresConfig = *setupPgConfig()
+	postgresConf, err := setupPgConfig()
+	if err != nil {
+		log.Error().Err(errors.Wrap(err, errs.ErrUnmarshalConfig)).Msg(errors.Wrap(err, errs.ErrUnmarshalConfig).Error())
+		return nil, errors.Wrap(err, errs.ErrUnmarshalConfig)
+	}
+
+	config.PostgresConfig = *postgresConf
 
 	log.Info().Msg("Config initialized")
 	return &config, nil
 }
 
-func setupPgConfig() *ConfigPgDB {
+func setupPgConfig() (*ConfigPgDB, error) {
 	// TODO fix config: it`s test database test password
-	postgres := Postgres{
-		Host:            viper.GetString(POSTGRES_HOST),
-		Port:            viper.GetInt(POSTGRES_PORT),
-		User:            viper.GetString(POSTGRES_USER),
-		Password:        viper.GetString(DB_PASSWORD),
-		Name:            viper.GetString(POSTGRES_DB),
-		MaxOpenConns:    100,
-		MaxIdleConns:    30,
-		ConnMaxLifetime: 30,
-		ConnMaxIdleTime: 5,
+	var postgres Postgres
+	if err := viper.Unmarshal(&postgres); err != nil {
+		log.Error().Err(errors.Wrap(err, errs.ErrUnmarshalConfig)).Msg(errors.Wrap(err, errs.ErrUnmarshalConfig).Error())
+		return nil, errors.Wrap(err, errs.ErrUnmarshalConfig)
 	}
 
 	avatarLocalStorage := LocalAvatarsStorage{
@@ -98,7 +99,7 @@ func setupPgConfig() *ConfigPgDB {
 	}
 
 	pgListener := Listener{
-		Port: viper.GetString(POSTGRES_PORT),
+		Port: strconv.Itoa(postgres.Port),
 	}
 
 	cfgDB := ConfigPgDB{
@@ -106,7 +107,7 @@ func setupPgConfig() *ConfigPgDB {
 		Databases: pgDatabase,
 	}
 
-	return &cfgDB
+	return &cfgDB, nil
 }
 
 func setupServer() {

@@ -9,6 +9,13 @@ cd db/postgresql_filmlk/
 ```bash
 source ../export_env_vars.sh <env_file>
 ```
+
+## Создаём внешнюю сеть docker
+```bash
+docker network create filmlk-net
+```
+
+
 ## Поднимаем PostgreSQL с помощью docker compose
 ```bash
 docker-compose up

@@ -1503,3 +1503,136 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, UPDATE, DELETE ON TABLES
 CREATE USER service_user WITH PASSWORD 'service_user_password';
 
 GRANT schema_editor_role TO service_user;
+
+
+
+
+CREATE EXTENSION vector;
+
+CREATE OR REPLACE FUNCTION array_sort(ANYARRAY)
+RETURNS ANYARRAY LANGUAGE SQL
+AS $$
+SELECT ARRAY(SELECT unnest($1) ORDER BY 1)
+$$;
+
+-- Create the similarity_movie table
+CREATE TABLE similarity_movie (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE UNIQUE NOT NULL,
+    movie_vector vector(41)
+);
+
+
+
+CREATE OR REPLACE FUNCTION embed_info(
+    movie_name_input TEXT,
+    genres_in INTEGER[],
+    actors_in TEXT[]
+)
+RETURNS vector(41)
+AS $$
+DECLARE
+    result_vector real[41];
+    i INTEGER;
+    j INTEGER;
+    norm_factor real := 2147483647.0;
+    sorted_genres INTEGER[];
+    sorted_actors TEXT[];
+BEGIN
+    FOR i IN 1..41 LOOP
+        result_vector[i] := 0.0;
+    END LOOP;
+
+    IF movie_name_input IS NOT NULL AND movie_name_input != '' THEN
+        result_vector[1] := hashtext(movie_name_input)::real / norm_factor;
+    END IF;
+
+    IF genres_in IS NOT NULL THEN
+        sorted_genres := array_sort(genres_in)::INTEGER[];
+        j := 1;
+        FOR i IN 1..20 LOOP
+            IF sorted_genres[j] IS NOT NULL AND sorted_genres[j] = i THEN
+                result_vector[1 + i] := (sorted_genres[j])::real / norm_factor;
+                j = j+1;
+            END IF;
+        END LOOP;
+    END IF;
+
+    IF actors_in IS NOT NULL THEN
+        sorted_actors := array_sort(actors_in)::TEXT[];
+        FOR i IN 1..20 LOOP
+            IF i <= array_length(sorted_actors, 1) AND sorted_actors[i] IS NOT NULL
+            AND sorted_actors[i] != '' AND sorted_actors[i] != ' ' THEN
+                result_vector[21 + i] := hashtext(sorted_actors[i])::real / norm_factor;
+            END IF;
+        END LOOP;
+    END IF;
+
+    RETURN result_vector::vector;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+
+CREATE OR REPLACE FUNCTION generate_movie_vector(movie_id_input INTEGER)
+RETURNS vector(41)
+AS $$
+DECLARE
+    movie_name TEXT;
+    genres INTEGER[];
+    actors TEXT[];
+BEGIN
+    SELECT m.name
+    INTO movie_name
+    FROM movie m
+    WHERE m.id = movie_id_input;
+
+    SELECT array_agg(g.id)
+    INTO genres
+    FROM movie_genre mg
+    JOIN genre g ON mg.genre_id = g.id
+    WHERE mg.movie_id = movie_id_input;
+
+    SELECT array_agg(p.full_name)
+    INTO actors
+    FROM movie_staff ms
+    JOIN person p ON ms.staff_id = p.id
+    WHERE ms.movie_id = movie_id_input;
+
+    RETURN embed_info(movie_name, genres, actors);
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+CREATE OR REPLACE FUNCTION populate_similarity_movie()
+RETURNS VOID
+AS $$
+DECLARE
+    m_id INTEGER;
+BEGIN
+    FOR m_id IN SELECT id FROM movie
+    LOOP
+        INSERT INTO similarity_movie (movie_id, movie_vector)
+        VALUES (m_id, generate_movie_vector(m_id))
+        ON CONFLICT (movie_id) DO UPDATE SET movie_vector = EXCLUDED.movie_vector;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+
+SELECT populate_similarity_movie();
+
+CREATE INDEX ON similarity_movie USING ivfflat (movie_vector vector_cosine_ops) WITH (lists = 100);
+
+SELECT
+    m.id AS id,
+    m.name AS title,
+    m.poster AS preview_url,
+    m.duration AS duration,
+    m.rating AS rating
+FROM similarity_movie sm1
+JOIN similarity_movie sm2 ON sm2.movie_id != sm1.movie_id
+JOIN movie m ON sm2.movie_id = m.id
+WHERE sm1.movie_id = 361
+ORDER BY sm1.movie_vector <-> sm2.movie_vector DESC
+LIMIT 10;

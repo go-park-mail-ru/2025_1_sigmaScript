@@ -5,14 +5,14 @@ postgres_prefixes=("POSTGRES_USER" "DB_PASSWORD" "POSTGRES_DB" "POSTGRES_PORT" "
 if [ -z "$1" ]; then
   echo "Usage: $0 <env_file>"
   echo "  <env_file>: Path to the file containing environment variables"
-  exit 1
+  return 1
 fi
 
 env_file="$1"
 
 if [ ! -f "$env_file" ]; then
   echo "Error: Environment file '$env_file' not found."
-  exit 1
+  return 1
 fi
 
 is_postgres_var() {

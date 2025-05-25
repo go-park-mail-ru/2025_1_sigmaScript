@@ -94,6 +94,21 @@ LEFT JOIN review r ON m.id = r.movie_id
 LEFT JOIN "user" u ON r.user_id = u.id
 WHERE m.id = $1;	
 `
+
+	getMovieSimilarMoviesQuery = `
+SELECT
+    m.id AS id,
+    m.name AS title,
+    m.poster AS preview_url,
+    m.duration AS duration,
+    m.rating AS rating
+FROM similarity_movie sm1
+JOIN similarity_movie sm2 ON sm2.movie_id != sm1.movie_id
+JOIN movie m ON sm2.movie_id = m.id
+WHERE sm1.movie_id = $1
+ORDER BY sm1.movie_vector <-> sm2.movie_vector DESC
+LIMIT 10;	
+`
 )
 
 func (r *MoviePostgresRepository) GetMovieFromRepoByID(ctx context.Context, movieID int) (*mocks.MovieJSON, error) {
@@ -295,6 +310,60 @@ func (r *MoviePostgresRepository) GetMovieFromRepoByID(ctx context.Context, movi
 		return nil, errMsg
 	}
 
+	// get similar movies
+	resSimilarMovies := []mocks.Movie{}
+	execRowSimilarMovies, err := r.pgdb.Query(getMovieSimilarMoviesQuery, movieID)
+	if err != nil {
+		logger.Error().Err(err).Msg(errors.Wrapf(err, "error in query statement in GetMovieFromRepoByID").Error())
+		return nil, errors.Wrap(err, "error in prepare query statement in GetMovieFromRepoByID")
+	}
+	defer func() {
+		if closeErr := execRowSimilarMovies.Close(); closeErr != nil {
+			logger.Error().Err(closeErr).Msg("failed_to_close_statement")
+			return
+		}
+	}()
+
+	for execRowSimilarMovies.Next() {
+		var similarMovieID sql.NullInt64
+		var similarMovieName sql.NullString
+		var similarMoviePoster sql.NullString
+		var similarMovieDuration sql.NullString
+		var similarMovieRating sql.NullFloat64
+
+		if err := execRowSimilarMovies.Scan(
+			&similarMovieID,
+			&similarMovieName,
+			&similarMoviePoster,
+			&similarMovieDuration,
+			&similarMovieRating,
+		); err != nil {
+			errMsg := errors.Wrap(err, "error in query scan in GetMovieFromRepoByID")
+			logger.Error().Err(errMsg).Msg(errMsg.Error())
+			return nil, errMsg
+		}
+
+		// skip if bad id or title name
+		if !similarMovieID.Valid || !similarMovieName.Valid {
+			continue
+		}
+
+		similarMovie := mocks.Movie{
+			ID:         int(similarMovieID.Int64),
+			Title:      similarMovieName.String,
+			PreviewURL: similarMoviePoster.String,
+			Duration:   similarMovieDuration.String,
+			Rating:     similarMovieRating.Float64,
+		}
+
+		resSimilarMovies = append(resSimilarMovies, similarMovie)
+	}
+	if execErr := execRowSimilarMovies.Err(); execErr != nil {
+		errMsg := errors.Wrap(execErr, "error in query next in GetMovieFromRepoByID")
+		logger.Error().Err(errMsg).Msg(errMsg.Error())
+		return nil, errMsg
+	}
+
 	// result
 	resMovie = mocks.MovieJSON{
 		ID:              movieID,
@@ -320,6 +389,7 @@ func (r *MoviePostgresRepository) GetMovieFromRepoByID(ctx context.Context, movi
 		Genres:          resMovieGenres.String,
 		Logo:            resMovieLogo.String,
 		Backdrop:        resMovieBackdrop.String,
+		SimilarMovies:   resSimilarMovies,
 	}
 
 	return &resMovie, nil

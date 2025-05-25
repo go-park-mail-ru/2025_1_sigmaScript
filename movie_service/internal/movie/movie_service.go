@@ -47,29 +47,6 @@ func New(isTest bool) (*App, error) {
 
 	reflection.Register(srv)
 
-	// cfg := config.ConfigPgDB{
-	// 	Listener: config.Listener{
-	// 		Port: ":8083",
-	// 	},
-	// 	Databases: config.Databases{
-	// 		Postgres: config.Postgres{
-	// 			Host:            "127.0.0.1",
-	// 			Port:            5433,
-	// 			User:            "filmlk_user",
-	// 			Password:        "filmlk_password",
-	// 			Name:            "filmlk",
-	// 			MaxOpenConns:    100,
-	// 			MaxIdleConns:    30,
-	// 			ConnMaxLifetime: 300,
-	// 			ConnMaxIdleTime: 60,
-	// 		},
-	// 		LocalStorage: config.LocalAvatarsStorage{
-	// 			UserAvatarsFullPath:   "/Users/propolisss/frontend/2025_1_sigmaScript/public/static/avatars/",
-	// 			UserAvatarsStaticPath: "/static/avatars/",
-	// 		},
-	// 	},
-	// }
-
 	cfg, err := config.New()
 	if err != nil {
 		logger.Fatal().Err(err).Msg("cannot create config")

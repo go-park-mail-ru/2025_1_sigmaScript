@@ -127,6 +127,20 @@ func (cl *MovieClient) GetMovieByID(ctx context.Context, movieID int) (*mocks.Mo
 		}(),
 		Logo:     pbM.GetLogo(),
 		Backdrop: pbM.GetBackdrop(),
+		SimilarMovies: func() []mocks.Movie {
+			out := make([]mocks.Movie, 0, len(pbM.GetSimilarMovies()))
+			for _, r := range pbM.GetSimilarMovies() {
+				out = append(out, mocks.Movie{
+					ID:          int(r.GetId()),
+					Title:       r.GetTitle(),
+					PreviewURL:  r.GetPreviewUrl(),
+					Duration:    r.GetDuration(),
+					ReleaseDate: r.GetReleaseDate(),
+					Rating:      r.GetRating(),
+				})
+			}
+			return out
+		}(),
 	}, nil
 }
 

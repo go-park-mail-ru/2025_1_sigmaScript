@@ -54,6 +54,7 @@ func (h *MovieHandler) GetMovie(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info().Msgf("getting movie by id: %d", movieID)
 	movieJSON, err := h.movieService.GetMovieByID(r.Context(), movieID)
+
 	if err != nil {
 		logger.Error().Err(err).Msg(err.Error())
 		if errors.Is(err, errs.ErrMovieNotFound) {

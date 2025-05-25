@@ -87,6 +87,28 @@ func SrvReviewsToDescReviews(srvs []mocks.ReviewJSON) []*pb.ReviewJSON {
 	return out
 }
 
+func SrvSimilarMovieToDescSimilarMovie(srv *mocks.Movie) *pb.Movie {
+	if srv == nil {
+		return nil
+	}
+	return &pb.Movie{
+		Id:          int64(srv.ID),
+		Title:       srv.Title,
+		PreviewUrl:  srv.PreviewURL,
+		Duration:    srv.Duration,
+		ReleaseDate: srv.ReleaseDate,
+		Rating:      srv.Rating,
+	}
+}
+
+func SrvSimilarMoviesToDescSimilarMovies(srvs []mocks.Movie) []*pb.Movie {
+	out := make([]*pb.Movie, 0, len(srvs))
+	for i := range srvs {
+		out = append(out, SrvSimilarMovieToDescSimilarMovie(&srvs[i]))
+	}
+	return out
+}
+
 func SrvWatchProvidersToDesc(srv []mocks.WatchProviderJSON) []*pb.WatchProviderJSON {
 	out := make([]*pb.WatchProviderJSON, 0, len(srv))
 	for _, w := range srv {
@@ -126,6 +148,7 @@ func SrvMovieToDescMovie(srv *mocks.MovieJSON) *pb.MovieJSON {
 		Watchability:    SrvWatchProvidersToDesc(srv.Watchability),
 		Logo:            srv.Logo,
 		Backdrop:        srv.Backdrop,
+		SimilarMovies:   SrvSimilarMoviesToDescSimilarMovies(srv.SimilarMovies),
 	}
 }
 

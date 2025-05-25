@@ -51,6 +51,7 @@ type MovieJSON struct {
 	Watchability    []WatchProviderJSON `json:"watchability,omitempty"`
 	Logo            string              `json:"logo,omitempty"`
 	Backdrop        string              `json:"backdrop,omitempty"`
+	SimilarMovies   []Movie             `json:"similar_movies,omitempty"`
 }
 
 // Новая структура

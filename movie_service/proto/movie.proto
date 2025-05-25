@@ -30,6 +30,7 @@ message MovieJSON {
     repeated WatchProviderJSON watchability = 24;
     string logo              = 25;
     string backdrop          = 26;
+    repeated Movie similar_movies = 27;
 }
 
 message PersonJSON {
@@ -46,6 +47,15 @@ message PersonJSON {
     string genres       = 11;
     string total_films  = 12;
     map<int32,MovieJSON> movie_collection = 13;
+}
+
+message Movie {
+	int64 id                = 1;
+	string title            = 2;
+	string preview_url      = 3;
+	string duration         = 4;
+	string release_date     = 5;
+	double rating           = 6;
 }
 
 message ReviewUserDataJSON {

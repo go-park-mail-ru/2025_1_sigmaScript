@@ -51,6 +51,7 @@ func (h *MovieServiceGRPCHandler) GetMovieByID(ctx context.Context, req *pb.GetM
 	}
 
 	logger.Info().Interface("movie_data_name", movieData.Name).Msg("GetMovieByID: movie found")
+
 	return adapter.ToDescGetMovieByIDResponse(movieData), nil
 }
 

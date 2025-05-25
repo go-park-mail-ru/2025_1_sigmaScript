@@ -12,6 +12,7 @@ import (
 	searchDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/search/delivery"
 	staffDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/delivery"
 	userDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/delivery/http"
+	wsNotificationDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/websocket_notification/delivery"
 	"github.com/gorilla/mux"
 )
 
@@ -48,6 +49,10 @@ func SetupGenresHandlers(router *mux.Router, genreHandler genreDelivery.GenreHan
 	router.HandleFunc("/genres/{genre_id}", genreHandler.GetGenreByID).Methods(http.MethodGet, http.MethodOptions).Name("UpdateReviewOfMovieRoute")
 }
 
+func SetupWSNotificationHandler(router *mux.Router, wsNotificationHandler wsNotificationDelivery.NotificationHandlerInterface) {
+	router.HandleFunc("/ws", wsNotificationHandler.WSHandler).Methods(http.MethodGet, http.MethodConnect, http.MethodOptions)
+}
+
 func SetupSearchHandlers(router *mux.Router, searchHandler searchDelivery.SearchHandlerInterface) {
 	router.HandleFunc("/search", searchHandler.SearchActorsAndMovies).Methods(http.MethodPost, http.MethodOptions).Name("SearchRoute")
 }
@@ -76,6 +81,4 @@ func ApplyMiddlewares(router *mux.Router) {
 	router.Use(middleware.RequestWithLoggerMiddleware)
 	router.Use(middleware.PreventPanicMiddleware)
 	router.Use(middleware.MiddlewareCors)
-
-	// router.Use(middleware.CsrfTokenMiddleware)
 }

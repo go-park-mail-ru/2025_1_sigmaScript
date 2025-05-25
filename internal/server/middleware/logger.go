@@ -3,6 +3,7 @@ package middleware
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -48,6 +49,12 @@ func RequestWithLoggerMiddleware(next http.Handler) http.Handler {
 		customResponseWriter := NewResponseWriterWithStatus(w, r.URL.Path)
 
 		requestStartTime := time.Now()
+
+		if strings.HasPrefix(r.URL.Path, "/ws") {
+			logger.Info().Msg(fmt.Sprintf("logged websocket connection from %s", r.RequestURI))
+			next.ServeHTTP(w, r)
+			return
+		}
 
 		next.ServeHTTP(customResponseWriter, r.WithContext(ctxtWithLogger))
 		status := customResponseWriter.Status

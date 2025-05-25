@@ -12,7 +12,7 @@ fi
 srvs_paths=("internal/db/postgresql_filmlk" "user_service" "auth_service" "movie_service" "./")
 
 for service_path in "${srvs_paths[@]}"; do
-  echo "Запуск docker-compose для $service_path"
+  echo "Запуск docker compose для $service_path"
 
   # Проверяем, существует ли docker-compose.yml
   if [ ! -f "$service_path/docker-compose.yml" ]; then
@@ -23,9 +23,9 @@ for service_path in "${srvs_paths[@]}"; do
   pushd "$service_path" > /dev/null
 
   if [[ "$1" == "--remove" ]]; then
-    docker-compose down -v
+    docker compose down -v
   else
-    docker-compose down
+    docker compose down
   fi  
   popd > /dev/null
 done

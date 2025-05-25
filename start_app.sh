@@ -12,7 +12,7 @@ source ./export_env_vars.sh ".env"
 srvs_paths=("internal/db/postgresql_filmlk" "user_service" "auth_service" "movie_service" "./")
 
 for service_path in "${srvs_paths[@]}"; do
-  echo "Запуск docker-compose для $service_path"
+  echo "Запуск docker compose для $service_path"
 
   # Проверяем, существует ли docker-compose.yml
   if [ ! -f "$service_path/docker-compose.yml" ]; then
@@ -22,12 +22,12 @@ for service_path in "${srvs_paths[@]}"; do
 
   pushd "$service_path" > /dev/null
   if [[ "$1" == "--build" ]]; then
-    echo "building docker-compose for $service_path..."
-    docker-compose down -v
-    docker-compose up --build -d
+    echo "building docker compose for $service_path..."
+    docker compose down -v
+    docker compose up --build -d
   else
-    docker-compose down -v
-    docker-compose up -d
+    docker compose down -v
+    docker compose up -d
   fi
   popd > /dev/null
 done

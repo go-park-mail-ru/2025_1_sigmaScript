@@ -12,6 +12,7 @@ import (
 
 const (
 	kinolkHostEnv             = "KINOLK_FRONTEND_HOST"
+	kinolkHostWSEnv           = "KINOLK_FRONTEND_HOST_WS"
 	kinolkAllowedMethodsEnv   = "KINOLK_METHODS"
 	kinolkAllowCredentialsEnv = "KINOLK_ALLOW_CRED"
 	kinolkAllowedHeadersEnv   = "KINOLK_ALLOW_HEADERS"

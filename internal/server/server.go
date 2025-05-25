@@ -29,6 +29,8 @@ import (
 
 	deliverySearch "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/search/delivery"
 
+	deliveryWSNotification "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/websocket_notification/delivery"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -123,6 +125,10 @@ func (s *Server) Run() error {
 
 	searchHandler := deliverySearch.NewSearchHandler(movieService)
 
+	logger := log.With().Str("notification_ws_sys_logger", "1").Caller().Logger()
+	wsNotificationHandler := deliveryWSNotification.NewNotificationHandler(logger.WithContext(context.Background()), nil)
+	defer wsNotificationHandler.Stop()
+
 	mx := router.NewRouter()
 
 	log.Info().Msg("Configuring routes")
@@ -139,6 +145,7 @@ func (s *Server) Run() error {
 	router.SetupReviewsHandlers(mx, movieReviewHandler)
 	router.SetupGenresHandlers(mx, genreHandler)
 	router.SetupSearchHandlers(mx, searchHandler)
+	router.SetupWSNotificationHandler(mx, wsNotificationHandler)
 
 	log.Info().Msg("Routes configured successfully")
 

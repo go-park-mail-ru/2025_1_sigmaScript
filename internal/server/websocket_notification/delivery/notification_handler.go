@@ -44,7 +44,6 @@ type NotificationHandler struct {
 	clientsMu     sync.Mutex
 	sysLogger     *zerolog.Logger
 	stop          chan struct{}
-	currentID     int
 }
 
 func NewNotificationHandler(ctx context.Context, notificationService NotificationServiceInterface) *NotificationHandler {
@@ -58,7 +57,6 @@ func NewNotificationHandler(ctx context.Context, notificationService Notificatio
 		clients:   make(map[*Client]bool),
 		sysLogger: log.Ctx(ctx),
 		stop:      make(chan struct{}),
-		currentID: 1,
 	}
 
 	go newNotificationHandler.broadcastLoop(newNotificationHandler.stop)
@@ -133,7 +131,7 @@ func (h *NotificationHandler) broadcastLoop(stop <-chan struct{}) {
 			notification := Notification{
 				Type: "notification",
 				Data: NotificationData{
-					ID:    h.currentID,
+					ID:    25,
 					Title: "Премьера фильма:",
 					Text:  "Легенда об Очи",
 					Date:  "2025-06-08T00:00:00Z",
@@ -151,7 +149,6 @@ func (h *NotificationHandler) broadcastLoop(stop <-chan struct{}) {
 					delete(h.clients, c)
 				}
 			}
-			h.currentID++
 			h.clientsMu.Unlock()
 
 			time.Sleep(60 * time.Second)

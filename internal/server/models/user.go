@@ -4,6 +4,7 @@ import (
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 )
 
+//go:generate easyjson -all user.go
 type User struct {
 	ID             string `json:"id,omitempty"`
 	Username       string `json:"username"`

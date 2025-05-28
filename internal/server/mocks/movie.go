@@ -1,5 +1,6 @@
 package mocks
 
+//go:generate easyjson -all movie.go
 type ReviewUserDataJSON struct {
 	Login  string `json:"login"`
 	Avatar string `json:"avatar,omitempty"`

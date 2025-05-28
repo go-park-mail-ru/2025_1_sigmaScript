@@ -1,0 +1,8 @@
+internal/ds/ds.go
+internal/server/mocks/collections.go
+internal/server/mocks/genres.go
+internal/server/mocks/movie.go
+internal/server/mocks/staff_person.go
+internal/server/models/auth.go
+internal/server/models/search.go
+internal/server/models/user.go

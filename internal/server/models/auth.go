@@ -1,5 +1,6 @@
 package models
 
+//go:generate easyjson -all auth.go
 type RegisterData struct {
 	Username         string `json:"username"`
 	Password         string `json:"password"`

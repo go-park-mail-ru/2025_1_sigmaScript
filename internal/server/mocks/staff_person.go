@@ -1,6 +1,8 @@
 package mocks
 
 // PersonJSON delivery layer staff person info
+//
+//go:generate easyjson -all staff_person.go
 type PersonJSON struct {
 	ID              int        `json:"id"`
 	FullName        string     `json:"full_name"`

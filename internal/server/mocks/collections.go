@@ -1,5 +1,6 @@
 package mocks
 
+//go:generate easyjson -all collections.go
 type Movie struct {
 	ID          int     `json:"id"`
 	Title       string  `json:"title"`

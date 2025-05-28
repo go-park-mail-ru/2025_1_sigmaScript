@@ -9,3 +9,11 @@ github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/delivery/moc
 github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/service/mocks
 github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/delivery/mocks
 github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/service/mocks
+internal/ds/ds_easyjson.go
+internal/server/mocks/collections_easyjson.go
+internal/server/mocks/genres_easyjson.go
+internal/server/mocks/movie_easyjson.go
+internal/server/mocks/staff_person_easyjson.go
+internal/server/models/auth_easyjson.go
+internal/server/models/search_easyjson.go
+internal/server/models/user_easyjson.go

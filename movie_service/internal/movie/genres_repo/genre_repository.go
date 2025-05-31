@@ -113,7 +113,9 @@ func (r *GenreRepository) GetGenreFromRepoByID(ctx context.Context, genreID stri
 
 func (r *GenreRepository) GetAllGenresFromRepo(ctx context.Context) (*[]mocks.Genre, error) {
 	logger := log.Ctx(ctx)
-	logger.Info().Msg("Get Collections from postgres repo")
+	logger.Info().Msg("Get all genres from postgres repo")
+
+	logger.Info().Msgf("Get all genres from postgres repo ALL DATA: %v", r.pgdb)
 
 	var resultGenres []mocks.Genre
 
@@ -128,6 +130,8 @@ func (r *GenreRepository) GetAllGenresFromRepo(ctx context.Context) (*[]mocks.Ge
 			return
 		}
 	}()
+
+	currGenreID := 0
 
 	for execRow.Next() {
 		var genreID int
@@ -151,10 +155,14 @@ func (r *GenreRepository) GetAllGenresFromRepo(ctx context.Context) (*[]mocks.Ge
 			return nil, errMsg
 		}
 
-		if len(resultGenres) < genreID {
+		if genreID != 0 {
+			currGenreID++
+		}
+
+		if len(resultGenres) < currGenreID {
 			resultGenres = append(resultGenres, mocks.Genre{})
-			resultGenres[genreID-1].ID = strconv.Itoa(genreID)
-			resultGenres[genreID-1].Name = genreName
+			resultGenres[currGenreID-1].ID = strconv.Itoa(currGenreID)
+			resultGenres[currGenreID-1].Name = genreName
 		}
 
 		if !movieID.Valid {
@@ -176,6 +184,8 @@ func (r *GenreRepository) GetAllGenresFromRepo(ctx context.Context) (*[]mocks.Ge
 		logger.Error().Err(errMsg).Msg(errMsg.Error())
 		return nil, errMsg
 	}
+
+	logger.Info().Msgf("Get all genres from postgres repo result: %v", resultGenres)
 
 	return &resultGenres, nil
 }

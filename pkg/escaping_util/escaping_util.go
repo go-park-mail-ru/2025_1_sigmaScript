@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	DEFAULT_TEXT_MAX_LENGTH = int64(500)
+	DEFAULT_TEXT_MAX_LENGTH = int64(2000)
 )
 
 var (

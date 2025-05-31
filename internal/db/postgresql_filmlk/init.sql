@@ -104,7 +104,8 @@ CREATE TABLE "movie" (
     short_description TEXT DEFAULT NULL,
     logo TEXT DEFAULT '#',
     backdrop TEXT DEFAULT '#',
-    watchability BOOLEAN DEFAULT FALSE
+    watchability BOOLEAN DEFAULT FALSE,
+    trailerurl TEXT DEFAULT NULL
 );
 
 CREATE TABLE "collection_movie" (
@@ -268,6 +269,22 @@ INSERT INTO genre (name) values
 INSERT INTO country (name) values
 ('Канада'),
 ('США');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 -- Start Transaction
@@ -1402,7 +1419,6 @@ COMMIT;
 
 -- add collections
 INSERT INTO collection_movie (collection_id, movie_id) VALUES
-(1, 361),
 (1, 400787),
 (1, 448),
 (1, 325),
@@ -1410,6 +1426,7 @@ INSERT INTO collection_movie (collection_id, movie_id) VALUES
 (1, 342),
 (1, 326),
 (1, 111543),
+(1, 361),
 
 
 (2, 1108577),
@@ -1438,11 +1455,11 @@ rating_kp, rating_imdb, short_description, logo, backdrop) OVERRIDING SYSTEM VAL
     'В отдаленной деревне на острове Карпатия застенчивую девочку воспитывают в страхе перед неуловимым видом животных, известным как очи. Но когда она обнаруживает, что раненый детеныш Очи остался дома, она убегает, чтобы вернуть его домой.',
     'https://www.kino-teatr.ru/movie/poster/185445/232809.jpg',
     NULL,
-    '2025-06-08T00:00:00.000000Z',
+    '2025-06-01T00:00:00.000000Z',
     'Там есть что-то еще.',
     'Исайя Саксон',
     'США, Финляндия, Великобритания',
-    '2025-06-08T00:00:00.000000Z',
+    '2025-06-01T00:00:00.000000Z',
     '2025-01-26T00:00:00.000000Z',
     '1ч 35мин',
     6.1,
@@ -1544,7 +1561,8 @@ BEGIN
     END LOOP;
 
     IF movie_name_input IS NOT NULL AND movie_name_input != '' THEN
-        result_vector[1] := hashtext(movie_name_input)::real / norm_factor;
+        -- result_vector[1] := hashtext(movie_name_input)::real / norm_factor;
+        result_vector[1] := 0.0;
     END IF;
 
     IF genres_in IS NOT NULL THEN
@@ -1563,7 +1581,8 @@ BEGIN
         FOR i IN 1..20 LOOP
             IF i <= array_length(sorted_actors, 1) AND sorted_actors[i] IS NOT NULL
             AND sorted_actors[i] != '' AND sorted_actors[i] != ' ' THEN
-                result_vector[21 + i] := hashtext(sorted_actors[i])::real / norm_factor;
+                -- result_vector[21 + i] := hashtext(sorted_actors[i])::real / norm_factor;
+                result_vector[21 + i] := 0.0;
             END IF;
         END LOOP;
     END IF;
@@ -1633,6 +1652,6 @@ SELECT
 FROM similarity_movie sm1
 JOIN similarity_movie sm2 ON sm2.movie_id != sm1.movie_id
 JOIN movie m ON sm2.movie_id = m.id
-WHERE sm1.movie_id = 361
+WHERE sm1.movie_id = 325
 ORDER BY sm1.movie_vector <-> sm2.movie_vector DESC
 LIMIT 10;

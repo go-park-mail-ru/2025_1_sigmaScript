@@ -8,8 +8,11 @@ import (
 	auth "github.com/go-park-mail-ru/2025_1_sigmaScript/auth_service/api/auth_api_v1/proto"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
 	deliveryAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
+	metric "github.com/go-park-mail-ru/2025_1_sigmaScript/metric"
 	movie "github.com/go-park-mail-ru/2025_1_sigmaScript/movie_service/api/movie_api_v1/proto"
 	user "github.com/go-park-mail-ru/2025_1_sigmaScript/user_service/api/user_api_v1/proto"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -126,7 +129,8 @@ func (s *Server) Run() error {
 	searchHandler := deliverySearch.NewSearchHandler(movieService)
 
 	logger := log.With().Str("notification_ws_sys_logger", "1").Caller().Logger()
-	wsNotificationHandler := deliveryWSNotification.NewNotificationHandler(logger.WithContext(context.Background()), nil)
+
+	wsNotificationHandler := deliveryWSNotification.NewNotificationHandler(logger.WithContext(context.Background()), movieService)
 	defer wsNotificationHandler.Stop()
 
 	mx := router.NewRouter()
@@ -146,6 +150,15 @@ func (s *Server) Run() error {
 	router.SetupGenresHandlers(mx, genreHandler)
 	router.SetupSearchHandlers(mx, searchHandler)
 	router.SetupWSNotificationHandler(mx, wsNotificationHandler)
+
+	reg := prometheus.NewRegistry()
+
+	_ = metric.NewMetrics(reg)
+	promHandler := promhttp.HandlerFor(reg, promhttp.HandlerOpts{})
+
+	mx.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
+		promHandler.ServeHTTP(w, r)
+	}).Methods(http.MethodGet, http.MethodOptions)
 
 	log.Info().Msg("Routes configured successfully")
 

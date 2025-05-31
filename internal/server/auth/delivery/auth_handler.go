@@ -181,6 +181,14 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var login models.LoginData
 	logger.Info().Msg("Logining user")
 
+	// expire old session cookie if it exists
+	errOldSession := cookie.ExpireOldSessionCookie(w, r, h.cookieData, h.sessionService)
+	if errOldSession != nil {
+		logger.Error().Err(errOldSession).Msg(errOldSession.Error())
+		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrSomethingWentWrong, errs.ErrMsgFailedToGetSession)
+		return
+	}
+
 	// get user credentials from request body
 	err := jsonutil.ReadJSON(r, &login)
 	if err != nil {
@@ -220,14 +228,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	logger.Info().Msg("User logged in successfully")
-
-	// expire old session cookie if it exists
-	errOldSession := cookie.ExpireOldSessionCookie(w, r, h.cookieData, h.sessionService)
-	if errOldSession != nil {
-		logger.Error().Err(errOldSession).Msg(errOldSession.Error())
-		jsonutil.SendError(r.Context(), w, http.StatusBadRequest, errs.ErrSomethingWentWrong, errs.ErrMsgFailedToGetSession)
-		return
-	}
 
 	newSessionID, err := h.sessionService.CreateSession(r.Context(), login.Username)
 	if err != nil {

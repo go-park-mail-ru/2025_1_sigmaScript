@@ -36,12 +36,12 @@ where c.is_main_collection = TRUE;
     m.name AS title,
     m.poster AS preview_url,
     m.duration AS duration,
-    m.release_year AS release_date,
+    m.premier_global AS release_date,
 		m.rating as rating
 FROM movie m
 WHERE
-    m.release_year >= CURRENT_TIMESTAMP AND
-    m.release_year <= CURRENT_TIMESTAMP + INTERVAL '4 weeks';
+    m.premier_global >= CURRENT_TIMESTAMP
+ORDER BY m.premier_global ASC;
  `
 )
 

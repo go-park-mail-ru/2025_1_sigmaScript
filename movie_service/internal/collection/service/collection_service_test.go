@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
-	service_mocks "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/service/mocks"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
+	service_mocks "github.com/go-park-mail-ru/2025_1_sigmaScript/movie_service/internal/collection/service/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )

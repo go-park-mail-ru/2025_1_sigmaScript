@@ -1648,7 +1648,8 @@ SELECT
     m.name AS title,
     m.poster AS preview_url,
     m.duration AS duration,
-    m.rating AS rating
+    m.rating AS rating,
+    (sm1.movie_vector <-> sm2.movie_vector) as similarity
 FROM similarity_movie sm1
 JOIN similarity_movie sm2 ON sm2.movie_id != sm1.movie_id
 JOIN movie m ON sm2.movie_id = m.id

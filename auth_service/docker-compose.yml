@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  auth_service:
+    container_name: auth_service
+    image: auth_service:latest
+    build:
+      context: ..
+      dockerfile: auth_service/Dockerfile
+    restart: always
+    ports:
+      - "8081:8081"
+    networks:
+      - filmlk-net
+
+networks:
+  filmlk-net:
+    external:
+      name: filmlk-net

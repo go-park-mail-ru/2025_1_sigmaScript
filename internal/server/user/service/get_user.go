@@ -8,9 +8,11 @@ import (
 )
 
 func (s *UserService) GetUser(ctx context.Context, login string) (*models.User, error) {
-	user, err := s.repo.GetUser(ctx, login)
+	logger := log.Ctx(ctx)
+
+	user, err := s.repo.GetUserPostgres(ctx, login)
 	if err != nil {
-		log.Error().Err(err).Msg(err.Error())
+		logger.Error().Err(err).Msg(err.Error())
 		return nil, err
 	}
 

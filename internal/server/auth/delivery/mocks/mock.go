@@ -6,6 +6,7 @@ package mock_interfaces
 
 import (
 	context "context"
+	multipart "mime/multipart"
 	reflect "reflect"
 
 	models "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/models"
@@ -35,6 +36,34 @@ func (m *MockUserServiceInterface) EXPECT() *MockUserServiceInterfaceMockRecorde
 	return m.recorder
 }
 
+// AddFavoriteActor mocks base method.
+func (m *MockUserServiceInterface) AddFavoriteActor(ctx context.Context, login, actorID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddFavoriteActor", ctx, login, actorID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddFavoriteActor indicates an expected call of AddFavoriteActor.
+func (mr *MockUserServiceInterfaceMockRecorder) AddFavoriteActor(ctx, login, actorID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFavoriteActor", reflect.TypeOf((*MockUserServiceInterface)(nil).AddFavoriteActor), ctx, login, actorID)
+}
+
+// AddFavoriteMovie mocks base method.
+func (m *MockUserServiceInterface) AddFavoriteMovie(ctx context.Context, login, movieID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddFavoriteMovie", ctx, login, movieID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddFavoriteMovie indicates an expected call of AddFavoriteMovie.
+func (mr *MockUserServiceInterfaceMockRecorder) AddFavoriteMovie(ctx, login, movieID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFavoriteMovie", reflect.TypeOf((*MockUserServiceInterface)(nil).AddFavoriteMovie), ctx, login, movieID)
+}
+
 // CreateUser mocks base method.
 func (m *MockUserServiceInterface) CreateUser(ctx context.Context, user *models.User) error {
 	m.ctrl.T.Helper()
@@ -61,6 +90,21 @@ func (m *MockUserServiceInterface) DeleteUser(ctx context.Context, login string)
 func (mr *MockUserServiceInterfaceMockRecorder) DeleteUser(ctx, login interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockUserServiceInterface)(nil).DeleteUser), ctx, login)
+}
+
+// GetProfile mocks base method.
+func (m *MockUserServiceInterface) GetProfile(ctx context.Context, login string) (*models.Profile, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProfile", ctx, login)
+	ret0, _ := ret[0].(*models.Profile)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProfile indicates an expected call of GetProfile.
+func (mr *MockUserServiceInterfaceMockRecorder) GetProfile(ctx, login interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProfile", reflect.TypeOf((*MockUserServiceInterface)(nil).GetProfile), ctx, login)
 }
 
 // GetUser mocks base method.
@@ -92,6 +136,34 @@ func (mr *MockUserServiceInterfaceMockRecorder) Login(ctx, loginData interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockUserServiceInterface)(nil).Login), ctx, loginData)
 }
 
+// RemoveFavoriteActor mocks base method.
+func (m *MockUserServiceInterface) RemoveFavoriteActor(ctx context.Context, login, actorID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveFavoriteActor", ctx, login, actorID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveFavoriteActor indicates an expected call of RemoveFavoriteActor.
+func (mr *MockUserServiceInterfaceMockRecorder) RemoveFavoriteActor(ctx, login, actorID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFavoriteActor", reflect.TypeOf((*MockUserServiceInterface)(nil).RemoveFavoriteActor), ctx, login, actorID)
+}
+
+// RemoveFavoriteMovie mocks base method.
+func (m *MockUserServiceInterface) RemoveFavoriteMovie(ctx context.Context, login, movieID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveFavoriteMovie", ctx, login, movieID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveFavoriteMovie indicates an expected call of RemoveFavoriteMovie.
+func (mr *MockUserServiceInterfaceMockRecorder) RemoveFavoriteMovie(ctx, login, movieID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFavoriteMovie", reflect.TypeOf((*MockUserServiceInterface)(nil).RemoveFavoriteMovie), ctx, login, movieID)
+}
+
 // UpdateUser mocks base method.
 func (m *MockUserServiceInterface) UpdateUser(ctx context.Context, login string, newUser *models.User) error {
 	m.ctrl.T.Helper()
@@ -104,6 +176,20 @@ func (m *MockUserServiceInterface) UpdateUser(ctx context.Context, login string,
 func (mr *MockUserServiceInterfaceMockRecorder) UpdateUser(ctx, login, newUser interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockUserServiceInterface)(nil).UpdateUser), ctx, login, newUser)
+}
+
+// UpdateUserAvatar mocks base method.
+func (m *MockUserServiceInterface) UpdateUserAvatar(ctx context.Context, uploadDir, hashedAvatarName string, avatarFile multipart.File, user models.User) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUserAvatar", ctx, uploadDir, hashedAvatarName, avatarFile, user)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateUserAvatar indicates an expected call of UpdateUserAvatar.
+func (mr *MockUserServiceInterfaceMockRecorder) UpdateUserAvatar(ctx, uploadDir, hashedAvatarName, avatarFile, user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserAvatar", reflect.TypeOf((*MockUserServiceInterface)(nil).UpdateUserAvatar), ctx, uploadDir, hashedAvatarName, avatarFile, user)
 }
 
 // MockSessionServiceInterface is a mock of SessionServiceInterface interface.

@@ -8,13 +8,10 @@ import (
 )
 
 func (s *UserService) UpdateUser(ctx context.Context, login string, newUser *models.User) error {
-	if err := s.DeleteUser(ctx, login); err != nil {
-		log.Error().Err(err).Msg(err.Error())
-		return err
-	}
+	logger := log.Ctx(ctx)
 
-	if err := s.repo.CreateUser(ctx, newUser); err != nil {
-		log.Error().Err(err).Msg(err.Error())
+	if _, err := s.repo.UpdateUserPostgres(ctx, login, newUser); err != nil {
+		logger.Error().Err(err).Msg(err.Error())
 		return err
 	}
 

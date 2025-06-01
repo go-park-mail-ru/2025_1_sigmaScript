@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
+	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -19,24 +20,30 @@ type SessionServiceInterface interface {
 	DeleteSession(ctx context.Context, sessionID string) error
 }
 
+// this function returns result of expiring old session cookie
+// if something happend while parsing old cookie function returns error.
 func ExpireOldSessionCookie(w http.ResponseWriter, r *http.Request, cookie *config.Cookie, sessionSrv SessionServiceInterface) error {
 	logger := log.Ctx(r.Context())
 
 	oldSessionCookie, err := r.Cookie("session_id")
-	if errors.Is(err, http.ErrNoCookie) {
-		logger.Info().Msg("user dont have old cookie")
-		return nil
+	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			logger.Info().Msg("user dont have old cookie")
+			return nil
+		}
+		return err
 	}
 
 	if oldSessionCookie != nil {
 		http.SetCookie(w, PreparedExpiredCookie(cookie))
 		err := sessionSrv.DeleteSession(r.Context(), oldSessionCookie.Value)
 		if err != nil {
-			return err
+			logger.Error().Err(err).Msg(errors.Wrap(err, "error happend while deleting old session from repo").Error())
+			return errs.ErrSessionNotExists
 		}
-		logger.Info().Msg("successfully expired old sesssion cookie")
 	}
 
+	logger.Info().Msg("successfully expired old sesssion cookie")
 	return nil
 }
 

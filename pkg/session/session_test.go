@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"testing"
 
-	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -40,7 +39,7 @@ func TestLong(t *testing.T) {
 		t.Run(strconv.Itoa(tt.length), func(t *testing.T) {
 			t.Parallel()
 			_, err := GenerateSessionID(tt.length)
-			require.Equal(t, err.Error(), errs.ErrMsgLengthTooLong)
+			require.Equal(t, err.Error(), "length too long")
 		})
 	}
 }
@@ -58,7 +57,7 @@ func TestShort(t *testing.T) {
 		t.Run(strconv.Itoa(tt.length), func(t *testing.T) {
 			t.Parallel()
 			_, err := GenerateSessionID(tt.length)
-			require.Equal(t, err.Error(), errs.ErrMsgLengthTooShort)
+			require.Equal(t, err.Error(), "length too short")
 		})
 	}
 }
@@ -76,7 +75,7 @@ func TestNegative(t *testing.T) {
 		t.Run(strconv.Itoa(tt.length), func(t *testing.T) {
 			t.Parallel()
 			_, err := GenerateSessionID(tt.length)
-			require.Equal(t, err.Error(), errs.ErrMsgNegativeSessionIDLength)
+			require.Equal(t, err.Error(), "negative session ID length")
 		})
 	}
 }

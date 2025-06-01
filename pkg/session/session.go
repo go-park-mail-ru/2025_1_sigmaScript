@@ -5,28 +5,33 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 
-	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/errors"
 	"github.com/pkg/errors"
 )
 
 const (
 	MinSessionIDLength = 8
 	MaxSessionIDLength = 512
+
+	ErrMsgNegativeSessionIDLength = "negative session ID length"
+	ErrMsgLengthTooShort          = "length too short"
+	ErrMsgLengthTooLong           = "length too long"
+	ErrMsgFailedToGetSession      = "failed to get session"
+	ErrMsgGenerateSession         = "error generating session ID"
 )
 
 func GenerateSessionID(length int) (string, error) {
 	if length < 0 {
-		return "", errors.New(errs.ErrMsgNegativeSessionIDLength)
+		return "", errors.New(ErrMsgNegativeSessionIDLength)
 	}
 	if length < MinSessionIDLength {
-		return "", errors.New(errs.ErrMsgLengthTooShort)
+		return "", errors.New(ErrMsgLengthTooShort)
 	}
 	if length > MaxSessionIDLength {
-		return "", errors.New(errs.ErrMsgLengthTooLong)
+		return "", errors.New(ErrMsgLengthTooLong)
 	}
 	session := make([]byte, length)
 	if _, err := rand.Read(session); err != nil {
-		return "", errors.Wrap(err, errs.ErrMsgGenerateSession)
+		return "", errors.Wrap(err, ErrMsgGenerateSession)
 	}
 	hash := sha256.Sum256(session)
 	return hex.EncodeToString(hash[:]), nil

@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package authservice;
+option go_package = "./;pb";
+
+message CreateSessionRequest {
+  string UserID = 1;
+}
+
+message CreateSessionResponse {
+  string Cookie = 1;
+  int64 MaxAge = 2;
+  string Name = 3;
+}
+
+message DestroySessionRequest {
+  string Cookie = 1;
+}
+
+message GetSessionRequest {
+  string Cookie = 1;
+}
+
+message GetSessionResponse {
+  string UserID = 1;
+}
+
+message Nothing {
+  bool Dummy = 1;
+}
+
+service SessionRPC {
+  rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
+  rpc DeleteSession(DestroySessionRequest) returns (Nothing);
+  rpc GetSession(GetSessionRequest) returns (GetSessionResponse);
+}

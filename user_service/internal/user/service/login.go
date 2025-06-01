@@ -1,0 +1,28 @@
+package service
+
+import (
+	"context"
+
+	errs "github.com/go-park-mail-ru/2025_1_sigmaScript/user_service/internal/errors"
+	"github.com/go-park-mail-ru/2025_1_sigmaScript/user_service/internal/models"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
+	"golang.org/x/crypto/bcrypt"
+)
+
+func (s *UserService) Login(ctx context.Context, loginData models.LoginData) error {
+	logger := log.Ctx(ctx)
+
+	user, err := s.repo.GetUserPostgres(ctx, loginData.Username)
+	if err != nil {
+		logger.Error().Err(err).Msg(err.Error())
+		return err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(loginData.Password)); err != nil {
+		logger.Error().Err(errors.Wrap(err, errs.ErrIncorrectLoginOrPassword)).Msg(errs.ErrIncorrectPassword)
+		return errors.New(errs.ErrIncorrectPassword)
+	}
+
+	return nil
+}

@@ -138,3 +138,18 @@ func TestReadFail(t *testing.T) {
 		require.Error(t, err)
 	})
 }
+
+func TestSendError(t *testing.T) {
+	errMsg := "error happened"
+	rr := httptest.NewRecorder()
+	t.Run("json encode error", func(t *testing.T) {
+		SendError(t.Context(), rr, 200, errMsg, errMsg)
+
+		var result ErrorResponse
+		err := json.NewDecoder(rr.Result().Body).Decode(&result)
+
+		assert.NoError(t, err)
+		assert.Equal(t, errMsg, result.Error)
+		assert.Equal(t, errMsg, result.Message)
+	})
+}

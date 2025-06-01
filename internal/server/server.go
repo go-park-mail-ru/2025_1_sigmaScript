@@ -5,28 +5,34 @@ import (
 	"fmt"
 	"net/http"
 
+	auth "github.com/go-park-mail-ru/2025_1_sigmaScript/auth_service/api/auth_api_v1/proto"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/config"
 	deliveryAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/delivery"
-	repoAuthSessions "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/repository"
-	serviceAuth "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/auth/service"
-	repoUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/repository"
+	metric "github.com/go-park-mail-ru/2025_1_sigmaScript/metric"
+	movie "github.com/go-park-mail-ru/2025_1_sigmaScript/movie_service/api/movie_api_v1/proto"
+	user "github.com/go-park-mail-ru/2025_1_sigmaScript/user_service/api/user_api_v1/proto"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	deliveryUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/delivery/http"
-	serviceUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/service"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	deliveryCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/delivery"
-	repoCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/repository"
-	serviceCollection "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/collection/service"
-	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/mocks"
 	"github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/router"
 
-	deliveryStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/delivery"
-	repoStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/repository"
-	serviceStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/service"
-
+	csrfDelivery "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/csrf/delivery"
 	deliveryMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/delivery"
-	repoMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/repository"
-	serviceMovie "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/movie/service"
+
+	deliveryReviews "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/reviews/delivery"
+	deliveryStaff "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/staff_person/delivery"
+
+	deliveryGenre "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/genre/delivery"
+	client "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/grpc_client"
+	deliveryUsers "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/user/delivery/http"
+
+	deliverySearch "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/search/delivery"
+
+	deliveryWSNotification "github.com/go-park-mail-ru/2025_1_sigmaScript/internal/server/websocket_notification/delivery"
 
 	"github.com/rs/zerolog/log"
 )
@@ -53,26 +59,79 @@ func New(cfg *config.Config) *Server {
 }
 
 func (s *Server) Run() error {
-	sessionRepo := repoAuthSessions.NewSessionRepository()
-	sessionService := serviceAuth.NewSessionService(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionRepo)
+	log.Info().Msg("Trying to connect to auth movie_service")
+	aGrpcConn, err := grpc.NewClient(
+		"auth_service:8081",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return fmt.Errorf("error couldnt connect to grpc: %w", err)
+	}
+	log.Info().Msg("Auth movie_service connection opened successfully")
 
-	userRepo := repoUsers.NewUserRepository()
-	userService := serviceUsers.NewUserService(userRepo)
+	defer func() {
+		if clErr := aGrpcConn.Close(); clErr != nil {
+			log.Error().Msg("couldn't close auth microservice grpc connection")
+		}
+	}()
+
+	log.Info().Msg("Trying to connect to auth movie_service")
+	mGrpcConn, err := grpc.NewClient(
+		"movie_service:8083",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return fmt.Errorf("error couldnt connect to grpc: %w", err)
+	}
+	log.Info().Msg("Auth movie_service connection opened successfully")
+
+	defer func() {
+		if clErr := mGrpcConn.Close(); clErr != nil {
+			log.Error().Msg("couldn't close auth microservice grpc connection")
+		}
+	}()
+
+	uGrpcConn, err := grpc.NewClient(
+		"user_service:8082",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return fmt.Errorf("error couldnt connect to grpc: %w", err)
+	}
+	log.Info().Msg("Auth service connection opened successfully")
+
+	defer func() {
+		if clErr := uGrpcConn.Close(); clErr != nil {
+			log.Error().Msg("couldn't close auth microservice grpc connection")
+		}
+	}()
+
+	sessionService := client.NewAuthClient(auth.NewSessionRPCClient(aGrpcConn))
+
+	userService := client.NewUserClient(user.NewUserServiceClient(uGrpcConn))
 	userHandler := deliveryUsers.NewUserHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)
 
 	authHandler := deliveryAuth.NewAuthHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), userService, sessionService)
 
-	staffPersonRepo := repoStaff.NewStaffPersonRepository(&mocks.ExistingActors)
-	staffPersonService := serviceStaff.NewStaffPersonService(staffPersonRepo)
-	staffPersonHandler := deliveryStaff.NewStaffPersonHandler(staffPersonService)
+	csrfHandler := csrfDelivery.NewCSRFHandler(config.WrapCookieContext(context.Background(), &s.Config.Cookie), sessionService)
 
-	collectionRepo := repoCollection.NewCollectionRepository(&mocks.MainPageCollections)
-	collectionService := serviceCollection.NewCollectionService(collectionRepo)
-	collectionHandler := deliveryCollection.NewCollectionHandler(collectionService)
-
-	movieRepo := repoMovie.NewMovieRepository(&mocks.ExistingMovies)
-	movieService := serviceMovie.NewMovieService(movieRepo)
+	movieService := client.NewMovieClient(movie.NewMovieRPCClient(mGrpcConn))
 	movieHandler := deliveryMovie.NewMovieHandler(movieService)
+
+	staffPersonHandler := deliveryStaff.NewStaffPersonHandler(movieService)
+
+	collectionHandler := deliveryCollection.NewCollectionHandler(movieService)
+
+	movieReviewHandler := deliveryReviews.NewReviewHandler(userService, sessionService, movieService)
+
+	genreHandler := deliveryGenre.NewGenreHandler(movieService)
+
+	searchHandler := deliverySearch.NewSearchHandler(movieService)
+
+	logger := log.With().Str("notification_ws_sys_logger", "1").Caller().Logger()
+
+	wsNotificationHandler := deliveryWSNotification.NewNotificationHandler(logger.WithContext(context.Background()), movieService)
+	defer wsNotificationHandler.Stop()
 
 	mx := router.NewRouter()
 
@@ -80,10 +139,26 @@ func (s *Server) Run() error {
 
 	router.ApplyMiddlewares(mx)
 	router.SetupAuth(mx, authHandler)
+
+	router.SetupCsrf(mx, csrfHandler)
+
 	router.SetupCollections(mx, collectionHandler)
 	router.SetupStaffPersonHandlers(mx, staffPersonHandler)
 	router.SetupUserHandlers(mx, userHandler)
 	router.SetupMovieHandlers(mx, movieHandler)
+	router.SetupReviewsHandlers(mx, movieReviewHandler)
+	router.SetupGenresHandlers(mx, genreHandler)
+	router.SetupSearchHandlers(mx, searchHandler)
+	router.SetupWSNotificationHandler(mx, wsNotificationHandler)
+
+	reg := prometheus.NewRegistry()
+
+	_ = metric.NewMetrics(reg)
+	promHandler := promhttp.HandlerFor(reg, promhttp.HandlerOpts{})
+
+	mx.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
+		promHandler.ServeHTTP(w, r)
+	}).Methods(http.MethodGet, http.MethodOptions)
 
 	log.Info().Msg("Routes configured successfully")
 
